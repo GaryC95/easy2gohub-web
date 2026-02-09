@@ -1,72 +1,66 @@
 ---
 /**
- * Image Compressor – Pro version
- * Multi-file · Quality slider · Target format · Auto fallback · ZIP download
+ * Image Compressor – Pro
+ * Multi-file · Quality · Target format · Max dimension · JPEG background for alpha · ZIP download
  */
 ---
+
 <section class="tool-card p-10 space-y-10">
   <div class="text-center">
-    <h2 class="text-3xl font-extrabold text-slate-900">
-      Pro Image Compressor
-    </h2>
-    <p class="text-slate-500 mt-2 text-lg">
-      Compress images locally in your browser. No upload. 100% private.
-    </p>
+    <h2 class="text-3xl font-extrabold text-slate-900">Pro Image Compressor</h2>
+    <p class="text-slate-500 mt-2 text-lg">Compress images locally in your browser. No upload. 100% private.</p>
   </div>
 
-  <!-- Dropzone -->
   <div
     id="dropzone"
-    class="border-2 border-dashed border-primary/30 rounded-2xl bg-slate-50/50
-           hover:bg-blue-50/30 hover:border-primary transition-all
-           cursor-pointer h-72 flex flex-col items-center justify-center text-center"
+    class="border-2 border-dashed border-indigo-500/30 rounded-2xl bg-white/40
+           hover:bg-indigo-50/40 hover:border-indigo-500 transition-all
+           cursor-pointer h-72 flex flex-col items-center justify-center text-center glow-effect"
   >
-    <div class="size-20 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-6">
+    <div class="size-20 bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-600 mb-6">
       <span class="material-symbols-outlined text-4xl">cloud_upload</span>
     </div>
 
-    <h3 class="text-xl font-bold text-slate-800 mb-2">
-      Drop files here
-    </h3>
-    <p class="text-sm text-slate-400 mb-6">
-      PNG, JPG, WEBP, AVIF up to 25MB each
-    </p>
+    <h3 class="text-xl font-extrabold text-slate-800 mb-2">Drop files here</h3>
+    <p class="text-sm text-slate-400 mb-6">PNG, JPG, WEBP, AVIF up to 25MB each</p>
 
     <button
       id="selectBtn"
-      class="bg-primary text-white px-10 py-3 rounded-full font-bold text-sm
-             shadow-lg shadow-primary/30 hover:bg-blue-700 transition-all"
+      class="bg-indigo-600 text-white px-10 py-3 rounded-full font-extrabold text-sm
+             shadow-lg shadow-indigo-600/25 hover:bg-indigo-700 transition-all"
     >
       Select from computer
     </button>
 
-    <input
-      id="fileInput"
-      type="file"
-      accept="image/*"
-      multiple
-      class="hidden"
-    />
+    <input id="fileInput" type="file" accept="image/*" multiple class="hidden" />
   </div>
 
-  <!-- Queue -->
   <div id="queue" class="hidden space-y-3"></div>
 
-  <!-- Actions -->
-  <div class="flex justify-between items-center pt-6 border-t">
-    <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider">
-      Status:
-      <span id="status" class="text-emerald-600">Idle</span>
+  <div class="flex justify-between items-center pt-6 border-t border-slate-200/60">
+    <div class="text-xs text-slate-400 font-extrabold uppercase tracking-wider">
+      Status: <span id="status" class="text-emerald-600">Idle</span>
+      <span id="statHint" class="ml-2 text-slate-400 font-semibold normal-case"></span>
     </div>
 
-    <button
-      id="processBtn"
-      class="bg-primary text-white px-8 py-3 rounded-xl font-bold text-sm
-             shadow-lg shadow-primary/25 hover:bg-blue-700 transition-all disabled:opacity-50"
-      disabled
-    >
-      Process Images
-    </button>
+    <div class="flex items-center gap-3">
+      <button
+        id="clearBtn"
+        class="px-4 py-2 rounded-xl text-sm font-extrabold bg-white/60 border border-white/50 hover:bg-white transition disabled:opacity-50"
+        disabled
+      >
+        Clear
+      </button>
+
+      <button
+        id="processBtn"
+        class="bg-indigo-600 text-white px-8 py-3 rounded-xl font-extrabold text-sm
+               shadow-lg shadow-indigo-600/25 hover:bg-indigo-700 transition-all disabled:opacity-50"
+        disabled
+      >
+        Process Images
+      </button>
+    </div>
   </div>
 
   <canvas id="canvas" class="hidden"></canvas>
@@ -78,24 +72,27 @@
   const selectBtn = document.getElementById("selectBtn");
   const queueEl = document.getElementById("queue");
   const processBtn = document.getElementById("processBtn");
+  const clearBtn = document.getElementById("clearBtn");
   const statusEl = document.getElementById("status");
+  const statHint = document.getElementById("statHint");
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d");
 
+  // Settings (from right panel)
   const qualityEl = document.getElementById("quality");
   const formatEl = document.getElementById("targetFormat");
+  const maxDimEl = document.getElementById("maxDim");
+  const jpegBgEl = document.getElementById("jpegBg"); // toggle
+  const jpegBgColorEl = document.getElementById("jpegBgColor"); // select
 
   let files = [];
   const MAX_SIZE = 25 * 1024 * 1024;
 
   const fmt = (n) => {
-    const u = ["B", "KB", "MB"];
-    let i = 0;
-    while (n >= 1024 && i < u.length - 1) {
-      n /= 1024;
-      i++;
-    }
-    return `${n.toFixed(i ? 2 : 0)} ${u[i]}`;
+    const u = ["B", "KB", "MB", "GB"];
+    let i = 0, v = n;
+    while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+    return `${v.toFixed(i ? 2 : 0)} ${u[i]}`;
   };
 
   function addFiles(list) {
@@ -111,26 +108,28 @@
     if (!files.length) {
       queueEl.classList.add("hidden");
       processBtn.disabled = true;
+      clearBtn.disabled = true;
+      statHint.textContent = "";
       return;
     }
 
     queueEl.innerHTML = "";
     queueEl.classList.remove("hidden");
     processBtn.disabled = false;
+    clearBtn.disabled = false;
+
+    const total = files.reduce((a, f) => a + f.size, 0);
+    statHint.textContent = `• ${files.length} file(s), ${fmt(total)}`;
 
     files.forEach((f, i) => {
       const row = document.createElement("div");
-      row.className =
-        "flex items-center justify-between bg-white rounded-xl border p-4 text-sm";
-
+      row.className = "flex items-center justify-between bg-white/70 rounded-2xl border border-white/60 p-4 text-sm";
       row.innerHTML = `
-        <div class="truncate">
-          <strong>${f.name}</strong>
-          <div class="text-xs text-slate-400">${fmt(f.size)}</div>
+        <div class="min-w-0">
+          <div class="font-extrabold text-slate-800 truncate">${f.name}</div>
+          <div class="text-xs text-slate-400">${fmt(f.size)} • ${f.type || "unknown"}</div>
         </div>
-        <button data-i="${i}" class="text-slate-400 hover:text-red-500">
-          ✕
-        </button>
+        <button data-i="${i}" class="text-slate-400 hover:text-red-500 font-extrabold px-2">✕</button>
       `;
 
       row.querySelector("button").onclick = () => {
@@ -143,41 +142,76 @@
   }
 
   function resolveFormat(original, selected) {
+    // selected is like: auto | image/avif | image/webp | image/jpeg | image/png
     if (selected && selected !== "auto") return selected;
+
+    // auto keep best
     if (original === "image/png") return "image/png";
     if (original === "image/webp") return "image/webp";
+    if (original === "image/avif") return "image/avif";
     return "image/jpeg";
   }
 
-  async function compress(file, quality, type) {
-    const bmp = await createImageBitmap(file);
-    canvas.width = bmp.width;
-    canvas.height = bmp.height;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(bmp, 0, 0);
+  function backgroundForJpeg() {
+    const enabled = jpegBgEl?.checked;
+    const mode = jpegBgColorEl?.value || "white";
+    if (!enabled) return null;
+    if (mode === "white") return "#ffffff";
+    if (mode === "black") return "#000000";
+    return "#f8fafc"; // neutral
+  }
 
-    return new Promise((res) => {
-      canvas.toBlob(res, type, quality);
-    });
+  async function compressOne(file, quality, outType, maxDim) {
+    const bmp = await createImageBitmap(file);
+    let w = bmp.width, h = bmp.height;
+
+    // downscale
+    if (maxDim && (w > maxDim || h > maxDim)) {
+      const s = Math.min(maxDim / w, maxDim / h);
+      w = Math.max(1, Math.round(w * s));
+      h = Math.max(1, Math.round(h * s));
+    }
+
+    canvas.width = w;
+    canvas.height = h;
+
+    // JPEG background fill (helps alpha -> jpeg)
+    if (outType === "image/jpeg") {
+      const bg = backgroundForJpeg();
+      if (bg) {
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+      } else {
+        ctx.clearRect(0, 0, w, h);
+      }
+    } else {
+      ctx.clearRect(0, 0, w, h);
+    }
+
+    ctx.drawImage(bmp, 0, 0, w, h);
+
+    const blob = await new Promise((res) => canvas.toBlob(res, outType, quality));
+    return blob;
   }
 
   async function processAll() {
     statusEl.textContent = "Processing…";
     processBtn.disabled = true;
 
-    const quality =
-      qualityEl ? Number(qualityEl.value || 80) / 100 : 0.8;
+    const quality = qualityEl ? Number(qualityEl.value || 80) / 100 : 0.8;
     const selectedFormat = formatEl ? formatEl.value : "auto";
+    const maxDim = maxDimEl ? Number(maxDimEl.value || 0) : 0;
 
     const results = [];
 
     for (const f of files) {
       const targetType = resolveFormat(f.type, selectedFormat);
-      const blob = await compress(f, quality, targetType);
+      const blob = await compressOne(f, quality, targetType, maxDim);
+      if (!blob) continue;
 
-      const ext = targetType.split("/")[1];
+      const ext = targetType.split("/")[1].replace("jpeg", "jpg");
       results.push({
-        name: f.name.replace(/\.[^.]+$/, "") + "-compressed." + ext,
+        name: f.name.replace(/\.[^.]+$/, "") + `-compressed.${ext}`,
         blob,
       });
     }
@@ -187,10 +221,8 @@
       a.href = URL.createObjectURL(results[0].blob);
       a.download = results[0].name;
       a.click();
-    } else {
-      const { default: JSZip } = await import(
-        "https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm"
-      );
+    } else if (results.length > 1) {
+      const { default: JSZip } = await import("https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm");
       const zip = new JSZip();
       results.forEach((r) => zip.file(r.name, r.blob));
       const out = await zip.generateAsync({ type: "blob" });
@@ -209,20 +241,15 @@
   selectBtn.onclick = () => fileInput.click();
   fileInput.onchange = () => addFiles(fileInput.files);
 
-  dropzone.ondragover = (e) => {
-    e.preventDefault();
-    dropzone.classList.add("ring-2", "ring-primary");
-  };
-
-  dropzone.ondragleave = () => {
-    dropzone.classList.remove("ring-2", "ring-primary");
-  };
-
+  dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add("ring-2", "ring-indigo-500"); };
+  dropzone.ondragleave = () => dropzone.classList.remove("ring-2", "ring-indigo-500");
   dropzone.ondrop = (e) => {
     e.preventDefault();
-    dropzone.classList.remove("ring-2", "ring-primary");
+    dropzone.classList.remove("ring-2", "ring-indigo-500");
     addFiles(e.dataTransfer.files);
   };
+
+  clearBtn.onclick = () => { files = []; renderQueue(); statusEl.textContent = "Idle"; };
 
   processBtn.onclick = processAll;
 </script>

@@ -19,59 +19,122 @@ const ToolComponent = slug === "image-compressor" ? ImageCompressor : null;
 const showImageSettings = slug === "image-compressor";
 ---
 
-<ToolLayout title={tool.title} description={tool.description}>
-  {ToolComponent ? <ToolComponent /> : <p class="text-slate-500">Tool coming soon.</p>}
+  {slug === "image-compressor" && (
+  <div slot="settings" class="tool-card overflow-hidden">
+    <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+      <h3 class="text-sm font-extrabold text-slate-900">Settings</h3>
+      <span class="material-symbols-outlined text-lg text-slate-400">settings</span>
+    </div>
 
-  {showImageSettings && (
-    <div slot="settings" class="tool-card overflow-hidden">
-      <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-        <h3 class="text-sm font-bold text-slate-900">Settings</h3>
-        <span class="material-symbols-outlined text-lg text-slate-400">settings</span>
+    <div class="p-6 space-y-8">
+      <!-- Quality -->
+      <div class="space-y-4">
+        <div class="flex justify-between items-center text-xs font-extrabold text-slate-700">
+          <span>Compression Level</span>
+          <span id="qualityBadge" class="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">80%</span>
+        </div>
+
+        <input id="quality" class="w-full" type="range" min="10" max="95" value="80" />
+
+        <div class="flex justify-between text-[10px] text-slate-400 font-extrabold uppercase">
+          <span>Faster</span>
+          <span>Better Quality</span>
+        </div>
       </div>
 
-      <div class="p-6 space-y-8">
-        <div class="space-y-5">
-          <div class="flex justify-between items-center text-xs font-bold text-slate-700">
-            <span>Compression Level</span>
-            <span id="qualityBadge" class="text-primary bg-primary/10 px-2 py-0.5 rounded">80%</span>
-          </div>
+      <!-- Format -->
+      <div class="space-y-3">
+        <label class="text-xs font-extrabold text-slate-700 block uppercase tracking-wider">Target Format</label>
+        <select
+          id="targetFormat"
+          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-extrabold text-slate-700"
+        >
+          <option value="auto">AUTO (keep best)</option>
+          <option value="image/avif">AVIF</option>
+          <option value="image/webp">WEBP</option>
+          <option value="image/jpeg">JPG</option>
+          <option value="image/png">PNG</option>
+        </select>
 
-          <input id="quality" class="w-full" type="range" min="10" max="95" value="80" />
+        <p class="text-xs text-slate-400 leading-relaxed">
+          AUTO keeps PNG/WEBP when possible, otherwise JPEG. AVIF/WEBP depend on browser support.
+        </p>
+      </div>
 
-          <div class="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
-            <span>Faster</span>
-            <span>Better Quality</span>
-          </div>
+      <!-- Resize -->
+      <div class="space-y-4 pt-2">
+        <label class="text-xs font-extrabold text-slate-700 block uppercase tracking-wider">Max Dimension</label>
+        <select
+          id="maxDim"
+          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-extrabold text-slate-700"
+        >
+          <option value="0">No resize</option>
+          <option value="4096">4096 px</option>
+          <option value="2048">2048 px</option>
+          <option value="1536">1536 px</option>
+          <option value="1024">1024 px</option>
+        </select>
+
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Downscale large images to reduce file size and speed up processing.
+        </p>
+      </div>
+
+      <!-- JPEG background for alpha -->
+      <div class="space-y-4 pt-4 border-t border-slate-100">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-slate-700 font-semibold">JPEG background for transparent images</span>
+          <label class="inline-flex items-center cursor-pointer select-none">
+            <input id="jpegBg" type="checkbox" class="sr-only" checked />
+            <span class="w-10 h-6 bg-indigo-600 rounded-full relative transition">
+              <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow translate-x-4 transition" data-knob></span>
+            </span>
+          </label>
         </div>
 
-        <div class="space-y-4">
-          <label class="text-xs font-bold text-slate-700 block uppercase tracking-wider">Target Format</label>
-          <select
-            id="targetFormat"
-            class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700"
-          >
-            <option value="auto">AUTO (keep best)</option>
-            <option value="image/avif">AVIF</option>
-            <option value="image/webp">WEBP</option>
-            <option value="image/jpeg">JPG</option>
-            <option value="image/png">PNG</option>
-          </select>
-
-          <p class="text-xs text-slate-400 leading-relaxed">
-            AUTO will keep PNG/WEBP when possible, otherwise JPEG. AVIF/WEBP require browser support.
-          </p>
-        </div>
+        <select
+          id="jpegBgColor"
+          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-extrabold text-slate-700"
+        >
+          <option value="white">White</option>
+          <option value="neutral">Neutral</option>
+          <option value="black">Black</option>
+        </select>
 
         <script type="module">
           const q = document.getElementById("quality");
           const badge = document.getElementById("qualityBadge");
+          const cb = document.getElementById("jpegBg");
+          const knob = document.querySelector("[data-knob]");
+          const track = cb?.parentElement?.querySelector("span.w-10");
+
           if (q && badge) {
             const sync = () => (badge.textContent = `${q.value}%`);
             q.addEventListener("input", sync);
             sync();
           }
+
+          function syncToggle(){
+            if (!cb || !knob || !track) return;
+            if (cb.checked) {
+              track.classList.remove("bg-slate-200");
+              track.classList.add("bg-indigo-600");
+              knob.classList.add("translate-x-4");
+            } else {
+              track.classList.remove("bg-indigo-600");
+              track.classList.add("bg-slate-200");
+              knob.classList.remove("translate-x-4");
+            }
+          }
+          cb?.addEventListener("change", syncToggle);
+          syncToggle();
         </script>
       </div>
+
+      <div class="pt-2 text-xs text-slate-400 leading-relaxed">
+        Tip: Use WEBP/AVIF for best size savings; use JPG for photos; use PNG to keep sharp edges.
+      </div>
     </div>
-  )}
-</ToolLayout>
+  </div>
+)}
+

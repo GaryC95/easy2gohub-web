@@ -1,41 +1,38 @@
 ---
+import BaseLayout from "./BaseLayout.astro";
 import AppSidebar from "../components/ui/AppSidebar.astro";
 import AdsSlot from "../components/ads/AdsSlot.astro";
 
 const { title, description } = Astro.props;
 ---
 
-<div class="flex h-screen overflow-hidden">
-  <AppSidebar />
+<BaseLayout title={`${title} - Easy2GoHub`} description={description}>
+  <div class="flex h-screen overflow-hidden">
+    <AppSidebar />
 
-  <main class="flex-1 flex flex-col overflow-y-auto">
-    <header class="px-8 py-4 border-b bg-white/80 backdrop-blur z-40 sticky top-0">
-      <h1 class="text-3xl font-extrabold">{title}</h1>
-      <p class="text-slate-500">{description}</p>
-    </header>
+    <main class="flex-1 flex flex-col overflow-y-auto">
+      <header class="sticky top-0 z-40 px-8 py-4 glass border-b border-slate-200/30 flex items-start justify-between gap-8">
+        <div>
+          <h1 class="text-3xl font-extrabold">{title}</h1>
+          <p class="text-slate-500">{description}</p>
+        </div>
+      </header>
 
-    <div class="flex-1 p-8 flex gap-8 max-w-7xl mx-auto w-full">
-      <!-- 主工具区域 -->
-      <div class="flex-1 space-y-8 min-w-0">
-        <slot />
+      <div class="flex-1 p-8 flex gap-8 max-w-7xl mx-auto w-full">
+        <div class="flex-1 space-y-8">
+          <slot />
+          <slot name="ads-below-tool">
+            <AdsSlot label="Sponsored" />
+          </slot>
+        </div>
 
-        <slot name="ads-below-tool">
-          <AdsSlot label="Sponsored" />
-        </slot>
+        <aside class="w-80 space-y-6">
+          <slot name="settings" />
+          <slot name="ads-right">
+            <AdsSlot label="Sponsored" />
+          </slot>
+        </aside>
       </div>
-
-      <!-- 右侧 Settings -->
-      <aside class="w-80 space-y-6 flex-shrink-0">
-        <slot name="settings" />
-        <slot name="ads-right">
-          <AdsSlot label="Sponsored" />
-        </slot>
-      </aside>
-    </div>
-
-    <footer class="border-t px-8 py-4 text-xs text-slate-400 flex justify-between">
-      <span>© 2026 Easy2GoHub</span>
-      <span>All systems operational</span>
-    </footer>
-  </main>
-</div>
+    </main>
+  </div>
+</BaseLayout>

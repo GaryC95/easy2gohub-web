@@ -2,8 +2,8 @@
 import "../styles/global.css";
 
 const {
-  title = "Easy2GoHub - Free Online Tools",
-  description = "Free online tools for images, PDFs, files, and text. Fast and private. No upload.",
+  title = "Easy2GoHub - Free Online Tools (Fast & Private)",
+  description = "Free online tools for images, PDFs, files, and text. Fast and private. No upload required.",
   canonical,
 } = Astro.props;
 ---
@@ -20,22 +20,16 @@ const {
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300..700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@200..700&display=swap"
       rel="stylesheet"
     />
-
-    <style>
-      .material-symbols-outlined{
-        font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
-      }
-    </style>
   </head>
 
-  <body class="text-slate-900 overflow-hidden font-sans">
+  <body class="text-slate-900 overflow-hidden">
     <slot />
   </body>
 </html>

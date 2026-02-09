@@ -1,0 +1,228 @@
+---
+/**
+ * Image Compressor – Pro version
+ * Multi-file · Quality slider · Target format · Auto fallback · ZIP download
+ */
+---
+<section class="tool-card p-10 space-y-10">
+  <div class="text-center">
+    <h2 class="text-3xl font-extrabold text-slate-900">
+      Pro Image Compressor
+    </h2>
+    <p class="text-slate-500 mt-2 text-lg">
+      Compress images locally in your browser. No upload. 100% private.
+    </p>
+  </div>
+
+  <!-- Dropzone -->
+  <div
+    id="dropzone"
+    class="border-2 border-dashed border-primary/30 rounded-2xl bg-slate-50/50
+           hover:bg-blue-50/30 hover:border-primary transition-all
+           cursor-pointer h-72 flex flex-col items-center justify-center text-center"
+  >
+    <div class="size-20 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-6">
+      <span class="material-symbols-outlined text-4xl">cloud_upload</span>
+    </div>
+
+    <h3 class="text-xl font-bold text-slate-800 mb-2">
+      Drop files here
+    </h3>
+    <p class="text-sm text-slate-400 mb-6">
+      PNG, JPG, WEBP, AVIF up to 25MB each
+    </p>
+
+    <button
+      id="selectBtn"
+      class="bg-primary text-white px-10 py-3 rounded-full font-bold text-sm
+             shadow-lg shadow-primary/30 hover:bg-blue-700 transition-all"
+    >
+      Select from computer
+    </button>
+
+    <input
+      id="fileInput"
+      type="file"
+      accept="image/*"
+      multiple
+      class="hidden"
+    />
+  </div>
+
+  <!-- Queue -->
+  <div id="queue" class="hidden space-y-3"></div>
+
+  <!-- Actions -->
+  <div class="flex justify-between items-center pt-6 border-t">
+    <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider">
+      Status:
+      <span id="status" class="text-emerald-600">Idle</span>
+    </div>
+
+    <button
+      id="processBtn"
+      class="bg-primary text-white px-8 py-3 rounded-xl font-bold text-sm
+             shadow-lg shadow-primary/25 hover:bg-blue-700 transition-all disabled:opacity-50"
+      disabled
+    >
+      Process Images
+    </button>
+  </div>
+
+  <canvas id="canvas" class="hidden"></canvas>
+</section>
+
+<script type="module">
+  const fileInput = document.getElementById("fileInput");
+  const dropzone = document.getElementById("dropzone");
+  const selectBtn = document.getElementById("selectBtn");
+  const queueEl = document.getElementById("queue");
+  const processBtn = document.getElementById("processBtn");
+  const statusEl = document.getElementById("status");
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+
+  const qualityEl = document.getElementById("quality");
+  const formatEl = document.getElementById("targetFormat");
+
+  let files = [];
+  const MAX_SIZE = 25 * 1024 * 1024;
+
+  const fmt = (n) => {
+    const u = ["B", "KB", "MB"];
+    let i = 0;
+    while (n >= 1024 && i < u.length - 1) {
+      n /= 1024;
+      i++;
+    }
+    return `${n.toFixed(i ? 2 : 0)} ${u[i]}`;
+  };
+
+  function addFiles(list) {
+    for (const f of list) {
+      if (!f.type.startsWith("image/")) continue;
+      if (f.size > MAX_SIZE) continue;
+      files.push(f);
+    }
+    renderQueue();
+  }
+
+  function renderQueue() {
+    if (!files.length) {
+      queueEl.classList.add("hidden");
+      processBtn.disabled = true;
+      return;
+    }
+
+    queueEl.innerHTML = "";
+    queueEl.classList.remove("hidden");
+    processBtn.disabled = false;
+
+    files.forEach((f, i) => {
+      const row = document.createElement("div");
+      row.className =
+        "flex items-center justify-between bg-white rounded-xl border p-4 text-sm";
+
+      row.innerHTML = `
+        <div class="truncate">
+          <strong>${f.name}</strong>
+          <div class="text-xs text-slate-400">${fmt(f.size)}</div>
+        </div>
+        <button data-i="${i}" class="text-slate-400 hover:text-red-500">
+          ✕
+        </button>
+      `;
+
+      row.querySelector("button").onclick = () => {
+        files.splice(i, 1);
+        renderQueue();
+      };
+
+      queueEl.appendChild(row);
+    });
+  }
+
+  function resolveFormat(original, selected) {
+    if (selected && selected !== "auto") return selected;
+    if (original === "image/png") return "image/png";
+    if (original === "image/webp") return "image/webp";
+    return "image/jpeg";
+  }
+
+  async function compress(file, quality, type) {
+    const bmp = await createImageBitmap(file);
+    canvas.width = bmp.width;
+    canvas.height = bmp.height;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bmp, 0, 0);
+
+    return new Promise((res) => {
+      canvas.toBlob(res, type, quality);
+    });
+  }
+
+  async function processAll() {
+    statusEl.textContent = "Processing…";
+    processBtn.disabled = true;
+
+    const quality =
+      qualityEl ? Number(qualityEl.value || 80) / 100 : 0.8;
+    const selectedFormat = formatEl ? formatEl.value : "auto";
+
+    const results = [];
+
+    for (const f of files) {
+      const targetType = resolveFormat(f.type, selectedFormat);
+      const blob = await compress(f, quality, targetType);
+
+      const ext = targetType.split("/")[1];
+      results.push({
+        name: f.name.replace(/\.[^.]+$/, "") + "-compressed." + ext,
+        blob,
+      });
+    }
+
+    if (results.length === 1) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(results[0].blob);
+      a.download = results[0].name;
+      a.click();
+    } else {
+      const { default: JSZip } = await import(
+        "https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm"
+      );
+      const zip = new JSZip();
+      results.forEach((r) => zip.file(r.name, r.blob));
+      const out = await zip.generateAsync({ type: "blob" });
+
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(out);
+      a.download = "images-compressed.zip";
+      a.click();
+    }
+
+    statusEl.textContent = "Done";
+    files = [];
+    renderQueue();
+  }
+
+  selectBtn.onclick = () => fileInput.click();
+  fileInput.onchange = () => addFiles(fileInput.files);
+
+  dropzone.ondragover = (e) => {
+    e.preventDefault();
+    dropzone.classList.add("ring-2", "ring-primary");
+  };
+
+  dropzone.ondragleave = () => {
+    dropzone.classList.remove("ring-2", "ring-primary");
+  };
+
+  dropzone.ondrop = (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("ring-2", "ring-primary");
+    addFiles(e.dataTransfer.files);
+  };
+
+  processBtn.onclick = processAll;
+</script>

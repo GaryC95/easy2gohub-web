@@ -1,0 +1,41 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import "../styles/global.css";
+
+const title = "About - Easy2GoHub";
+const description = "Easy2GoHub is a free online tools hub focused on speed and privacy (client-side processing).";
+---
+<BaseLayout title={title} description={description}>
+  <div class="max-w-3xl mx-auto p-8 space-y-6">
+    <h1 class="text-3xl font-extrabold">About Easy2GoHub</h1>
+
+    <p class="text-slate-600">
+      Easy2GoHub is a collection of free online tools for everyday tasks — images, PDFs, text, and file utilities.
+      The core goal is simple: <b>fast, clean UX</b> with <b>privacy-first</b> design.
+    </p>
+
+    <div class="glass rounded-2xl p-6 border border-white">
+      <h2 class="text-lg font-bold mb-2">Privacy-first by default</h2>
+      <p class="text-slate-600 text-sm">
+        Most tools are designed to run locally in your browser. That means your files are not uploaded to a server by default.
+        (If a future tool requires cloud processing, it will be clearly labeled.)
+      </p>
+    </div>
+
+    <div class="glass rounded-2xl p-6 border border-white">
+      <h2 class="text-lg font-bold mb-2">Roadmap</h2>
+      <ul class="list-disc pl-6 text-slate-600 text-sm space-y-1">
+        <li>Image tools: compressor, resizer, converter</li>
+        <li>PDF tools: merge, split, lightweight compression</li>
+        <li>Text & data tools: JSON formatter, Base64, case converter</li>
+        <li>More tools will be added over time</li>
+      </ul>
+    </div>
+
+    <p class="text-slate-600 text-sm">
+      Contact: you can add an email later (recommended for Adsense). For now, this page is enough to make the site complete.
+    </p>
+
+    <a class="text-indigo-600 font-bold" href="/">Back to Home</a>
+  </div>
+</BaseLayout>

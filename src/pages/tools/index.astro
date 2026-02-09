@@ -1,0 +1,28 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Sidebar from "../../components/Sidebar.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+import ToolGrid from "../../components/ToolGrid.astro";
+import { tools } from "../../data/tools";
+import "../../styles/global.css";
+
+const title = "All Tools - Easy2GoHub";
+const description = "Browse all Easy2GoHub tools: image, PDF, text, and file utilities.";
+---
+<BaseLayout title={title} description={description}>
+  <div class="flex h-screen overflow-hidden">
+    <Sidebar />
+    <main class="flex-1 flex flex-col h-full overflow-y-auto">
+      <Header />
+      <div class="p-8 lg:p-12 space-y-8">
+        <section>
+          <h1 class="text-3xl font-extrabold mb-2">All Tools</h1>
+          <p class="text-slate-500">Pick a tool below. Everything runs locally in your browser.</p>
+        </section>
+        <ToolGrid tools={tools} />
+      </div>
+      <Footer />
+    </main>
+  </div>
+</BaseLayout>

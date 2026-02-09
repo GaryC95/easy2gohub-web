@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{
+  --glass-bg: rgba(255,255,255,.55);
+  --glass-border: rgba(255,255,255,.7);
+  --sidebar-width: 280px;
+}
+
+body{
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+  background:
+    radial-gradient(at top left, #e0e7ff, transparent 55%),
+    radial-gradient(at bottom right, #f3e8ff, transparent 55%),
+    #f8fafc;
+  min-height: 100vh;
+}
+
+.glass{
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+.tool-card{
+  transition: all .25s cubic-bezier(0.4,0,0.2,1);
+}
+.tool-card:hover{
+  transform: translateY(-4px);
+  box-shadow: 0 0 20px rgba(99,102,241,.18);
+  border-color: rgba(99,102,241,.45);
+}
+
+.tree-item:hover{
+  background: rgba(99,102,241,.10);
+}
+
+.no-scrollbar::-webkit-scrollbar{ display:none; }
+.no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }

@@ -1,0 +1,93 @@
+<section class="tool-card p-6 space-y-8">
+  <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+    <span class="material-symbols-outlined text-primary">settings</span>
+    Settings
+  </h3>
+
+  <!-- Compression Level -->
+  <div class="space-y-4">
+    <div class="flex justify-between items-center text-xs font-bold text-slate-700">
+      <span>Compression Level</span>
+      <span
+        id="qualityLabel"
+        class="text-primary bg-primary/10 px-2 py-0.5 rounded"
+      >
+        80%
+      </span>
+    </div>
+
+    <input
+      id="quality"
+      type="range"
+      min="30"
+      max="95"
+      value="80"
+      class="w-full"
+    />
+
+    <div class="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
+      <span>Faster</span>
+      <span>Better Quality</span>
+    </div>
+  </div>
+
+  <!-- Target Format -->
+  <div class="space-y-4">
+    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+      Target Format
+    </label>
+
+    <div class="grid grid-cols-2 gap-2">
+      <button data-format="auto" class="format-btn active">Auto</button>
+      <button data-format="image/avif" class="format-btn">AVIF</button>
+      <button data-format="image/webp" class="format-btn">WEBP</button>
+      <button data-format="image/jpeg" class="format-btn">JPG</button>
+      <button data-format="image/png" class="format-btn">PNG</button>
+    </div>
+  </div>
+
+  <!-- Hidden shared state -->
+  <input type="hidden" id="targetFormat" value="auto" />
+</section>
+
+<style>
+  .format-btn {
+    padding: 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    border: 2px solid #e5e7eb;
+    background: white;
+    color: #64748b;
+    transition: all 0.15s;
+  }
+  .format-btn:hover {
+    border-color: #93c5fd;
+  }
+  .format-btn.active {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #2563eb;
+  }
+</style>
+
+<script type="module">
+  const quality = document.getElementById("quality");
+  const label = document.getElementById("qualityLabel");
+  const target = document.getElementById("targetFormat");
+  const buttons = document.querySelectorAll(".format-btn");
+
+  label.textContent = quality.value + "%";
+
+  quality.addEventListener("input", () => {
+    label.textContent = quality.value + "%";
+  });
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      buttons.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      target.value = btn.dataset.format;
+    });
+  });
+</script>

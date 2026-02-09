@@ -1,0 +1,14 @@
+---
+const { label = "Sponsored" } = Astro.props;
+---
+<div class="tool-card bg-slate-50/50 border-dashed border-slate-300 p-6 h-64 flex flex-col items-center justify-center text-center">
+  <span class="material-symbols-outlined text-slate-300 text-4xl mb-3">
+    ads_click
+  </span>
+  <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">
+    {label}
+  </p>
+  <div class="mt-4 w-full h-full bg-white/60 rounded-xl border border-white flex items-center justify-center text-xs text-slate-400 italic">
+    Ad Slot
+  </div>
+</div>

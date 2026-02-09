@@ -1,0 +1,56 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import "../styles/global.css";
+
+const title = "Terms of Service - Easy2GoHub";
+const description = "Terms of service for using Easy2GoHub tools.";
+---
+<BaseLayout title={title} description={description}>
+  <div class="max-w-3xl mx-auto p-8 space-y-6">
+    <h1 class="text-3xl font-extrabold">Terms of Service</h1>
+
+    <p class="text-slate-600">
+      By using Easy2GoHub, you agree to the following terms. If you do not agree, please do not use the site.
+    </p>
+
+    <div class="space-y-4">
+      <section class="glass rounded-2xl p-6 border border-white">
+        <h2 class="text-lg font-bold mb-2">1. Service “as-is”</h2>
+        <p class="text-slate-600 text-sm">
+          Tools are provided on an “as-is” and “as-available” basis without warranties of any kind.
+        </p>
+      </section>
+
+      <section class="glass rounded-2xl p-6 border border-white">
+        <h2 class="text-lg font-bold mb-2">2. User responsibility</h2>
+        <p class="text-slate-600 text-sm">
+          You are responsible for how you use the tools and for verifying outputs before relying on them.
+        </p>
+      </section>
+
+      <section class="glass rounded-2xl p-6 border border-white">
+        <h2 class="text-lg font-bold mb-2">3. File processing & privacy</h2>
+        <p class="text-slate-600 text-sm">
+          Most tools are intended to run locally in your browser. We do not request uploads by default.
+          If a tool ever requires server-side processing, it will be clearly disclosed on that tool page.
+        </p>
+      </section>
+
+      <section class="glass rounded-2xl p-6 border border-white">
+        <h2 class="text-lg font-bold mb-2">4. Limitation of liability</h2>
+        <p class="text-slate-600 text-sm">
+          Easy2GoHub is not liable for any direct or indirect damages arising from use of the site or tools.
+        </p>
+      </section>
+
+      <section class="glass rounded-2xl p-6 border border-white">
+        <h2 class="text-lg font-bold mb-2">5. Changes</h2>
+        <p class="text-slate-600 text-sm">
+          We may update these terms from time to time. Continued use means you accept the updated terms.
+        </p>
+      </section>
+    </div>
+
+    <a class="text-indigo-600 font-bold" href="/">Back to Home</a>
+  </div>
+</BaseLayout>

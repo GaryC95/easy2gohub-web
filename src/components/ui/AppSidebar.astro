@@ -1,0 +1,39 @@
+---
+import { tools } from "../../data/tools";
+
+const categories = Array.from(
+  new Set(tools.map((t) => t.category))
+);
+---
+
+<aside class="w-64 glass-sidebar flex flex-col overflow-y-auto">
+  <div class="p-6 border-b border-slate-200">
+    <a href="/" class="font-extrabold text-lg">
+      Easy2Go<span class="text-primary">Hub</span>
+    </a>
+  </div>
+
+  <nav class="p-4 space-y-6 text-sm">
+    {categories.map((cat) => {
+      const list = tools.filter((t) => t.category === cat);
+      return (
+        <details open>
+          <summary class="cursor-pointer font-bold text-slate-600 flex items-center gap-2">
+            <span class="material-symbols-outlined text-base">folder</span>
+            {cat.toUpperCase()}
+          </summary>
+          <div class="ml-4 mt-2 space-y-1 border-l">
+            {list.map((t) => (
+              <a
+                href={`/${t.category}/${t.slug}/`}
+                class="block pl-4 py-1 text-slate-500 hover:text-primary"
+              >
+                {t.title}
+              </a>
+            ))}
+          </div>
+        </details>
+      );
+    })}
+  </nav>
+</aside>

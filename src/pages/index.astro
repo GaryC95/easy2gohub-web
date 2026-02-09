@@ -1,11 +1,61 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Sidebar from "../components/Sidebar.astro";
+import Header from "../components/Header.astro";
+import ToolGrid from "../components/ToolGrid.astro";
+import Footer from "../components/Footer.astro";
+import { tools } from "../data/tools";
+import "../styles/global.css";
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const title = "Easy2GoHub - Free Online Tools (Fast & Private)";
+const description = "Free online tools for images, PDFs, files, and text. Fast and private. No upload required.";
 ---
+<BaseLayout title={title} description={description}>
+  <div class="flex h-screen overflow-hidden">
+    <Sidebar />
 
-<Layout>
-	<Welcome />
-</Layout>
+    <main class="flex-1 flex flex-col h-full overflow-y-auto">
+      <Header />
+
+      <div class="p-8 lg:p-12 space-y-12">
+        <section class="max-w-4xl">
+          <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight mb-4">
+            <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-indigo-600 to-fuchsia-500">
+              Free Online Tools — Fast & Private
+            </span>
+          </h1>
+          <p class="text-lg text-slate-500 leading-relaxed max-w-2xl">
+            Compress images, process PDFs, format JSON, and more — directly in your browser. No upload required.
+          </p>
+        </section>
+
+        <ToolGrid tools={tools.slice(0, 8)} />
+
+        <section class="glass rounded-2xl p-8 border-dashed border-2 border-slate-300/50 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative">
+          <div class="relative z-10 text-center md:text-left">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Sponsored</p>
+            <h2 class="text-xl font-bold mb-2">Productivity picks for your workflow</h2>
+            <p class="text-sm text-slate-500 max-w-sm">This area is reserved for ads / partnerships later.</p>
+            <a class="mt-4 inline-block px-6 py-2 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition-colors" href="/tools/">
+              Explore all tools
+            </a>
+          </div>
+          <div class="hidden md:flex relative z-10 w-32 h-32 bg-slate-100 rounded-2xl items-center justify-center">
+            <span class="material-symbols-outlined text-slate-300 !text-6xl">ad_units</span>
+          </div>
+        </section>
+
+        <section class="max-w-4xl">
+          <h2 class="text-xl font-bold mb-3">Why Easy2GoHub?</h2>
+          <ul class="text-sm text-slate-500 space-y-2 list-disc pl-6">
+            <li>Browser-based: your files stay on your device.</li>
+            <li>Fast: optimized for quick everyday tasks.</li>
+            <li>Clean UX: simple tools, no clutter.</li>
+          </ul>
+        </section>
+      </div>
+
+      <Footer />
+    </main>
+  </div>
+</BaseLayout>

@@ -1,0 +1,39 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import { tools } from "../../data/tools";
+
+import ImageCompressor from "../../components/tools/ImageCompressor.astro";
+import ImageSettings from "../../components/tool-settings/ImageSettings.astro";
+
+export async function getStaticPaths() {
+  return tools.map((t) => ({
+    params: { category: t.category, slug: t.slug },
+  }));
+}
+
+const { category, slug } = Astro.params;
+
+const tool = tools.find(
+  (t) => t.category === category && t.slug === slug
+);
+
+if (!tool) {
+  throw new Error("Tool not found");
+}
+---
+
+<ToolLayout title={tool.title} description={tool.description}>
+  <!-- 主工具区 -->
+  {tool.slug === "image-compressor" && (
+   <ImageCompressor />
+  )}
+
+  {tool.slug !== "image-compressor" && (
+    <p>Tool coming soon.</p>
+  )}
+
+  <!-- Settings 区（slot） -->
+  {tool.settingsType === "image" && (
+    <ImageSettings slot="settings" />
+  )}
+</ToolLayout>

@@ -1,14 +1,39 @@
 ---
-import { CATEGORY_META, CATEGORY_ORDER, getToolsByCategory } from "../../data/tools";
+import { CATEGORY_LABEL, CATEGORY_DESC, tools } from "../../data/tools";
 
 const path = Astro.url.pathname;
 
-// 以 /image/image-compressor/ 这种路径判断 active
 function isActive(category: string, slug: string) {
   return path.startsWith(`/${category}/${slug}/`);
 }
 function isCategoryActive(category: string) {
   return path === `/${category}/` || path.startsWith(`/${category}/`);
+}
+
+const CATEGORY_ORDER = Object.keys(CATEGORY_LABEL) as (keyof typeof CATEGORY_LABEL)[];
+
+const ICON_BY_CATEGORY: Record<string, string> = {
+  image: "image",
+  pdf: "picture_as_pdf",
+  text: "format_list_bulleted",
+  file: "folder",
+  dev: "terminal",
+  convert: "swap_horiz",
+  media: "movie",
+};
+
+const COLOR_BY_CATEGORY: Record<string, string> = {
+  image: "text-indigo-500",
+  pdf: "text-red-500",
+  text: "text-fuchsia-500",
+  file: "text-slate-500",
+  dev: "text-blue-500",
+  convert: "text-emerald-600",
+  media: "text-purple-600",
+};
+
+function getToolsByCategory(cat: string) {
+  return tools.filter((t) => t.category === cat);
 }
 ---
 
@@ -27,7 +52,7 @@ function isCategoryActive(category: string) {
       </div>
     </a>
 
-    <!-- Sidebar Search -->
+    <!-- Search -->
     <div class="mt-5 relative">
       <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
       <input
@@ -39,7 +64,7 @@ function isCategoryActive(category: string) {
       />
     </div>
 
-    <!-- Quick links -->
+    <!-- Quick -->
     <div class="mt-4 flex gap-2">
       <a href="/tools/" class="flex-1 text-center text-xs font-bold px-3 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition">
         All Tools
@@ -50,28 +75,29 @@ function isCategoryActive(category: string) {
     </div>
   </div>
 
-  <!-- Nav -->
   <nav class="p-4 space-y-3">
     <div class="text-[10px] uppercase font-bold tracking-[0.18em] text-slate-400 px-2">
       Explorer
     </div>
 
     {CATEGORY_ORDER.map((cat) => {
-      const meta = CATEGORY_META[cat];
+      const label = (CATEGORY_LABEL as any)[cat] ?? cat;
+      const desc = (CATEGORY_DESC as any)[cat] ?? "";
       const list = getToolsByCategory(cat);
       const open = isCategoryActive(cat);
+
+      const icon = ICON_BY_CATEGORY[cat] ?? "folder";
+      const color = COLOR_BY_CATEGORY[cat] ?? "text-indigo-500";
 
       return (
         <details class="group" open={open}>
           <summary class="flex items-center justify-between gap-2 p-2.5 rounded-xl cursor-pointer hover:bg-white/50 transition list-none">
             <div class="flex items-center gap-2.5 min-w-0">
               <span class="material-symbols-outlined text-slate-400 group-open:rotate-90 transition-transform">chevron_right</span>
-              <span class={`material-symbols-outlined text-[18px] ${meta.badgeColor}`}>{meta.icon}</span>
+              <span class={`material-symbols-outlined text-[18px] ${color}`}>{icon}</span>
               <div class="min-w-0">
-                <div class="text-sm font-extrabold text-slate-800 truncate">
-                  {meta.label}
-                </div>
-                <div class="text-[11px] text-slate-400 truncate">{meta.desc}</div>
+                <div class="text-sm font-extrabold text-slate-800 truncate">{label}</div>
+                <div class="text-[11px] text-slate-400 truncate">{desc}</div>
               </div>
             </div>
 
@@ -80,7 +106,7 @@ function isCategoryActive(category: string) {
             </span>
           </summary>
 
-          <div class="mt-2 ml-4 border-l-2 border-slate-100 space-y-1" data-cat-panel>
+          <div class="mt-2 ml-4 border-l-2 border-slate-100 space-y-1">
             {list.map((t) => {
               const active = isActive(t.category, t.slug);
               return (
@@ -88,7 +114,7 @@ function isCategoryActive(category: string) {
                   href={`/${t.category}/${t.slug}/`}
                   class={active ? "tree-link tree-link-active" : "tree-link"}
                   data-tool-item
-                  data-search={`${t.title} ${t.slug} ${t.tags?.join(" ") || ""} ${meta.label}`.toLowerCase()}
+                  data-search={`${t.title} ${t.slug} ${(t.tags || []).join(" ")} ${label}`.toLowerCase()}
                 >
                   <div class="flex items-center gap-2">
                     <span class={`material-symbols-outlined text-[18px] ${active ? "text-indigo-600" : "text-slate-400"}`}>
@@ -105,13 +131,10 @@ function isCategoryActive(category: string) {
     })}
   </nav>
 
-  <!-- Footer / Upgrade -->
   <div class="p-4 mt-auto">
     <div class="rounded-2xl p-4 bg-indigo-50/60 border border-indigo-100/80">
       <div class="text-[10px] uppercase tracking-widest font-extrabold text-indigo-600 mb-1">Pro Workspace</div>
-      <div class="text-xs text-slate-600 leading-relaxed">
-        Batch + larger limits + advanced settings (coming soon).
-      </div>
+      <div class="text-xs text-slate-600 leading-relaxed">Batch + larger limits + advanced settings (coming soon).</div>
       <a href="/tools/" class="inline-flex items-center gap-1 mt-3 text-xs font-extrabold text-indigo-600 hover:underline">
         Explore more <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
       </a>

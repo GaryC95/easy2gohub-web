@@ -2,40 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
-:root{
-  --glass-bg: rgba(255,255,255,.55);
-  --glass-border: rgba(255,255,255,.7);
-  --sidebar-width: 280px;
+/* ===== Pro UI Base ===== */
+:root {
+  --primary: 37 99 235; /* #2563EB */
 }
 
-body{
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
-  background:
-    radial-gradient(at top left, #e0e7ff, transparent 55%),
-    radial-gradient(at bottom right, #f3e8ff, transparent 55%),
-    #f8fafc;
-  min-height: 100vh;
+@layer base {
+  body {
+    @apply bg-[#F8FAFC] text-slate-700 font-sans antialiased;
+    background-image:
+      radial-gradient(at 0% 0%, hsla(217,100%,95%,1) 0, transparent 50%),
+      radial-gradient(at 50% 0%, hsla(210,100%,96%,1) 0, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(199,100%,94%,1) 0, transparent 50%);
+  }
 }
 
-.glass{
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
+/* Glass helpers */
+.glass {
+  @apply backdrop-blur-md bg-white/60 border border-white/40;
+}
+.tool-card {
+  @apply bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50;
 }
 
-.tool-card{
-  transition: all .25s cubic-bezier(0.4,0,0.2,1);
+/* Slider styling */
+input[type="range"] {
+  @apply appearance-none h-1.5 bg-slate-200 rounded-lg cursor-pointer;
 }
-.tool-card:hover{
-  transform: translateY(-4px);
-  box-shadow: 0 0 20px rgba(99,102,241,.18);
-  border-color: rgba(99,102,241,.45);
+input[type="range"]::-webkit-slider-thumb {
+  @apply appearance-none w-4 h-4 rounded-full cursor-pointer ring-4 transition-all;
+  background: rgb(var(--primary));
+  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.2);
 }
-
-.tree-item:hover{
-  background: rgba(99,102,241,.10);
+input[type="range"]::-moz-range-thumb {
+  border: none;
+  border-radius: 9999px;
+  width: 16px;
+  height: 16px;
+  background: rgb(var(--primary));
 }
-
-.no-scrollbar::-webkit-scrollbar{ display:none; }
-.no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }

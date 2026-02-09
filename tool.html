@@ -1,0 +1,191 @@
+<!DOCTYPE html><link rel="stylesheet" href="/_astro/_slug_.CpNlTCqx.css"><div class="flex h-screen overflow-hidden"> <aside class="w-64 glass-sidebar flex flex-col overflow-y-auto"> <div class="p-6 border-b border-slate-200"> <a href="/" class="font-extrabold text-lg">
+Easy2Go<span class="text-primary">Hub</span> </a> </div> <nav class="p-4 space-y-6 text-sm"> <details open> <summary class="cursor-pointer font-bold text-slate-600 flex items-center gap-2"> <span class="material-symbols-outlined text-base">folder</span> IMAGE </summary> <div class="ml-4 mt-2 space-y-1 border-l"> <a href="/image/image-compressor/" class="block pl-4 py-1 text-slate-500 hover:text-primary"> Image Compressor </a><a href="/image/image-resizer/" class="block pl-4 py-1 text-slate-500 hover:text-primary"> Image Resizer </a><a href="/image/image-converter/" class="block pl-4 py-1 text-slate-500 hover:text-primary"> Image Converter </a><a href="/image/image-to-webp/" class="block pl-4 py-1 text-slate-500 hover:text-primary"> Image to WebP </a> </div> </details><details open> <summary class="cursor-pointer font-bold text-slate-600 flex items-center gap-2"> <span class="material-symbols-outlined text-base">folder</span> PDF </summary> <div class="ml-4 mt-2 space-y-1 border-l"> <a href="/pdf/pdf-merge/" class="block pl-4 py-1 text-slate-500 hover:text-primary"> PDF Merger </a><a href="/pdf/pdf-split/" class="block pl-4 py-1 text-slate-500 hover:text-primary"> PDF Splitter </a><a href="/pdf/pdf-compress/" class="block pl-4 py-1 text-slate-500 hover:text-primary"> PDF Compressor </a> </div> </details><details open> <summary class="cursor-pointer font-bold text-slate-600 flex items-center gap-2"> <span class="material-symbols-outlined text-base">folder</span> TEXT </summary> <div class="ml-4 mt-2 space-y-1 border-l"> <a href="/text/json-formatter/" class="block pl-4 py-1 text-slate-500 hover:text-primary"> JSON Formatter </a><a href="/text/base64-encode-decode/" class="block pl-4 py-1 text-slate-500 hover:text-primary"> Base64 Encode / Decode </a><a href="/text/text-case-converter/" class="block pl-4 py-1 text-slate-500 hover:text-primary"> Text Case Converter </a> </div> </details><details open> <summary class="cursor-pointer font-bold text-slate-600 flex items-center gap-2"> <span class="material-symbols-outlined text-base">folder</span> FILE </summary> <div class="ml-4 mt-2 space-y-1 border-l"> <a href="/file/file-hash/" class="block pl-4 py-1 text-slate-500 hover:text-primary"> File Hash Generator </a><a href="/file/uuid-generator/" class="block pl-4 py-1 text-slate-500 hover:text-primary"> UUID Generator </a> </div> </details> </nav> </aside> <main class="flex-1 flex flex-col overflow-y-auto"> <header class="px-8 py-4 border-b bg-white/80 backdrop-blur z-40 sticky top-0"> <h1 class="text-3xl font-extrabold">Image Compressor</h1> <p class="text-slate-500">Compress JPG, PNG, and WebP images in your browser. No upload. Fast and private.</p> </header> <div class="flex-1 p-8 flex gap-8 max-w-7xl mx-auto w-full"> <!-- 主工具区域 --> <div class="flex-1 space-y-8 min-w-0"> <section class="tool-card p-10 space-y-10"> <div class="text-center"> <h2 class="text-3xl font-extrabold text-slate-900">
+Pro Image Compressor
+</h2> <p class="text-slate-500 mt-2 text-lg">
+Compress images locally in your browser. No upload. 100% private.
+</p> </div> <!-- Dropzone --> <div id="dropzone" class="border-2 border-dashed border-primary/30 rounded-2xl bg-slate-50/50
+           hover:bg-blue-50/30 hover:border-primary transition-all
+           cursor-pointer h-72 flex flex-col items-center justify-center text-center"> <div class="size-20 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-6"> <span class="material-symbols-outlined text-4xl">cloud_upload</span> </div> <h3 class="text-xl font-bold text-slate-800 mb-2">
+Drop files here
+</h3> <p class="text-sm text-slate-400 mb-6">
+PNG, JPG, WEBP, AVIF up to 25MB each
+</p> <button id="selectBtn" class="bg-primary text-white px-10 py-3 rounded-full font-bold text-sm
+             shadow-lg shadow-primary/30 hover:bg-blue-700 transition-all">
+Select from computer
+</button> <input id="fileInput" type="file" accept="image/*" multiple class="hidden"> </div> <!-- Queue --> <div id="queue" class="hidden space-y-3"></div> <!-- Actions --> <div class="flex justify-between items-center pt-6 border-t"> <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider">
+Status:
+<span id="status" class="text-emerald-600">Idle</span> </div> <button id="processBtn" class="bg-primary text-white px-8 py-3 rounded-xl font-bold text-sm
+             shadow-lg shadow-primary/25 hover:bg-blue-700 transition-all disabled:opacity-50" disabled>
+Process Images
+</button> </div> <canvas id="canvas" class="hidden"></canvas> </section> <script type="module">
+  const fileInput = document.getElementById("fileInput");
+  const dropzone = document.getElementById("dropzone");
+  const selectBtn = document.getElementById("selectBtn");
+  const queueEl = document.getElementById("queue");
+  const processBtn = document.getElementById("processBtn");
+  const statusEl = document.getElementById("status");
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+
+  const qualityEl = document.getElementById("quality");
+  const formatEl = document.getElementById("targetFormat");
+
+  let files = [];
+  const MAX_SIZE = 25 * 1024 * 1024;
+
+  const fmt = (n) => {
+    const u = ["B", "KB", "MB"];
+    let i = 0;
+    while (n >= 1024 && i < u.length - 1) {
+      n /= 1024;
+      i++;
+    }
+    return `${n.toFixed(i ? 2 : 0)} ${u[i]}`;
+  };
+
+  function addFiles(list) {
+    for (const f of list) {
+      if (!f.type.startsWith("image/")) continue;
+      if (f.size > MAX_SIZE) continue;
+      files.push(f);
+    }
+    renderQueue();
+  }
+
+  function renderQueue() {
+    if (!files.length) {
+      queueEl.classList.add("hidden");
+      processBtn.disabled = true;
+      return;
+    }
+
+    queueEl.innerHTML = "";
+    queueEl.classList.remove("hidden");
+    processBtn.disabled = false;
+
+    files.forEach((f, i) => {
+      const row = document.createElement("div");
+      row.className =
+        "flex items-center justify-between bg-white rounded-xl border p-4 text-sm";
+
+      row.innerHTML = `
+        <div class="truncate">
+          <strong>${f.name}</strong>
+          <div class="text-xs text-slate-400">${fmt(f.size)}</div>
+        </div>
+        <button data-i="${i}" class="text-slate-400 hover:text-red-500">
+          ✕
+        </button>
+      `;
+
+      row.querySelector("button").onclick = () => {
+        files.splice(i, 1);
+        renderQueue();
+      };
+
+      queueEl.appendChild(row);
+    });
+  }
+
+  function resolveFormat(original, selected) {
+    if (selected && selected !== "auto") return selected;
+    if (original === "image/png") return "image/png";
+    if (original === "image/webp") return "image/webp";
+    return "image/jpeg";
+  }
+
+  async function compress(file, quality, type) {
+    const bmp = await createImageBitmap(file);
+    canvas.width = bmp.width;
+    canvas.height = bmp.height;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bmp, 0, 0);
+
+    return new Promise((res) => {
+      canvas.toBlob(res, type, quality);
+    });
+  }
+
+  async function processAll() {
+    statusEl.textContent = "Processing…";
+    processBtn.disabled = true;
+
+    const quality =
+      qualityEl ? Number(qualityEl.value || 80) / 100 : 0.8;
+    const selectedFormat = formatEl ? formatEl.value : "auto";
+
+    const results = [];
+
+    for (const f of files) {
+      const targetType = resolveFormat(f.type, selectedFormat);
+      const blob = await compress(f, quality, targetType);
+
+      const ext = targetType.split("/")[1];
+      results.push({
+        name: f.name.replace(/\.[^.]+$/, "") + "-compressed." + ext,
+        blob,
+      });
+    }
+
+    if (results.length === 1) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(results[0].blob);
+      a.download = results[0].name;
+      a.click();
+    } else {
+      const { default: JSZip } = await import(
+        "https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm"
+      );
+      const zip = new JSZip();
+      results.forEach((r) => zip.file(r.name, r.blob));
+      const out = await zip.generateAsync({ type: "blob" });
+
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(out);
+      a.download = "images-compressed.zip";
+      a.click();
+    }
+
+    statusEl.textContent = "Done";
+    files = [];
+    renderQueue();
+  }
+
+  selectBtn.onclick = () => fileInput.click();
+  fileInput.onchange = () => addFiles(fileInput.files);
+
+  dropzone.ondragover = (e) => {
+    e.preventDefault();
+    dropzone.classList.add("ring-2", "ring-primary");
+  };
+
+  dropzone.ondragleave = () => {
+    dropzone.classList.remove("ring-2", "ring-primary");
+  };
+
+  dropzone.ondrop = (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("ring-2", "ring-primary");
+    addFiles(e.dataTransfer.files);
+  };
+
+  processBtn.onclick = processAll;
+</script>  <div class="tool-card bg-slate-50/50 border-dashed border-slate-300 p-6 h-64 flex flex-col items-center justify-center text-center"> <span class="material-symbols-outlined text-slate-300 text-4xl mb-3">
+ads_click
+</span> <p class="text-xs font-bold text-slate-400 uppercase tracking-widest"> Sponsored </p> <div class="mt-4 w-full h-full bg-white/60 rounded-xl border border-white flex items-center justify-center text-xs text-slate-400 italic">
+Ad Slot
+</div> </div>  </div> <!-- 右侧 Settings --> <aside class="w-80 space-y-6 flex-shrink-0"> <div class="tool-card overflow-hidden"> <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between"> <h3 class="text-sm font-bold text-slate-900">Settings</h3> <span class="material-symbols-outlined text-lg text-slate-400">settings</span> </div> <div class="p-6 space-y-8"> <div class="space-y-5"> <div class="flex justify-between items-center text-xs font-bold text-slate-700"> <span>Compression Level</span> <span id="qualityBadge" class="text-primary bg-primary/10 px-2 py-0.5 rounded">80%</span> </div> <input id="quality" class="w-full" type="range" min="10" max="95" value="80"> <div class="flex justify-between text-[10px] text-slate-400 font-bold uppercase"> <span>Faster</span> <span>Better Quality</span> </div> </div> <div class="space-y-4"> <label class="text-xs font-bold text-slate-700 block uppercase tracking-wider">Target Format</label> <select id="targetFormat" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700"> <option value="auto">AUTO (keep best)</option> <option value="image/avif">AVIF</option> <option value="image/webp">WEBP</option> <option value="image/jpeg">JPG</option> <option value="image/png">PNG</option> </select> <p class="text-xs text-slate-400 leading-relaxed">
+AUTO will keep PNG/WEBP when possible, otherwise JPEG. AVIF/WEBP require browser support.
+</p> </div> <script type="module">
+          const q = document.getElementById("quality");
+          const badge = document.getElementById("qualityBadge");
+          if (q && badge) {
+            const sync = () => (badge.textContent = `${q.value}%`);
+            q.addEventListener("input", sync);
+            sync();
+          }
+        </script> </div> </div>  <div class="tool-card bg-slate-50/50 border-dashed border-slate-300 p-6 h-64 flex flex-col items-center justify-center text-center"> <span class="material-symbols-outlined text-slate-300 text-4xl mb-3">
+ads_click
+</span> <p class="text-xs font-bold text-slate-400 uppercase tracking-widest"> Sponsored </p> <div class="mt-4 w-full h-full bg-white/60 rounded-xl border border-white flex items-center justify-center text-xs text-slate-400 italic">
+Ad Slot
+</div> </div>  </aside> </div> <footer class="border-t px-8 py-4 text-xs text-slate-400 flex justify-between"> <span>© 2026 Easy2GoHub</span> <span>All systems operational</span> </footer> </main> </div>

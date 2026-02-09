@@ -3,7 +3,6 @@ import ToolLayout from "../../layouts/ToolLayout.astro";
 import { tools } from "../../data/tools";
 
 import ImageCompressor from "../../components/tools/ImageCompressor.astro";
-import ImageSettings from "../../components/tool-settings/ImageSettings.astro";
 
 export async function getStaticPaths() {
   return tools.map((t) => ({
@@ -13,27 +12,66 @@ export async function getStaticPaths() {
 
 const { category, slug } = Astro.params;
 
-const tool = tools.find(
-  (t) => t.category === category && t.slug === slug
-);
+const tool = tools.find((t) => t.category === category && t.slug === slug);
+if (!tool) throw new Error("Tool not found");
 
-if (!tool) {
-  throw new Error("Tool not found");
-}
+const ToolComponent = slug === "image-compressor" ? ImageCompressor : null;
+const showImageSettings = slug === "image-compressor";
 ---
 
 <ToolLayout title={tool.title} description={tool.description}>
-  <!-- 主工具区 -->
-  {tool.slug === "image-compressor" && (
-   <ImageCompressor />
-  )}
+  {ToolComponent ? <ToolComponent /> : <p class="text-slate-500">Tool coming soon.</p>}
 
-  {tool.slug !== "image-compressor" && (
-    <p>Tool coming soon.</p>
-  )}
+  {showImageSettings && (
+    <div slot="settings" class="tool-card overflow-hidden">
+      <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+        <h3 class="text-sm font-bold text-slate-900">Settings</h3>
+        <span class="material-symbols-outlined text-lg text-slate-400">settings</span>
+      </div>
 
-  <!-- Settings 区（slot） -->
-  {tool.settingsType === "image" && (
-    <ImageSettings slot="settings" />
+      <div class="p-6 space-y-8">
+        <div class="space-y-5">
+          <div class="flex justify-between items-center text-xs font-bold text-slate-700">
+            <span>Compression Level</span>
+            <span id="qualityBadge" class="text-primary bg-primary/10 px-2 py-0.5 rounded">80%</span>
+          </div>
+
+          <input id="quality" class="w-full" type="range" min="10" max="95" value="80" />
+
+          <div class="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
+            <span>Faster</span>
+            <span>Better Quality</span>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <label class="text-xs font-bold text-slate-700 block uppercase tracking-wider">Target Format</label>
+          <select
+            id="targetFormat"
+            class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700"
+          >
+            <option value="auto">AUTO (keep best)</option>
+            <option value="image/avif">AVIF</option>
+            <option value="image/webp">WEBP</option>
+            <option value="image/jpeg">JPG</option>
+            <option value="image/png">PNG</option>
+          </select>
+
+          <p class="text-xs text-slate-400 leading-relaxed">
+            AUTO will keep PNG/WEBP when possible, otherwise JPEG. AVIF/WEBP require browser support.
+          </p>
+        </div>
+
+        <script type="module">
+          const q = document.getElementById("quality");
+          const badge = document.getElementById("qualityBadge");
+          if (q && badge) {
+            const sync = () => (badge.textContent = `${q.value}%`);
+            q.addEventListener("input", sync);
+            sync();
+          }
+        </script>
+      </div>
+    </div>
   )}
 </ToolLayout>

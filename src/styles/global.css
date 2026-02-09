@@ -2,37 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== Pro UI Base ===== */
+/* ===== Match Home Page Style (indigo + fuchsia glass) ===== */
 :root {
-  --primary: 37 99 235; /* #2563EB */
+  --primary: 79 70 229;   /* indigo-600 */
+  --accent: 217 70 239;   /* fuchsia-500 */
 }
 
 @layer base {
   body {
-    @apply bg-[#F8FAFC] text-slate-700 font-sans antialiased;
-    background-image:
-      radial-gradient(at 0% 0%, hsla(217,100%,95%,1) 0, transparent 50%),
-      radial-gradient(at 50% 0%, hsla(210,100%,96%,1) 0, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(199,100%,94%,1) 0, transparent 50%);
+    @apply text-slate-900 font-sans antialiased;
+    /* same idea as your home page */
+    background:
+      radial-gradient(at top left, rgb(224 231 255), transparent),
+      radial-gradient(at bottom right, rgb(243 232 255), transparent),
+      rgb(248 250 252);
+    min-height: 100vh;
   }
 }
 
-/* Glass helpers */
+/* Home-like glass */
 .glass {
   @apply backdrop-blur-md bg-white/60 border border-white/40;
 }
+
+/* Card style like home */
 .tool-card {
-  @apply bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50;
+  @apply bg-white/70 rounded-2xl border border-white shadow-xl shadow-indigo-200/40;
 }
 
-/* Slider styling */
+/* Slider styling (keep, but match indigo primary) */
 input[type="range"] {
   @apply appearance-none h-1.5 bg-slate-200 rounded-lg cursor-pointer;
 }
 input[type="range"]::-webkit-slider-thumb {
-  @apply appearance-none w-4 h-4 rounded-full cursor-pointer ring-4 transition-all;
+  @apply appearance-none w-4 h-4 rounded-full cursor-pointer transition-all;
   background: rgb(var(--primary));
-  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 6px rgba(79, 70, 229, 0.18);
 }
 input[type="range"]::-moz-range-thumb {
   border: none;
@@ -40,4 +45,9 @@ input[type="range"]::-moz-range-thumb {
   width: 16px;
   height: 16px;
   background: rgb(var(--primary));
+}
+
+/* Optional: small hover glow like home */
+.glow-effect {
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.18);
 }

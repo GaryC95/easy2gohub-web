@@ -1,58 +1,37 @@
 ---
-import ToolLayout from "../layouts/ToolLayout.astro";
-import { tools, CATEGORY_LABEL } from "../data/tools";
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import { CATEGORY_LABEL, CATEGORY_DESC, getToolsByCategory } from "../../data/tools";
 
-const title = "Easy2GoHub - Free Online Tools (Fast & Private)";
-const description =
-  "Free online tools for images, PDFs, files, and text. Fast and private. No upload required.";
+export async function getStaticPaths() {
+  return Object.keys(CATEGORY_LABEL).map((category) => ({
+    params: { category },
+  }));
+}
 
-// 首页卡片：默认展示前 12 个
-const featured = tools.slice(0, 12);
+const { category } = Astro.params;
 
-// 分类顺序：按 tools.ts 里定义的 label 顺序
-const categories = Object.keys(CATEGORY_LABEL);
+if (!category || !(category in CATEGORY_LABEL)) {
+  throw new Error("Category not found: " + category);
+}
+
+const h1 = CATEGORY_LABEL[category];
+const description = CATEGORY_DESC[category];
+const list = getToolsByCategory(category);
 ---
 
-<ToolLayout title={title} description={description}>
-  <!-- Hero -->
-  <section class="glass rounded-2xl p-10 border border-white/60">
-    <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight mb-4">
-      <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-fuchsia-500">
-        Free Online Tools — Fast & Private
-      </span>
-    </h1>
-    <p class="text-lg text-slate-500 max-w-3xl leading-relaxed">
-      Compress images, process PDFs, format JSON, and more — directly in your browser.
-      No upload required.
-    </p>
-
-    <div class="mt-8 flex flex-wrap gap-3">
-      <a
-        href="/tools/"
-        class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-extrabold shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/30 transition"
-      >
-        Browse All Tools
-      </a>
-      <a
-        href="/image/image-compressor/"
-        class="bg-white/70 border border-white/70 px-6 py-3 rounded-xl font-extrabold text-slate-800 hover:bg-white transition"
-      >
-        Try Image Compressor →
-      </a>
-    </div>
-  </section>
-
-  <!-- Featured tools -->
-  <section class="space-y-4">
-    <div class="flex items-center justify-between">
-      <h2 class="text-xl font-extrabold text-slate-900">Featured Tools</h2>
-      <a class="text-sm font-extrabold text-indigo-600 hover:underline" href="/tools/">
-        View all →
-      </a>
+<ToolLayout
+  title={h1}
+  description={description}
+  canonical={`https://easy2gohub.com/${category}/`}
+>
+  <section class="space-y-6">
+    <div class="glass rounded-2xl p-8 border border-white/60">
+      <h2 class="text-3xl font-extrabold text-slate-900">{h1}</h2>
+      <p class="text-slate-500 mt-2 text-lg max-w-3xl">{description}</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-      {featured.map((t) => (
+      {list.map((t) => (
         <a
           href={`/${t.category}/${t.slug}/`}
           class="tool-card p-6 flex flex-col gap-4 group hover:-translate-y-0.5 transition"
@@ -61,69 +40,22 @@ const categories = Object.keys(CATEGORY_LABEL);
             <div class="w-12 h-12 rounded-2xl bg-indigo-600/10 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition">
               <span class="material-symbols-outlined !text-3xl">{t.icon}</span>
             </div>
-            <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
-              {(CATEGORY_LABEL as any)[t.category] ?? t.category}
-            </span>
+
+            <div class="flex gap-2">
+              {(t.tags || []).slice(0, 2).map((tag) => (
+                <span class="px-2 py-1 bg-white/70 border border-white/70 text-[10px] font-extrabold text-slate-500 rounded uppercase tracking-wider">
+                  {tag}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div>
             <h3 class="text-lg font-extrabold text-slate-900">{t.title}</h3>
             <p class="text-sm text-slate-500 mt-1">{t.description}</p>
           </div>
-
-          <div class="flex gap-2 mt-auto pt-2 flex-wrap">
-            {(t.tags || []).slice(0, 3).map((tag) => (
-              <span class="px-2 py-1 bg-white/70 border border-white/70 text-[10px] font-extrabold text-slate-500 rounded uppercase tracking-wider">
-                {tag}
-              </span>
-            ))}
-          </div>
         </a>
       ))}
     </div>
   </section>
-
-  <!-- Why -->
-  <section class="tool-card p-8">
-    <h2 class="text-xl font-extrabold text-slate-900 mb-3">Why Easy2GoHub?</h2>
-    <ul class="text-sm text-slate-500 space-y-2 list-disc pl-6">
-      <li><b>Browser-based:</b> your files stay on your device.</li>
-      <li><b>Fast:</b> optimized for quick everyday tasks.</li>
-      <li><b>Clean UX:</b> simple tools, no clutter.</li>
-    </ul>
-  </section>
-
-  <!-- Ads below tool slot -->
-  <div slot="ads-below-tool"></div>
-
-  <!-- Right settings panel on home (optional) -->
-  <div slot="settings">
-    <div class="tool-card p-6">
-      <h3 class="text-sm font-extrabold text-slate-900 mb-2">Quick Start</h3>
-      <p class="text-sm text-slate-500">
-        Pick a tool from the left. Everything runs locally — no uploads.
-      </p>
-
-      <div class="mt-4 space-y-2">
-        <a
-          class="block text-sm font-extrabold text-indigo-600 hover:underline"
-          href="/image/image-compressor/"
-        >
-          → Image Compressor
-        </a>
-        <a
-          class="block text-sm font-extrabold text-indigo-600 hover:underline"
-          href="/text/json-formatter/"
-        >
-          → JSON Formatter
-        </a>
-        <a
-          class="block text-sm font-extrabold text-indigo-600 hover:underline"
-          href="/pdf/pdf-merge/"
-        >
-          → PDF Merger
-        </a>
-      </div>
-    </div>
-  </div>
 </ToolLayout>

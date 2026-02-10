@@ -1,14 +1,37 @@
 ---
-const { label = "Sponsored" } = Astro.props;
+const {
+  label = "Sponsored",
+  height = "h-72",
+  className = "",
+  variant = "box", // "box" | "banner"
+} = Astro.props;
+
+const isBanner = variant === "banner";
 ---
-<div class="tool-card bg-slate-50/50 border-dashed border-slate-300 p-6 h-64 flex flex-col items-center justify-center text-center">
-  <span class="material-symbols-outlined text-slate-300 text-4xl mb-3">
-    ads_click
-  </span>
-  <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">
-    {label}
-  </p>
-  <div class="mt-4 w-full h-full bg-white/60 rounded-xl border border-white flex items-center justify-center text-xs text-slate-400 italic">
-    Ad Slot
+
+{isBanner ? (
+  <div class={`tool-card p-4 md:p-5 bg-white/60 border border-white/40 ${className}`} aria-label={label}>
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-2 text-xs font-extrabold text-slate-400 uppercase tracking-widest">
+        <span class="material-symbols-outlined text-slate-300 text-base">ads_click</span>
+        <span>{label}</span>
+      </div>
+      <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Banner</span>
+    </div>
+
+    <div class="mt-3 h-20 md:h-24 rounded-xl border border-dashed border-slate-300 bg-slate-50/60 flex items-center justify-center text-xs text-slate-400 italic">
+      Reserved Space
+    </div>
   </div>
-</div>
+) : (
+  <div
+    class={`tool-card bg-slate-50/50 border-dashed border-slate-300 p-6 flex flex-col items-center justify-center text-center ${height} ${className}`}
+    aria-label={label}
+  >
+    <span class="material-symbols-outlined text-slate-300 text-4xl mb-3">ads_click</span>
+    <p class="text-xs font-extrabold text-slate-400 uppercase tracking-widest">{label}</p>
+    <div class="mt-4 w-full h-full bg-white/60 rounded-xl border border-white flex items-center justify-center text-xs text-slate-400 italic">
+      Reserved Space
+    </div>
+  </div>
+)}

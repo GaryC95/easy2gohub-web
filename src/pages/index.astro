@@ -1,61 +1,94 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
-import Sidebar from "../components/Sidebar.astro";
-import Header from "../components/Header.astro";
-import ToolGrid from "../components/ToolGrid.astro";
-import Footer from "../components/Footer.astro";
-import { tools } from "../data/tools";
-import "../styles/global.css";
+import ToolLayout from "../layouts/ToolLayout.astro";
+import ToolSeoBlock from "../components/seo/ToolSeoBlock.astro";
+import AdsSlot from "../components/ads/AdsSlot.astro";
+import { CATEGORY_ORDER, CATEGORY_META, getToolsByCategory } from "../data/tools";
 
 const title = "Easy2GoHub - Free Online Tools (Fast & Private)";
-const description = "Free online tools for images, PDFs, files, and text. Fast and private. No upload required.";
+const description =
+  "Free online tools for images, PDFs, files, and text. Fast and private. No upload required.";
+const canonical = "https://www.easy2gohub.com/";
+
+const seo = {
+  intro:
+    "Use fast, private tools directly in your browser. No uploads. Great for daily productivity tasks like compressing images, merging PDFs, formatting JSON and more.",
+  steps: ["Pick a category on the left.", "Open a tool and adjust settings.", "Download your result instantly."],
+  tips: ["Local processing: your files never leave your device.", "Simple UX: clean layout, quick results.", "More tools will be added weekly."],
+  faq: [
+    { q: "Is it free?", a: "Yes. The tools run in your browser and are free to use." },
+    { q: "Are files uploaded?", a: "No. Tools process locally on your device." },
+  ],
+};
 ---
-<BaseLayout title={title} description={description}>
-  <div class="flex h-screen overflow-hidden">
-    <Sidebar />
 
-    <main class="flex-1 flex flex-col h-full overflow-y-auto">
-      <Header />
+<ToolLayout title={title} description={description} canonical={canonical} adsProfile="default">
+  <section class="tool-card p-10 md:p-12">
+    <div class="grid lg:grid-cols-12 gap-10 items-start">
+      <div class="lg:col-span-7 space-y-5">
+        <h2 class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">
+          Fast, private tools — right in your browser.
+        </h2>
+        <p class="text-slate-600 text-base md:text-lg leading-relaxed">
+          Compress images, merge PDFs, format JSON, generate hashes — all locally. No uploads.
+        </p>
 
-      <div class="p-8 lg:p-12 space-y-12">
-        <section class="max-w-4xl">
-          <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight mb-4">
-            <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-indigo-600 to-fuchsia-500">
-              Free Online Tools — Fast & Private
-            </span>
-          </h1>
-          <p class="text-lg text-slate-500 leading-relaxed max-w-2xl">
-            Compress images, process PDFs, format JSON, and more — directly in your browser. No upload required.
-          </p>
-        </section>
+        <div class="flex gap-3 flex-wrap">
+          <a
+            href="/tools/"
+            class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-primary text-white text-sm font-extrabold shadow-lg shadow-primary/25 hover:shadow-primary/35 transition"
+          >
+            <span class="material-symbols-outlined text-base">apps</span>
+            Browse all tools
+          </a>
 
-        <ToolGrid tools={tools.slice(0, 8)} />
-
-        <section class="glass rounded-2xl p-8 border-dashed border-2 border-slate-300/50 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative">
-          <div class="relative z-10 text-center md:text-left">
-            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Sponsored</p>
-            <h2 class="text-xl font-bold mb-2">Productivity picks for your workflow</h2>
-            <p class="text-sm text-slate-500 max-w-sm">This area is reserved for ads / partnerships later.</p>
-            <a class="mt-4 inline-block px-6 py-2 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition-colors" href="/tools/">
-              Explore all tools
-            </a>
-          </div>
-          <div class="hidden md:flex relative z-10 w-32 h-32 bg-slate-100 rounded-2xl items-center justify-center">
-            <span class="material-symbols-outlined text-slate-300 !text-6xl">ad_units</span>
-          </div>
-        </section>
-
-        <section class="max-w-4xl">
-          <h2 class="text-xl font-bold mb-3">Why Easy2GoHub?</h2>
-          <ul class="text-sm text-slate-500 space-y-2 list-disc pl-6">
-            <li>Browser-based: your files stay on your device.</li>
-            <li>Fast: optimized for quick everyday tasks.</li>
-            <li>Clean UX: simple tools, no clutter.</li>
-          </ul>
-        </section>
+          <a
+            href="/image/image-compressor/"
+            class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white/60 border border-white/50 text-sm font-extrabold text-slate-900 hover:text-primary hover:bg-white/80 transition"
+          >
+            <span class="material-symbols-outlined text-base text-slate-400">compress</span>
+            Try Image Compressor
+          </a>
+        </div>
       </div>
 
-      <Footer />
-    </main>
-  </div>
-</BaseLayout>
+      <div class="lg:col-span-5 space-y-4">
+        <AdsSlot label="Sponsored" variant="banner" />
+        <AdsSlot label="Sponsored" height="h-40" />
+      </div>
+    </div>
+  </section>
+
+  <section class="tool-card p-8 md:p-10">
+    <h3 class="text-xl md:text-2xl font-extrabold text-slate-900 mb-6">Explore categories</h3>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {CATEGORY_ORDER.map((cat) => {
+        const meta = CATEGORY_META[cat];
+        const list = getToolsByCategory(cat);
+        return (
+          <a
+            href={`/${cat}/`}
+            class="tool-card p-6 bg-white/60 border border-white/40 rounded-2xl hover:shadow-xl hover:shadow-slate-200/40 transition"
+          >
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                  <span class="material-symbols-outlined">{meta.icon}</span>
+                </div>
+                <div>
+                  <div class="font-extrabold text-slate-900">{meta.label}</div>
+                  <div class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">{list.length} tools</div>
+                </div>
+              </div>
+              <span class="material-symbols-outlined text-slate-300">arrow_right_alt</span>
+            </div>
+
+            <p class="mt-3 text-sm text-slate-600 leading-relaxed">{meta.desc}</p>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+
+  <ToolSeoBlock title="Easy2GoHub" seo={seo} showAds={true} adsProfile="default" />
+</ToolLayout>

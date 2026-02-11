@@ -36,21 +36,23 @@ const {
     </style>
   </head>
 
-  <body class="text-slate-900 overflow-hidden">
+  {/* ✅ 关键：不要 overflow-hidden，否则 footer 永远不可达 */}
+  <body class="text-slate-900 min-h-screen">
     <slot />
-    <footer class="mt-16 border-t border-white/40 bg-white/40">
-  <div class="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row gap-4 items-center justify-between text-xs text-slate-500">
-    <div class="font-semibold">
-      © {new Date().getFullYear()} Easy2GoHub
-    </div>
 
-    <div class="flex items-center gap-4 font-semibold">
-      <a href="/about/" class="hover:text-slate-700">About</a>
-      <a href="/privacy-policy/" class="hover:text-slate-700">Privacy Policy</a>
-      <a href="/terms/" class="hover:text-slate-700">Terms</a>
-    </div>
-  </div>
-</footer>
+    {/* Global Footer (AdSense-friendly) */}
+    <footer class="border-t border-white/40 bg-white/40">
+      <div class="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row gap-4 items-center justify-between text-xs text-slate-500">
+        <div class="font-semibold">
+          © {new Date().getFullYear()} Easy2GoHub
+        </div>
 
+        <nav class="flex items-center gap-4 font-semibold">
+          <a href="/about/" class="hover:text-slate-700">About</a>
+          <a href="/privacy-policy/" class="hover:text-slate-700">Privacy Policy</a>
+          <a href="/terms/" class="hover:text-slate-700">Terms</a>
+        </nav>
+      </div>
+    </footer>
   </body>
 </html>

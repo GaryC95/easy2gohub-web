@@ -1,93 +1,327 @@
+---
+const { tool } = Astro.props;
+
+// tool may be undefined in some edge cases; keep safe defaults
+const slug = tool?.slug ?? "";
+const title = tool?.title ?? "Image Tool";
+
+// Capabilities by tool slug (adjust anytime)
+const CAP_BY_SLUG: Record<string, {
+  showQuality?: boolean;
+  showTargetFormat?: boolean;
+  showMaxDim?: boolean;
+  showResizeMode?: boolean;
+  showAllowUpscale?: boolean;
+  showJpegBg?: boolean;
+  showNaming?: boolean;
+  showMetadata?: boolean;
+}> = {
+  "image-compressor": {
+    showQuality: true,
+    showTargetFormat: true,
+    showMaxDim: true,
+    showJpegBg: true,
+    showNaming: true,
+    showMetadata: true,
+  },
+  "image-resizer": {
+    showQuality: true,        // used for jpeg/webp/avif exports
+    showTargetFormat: true,   // keep/convert output format
+    showMaxDim: true,
+    showResizeMode: true,
+    showAllowUpscale: true,
+    showJpegBg: true,         // for alpha -> jpeg
+    showNaming: true,
+    showMetadata: true,
+  },
+  "image-converter": {
+    showQuality: true,
+    showTargetFormat: true,
+    showJpegBg: true,
+    showNaming: true,
+    showMetadata: true,
+  },
+  "image-to-webp": {
+    showQuality: true,
+    showMaxDim: true,
+    showResizeMode: true,
+    showAllowUpscale: true,
+    showNaming: true,
+    showMetadata: true,
+    // targetFormat not needed (fixed webp), jpeg bg not needed
+  },
+};
+
+// Default capability set if slug is unknown but category is image
+const caps = CAP_BY_SLUG[slug] ?? {
+  showQuality: true,
+  showTargetFormat: true,
+  showMaxDim: true,
+  showResizeMode: true,
+  showAllowUpscale: true,
+  showJpegBg: true,
+  showNaming: true,
+  showMetadata: true,
+};
+
+const showQuality = !!caps.showQuality;
+const showTargetFormat = !!caps.showTargetFormat;
+const showMaxDim = !!caps.showMaxDim;
+const showResizeMode = !!caps.showResizeMode;
+const showAllowUpscale = !!caps.showAllowUpscale;
+const showJpegBg = !!caps.showJpegBg;
+const showNaming = !!caps.showNaming;
+const showMetadata = !!caps.showMetadata;
+---
+
 <section class="tool-card p-6 space-y-8">
   <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
     <span class="material-symbols-outlined text-primary">settings</span>
     Settings
   </h3>
 
-  <!-- Compression Level -->
-  <div class="space-y-4">
-    <div class="flex justify-between items-center text-xs font-bold text-slate-700">
-      <span>Compression Level</span>
-      <span
-        id="qualityLabel"
-        class="text-primary bg-primary/10 px-2 py-0.5 rounded"
-      >
-        80%
-      </span>
-    </div>
-
-    <input
-      id="quality"
-      type="range"
-      min="30"
-      max="95"
-      value="80"
-      class="w-full"
-    />
-
-    <div class="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
-      <span>Faster</span>
-      <span>Better Quality</span>
-    </div>
+  <div class="text-xs text-slate-400 font-semibold">
+    Active tool: <span class="text-slate-600 font-extrabold">{title}</span>
   </div>
 
-  <!-- Target Format -->
-  <div class="space-y-4">
-    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">
-      Target Format
-    </label>
+  {/* ===================== Compression / Quality ===================== */}
+  {showQuality ? (
+    <div class="space-y-4">
+      <div class="flex justify-between items-center text-xs font-bold text-slate-700">
+        <span>Quality</span>
+        <span id="qualityLabel" class="text-primary bg-primary/10 px-2 py-0.5 rounded">80%</span>
+      </div>
 
-    <div class="grid grid-cols-2 gap-2">
-      <button data-format="auto" class="format-btn active">Auto</button>
-      <button data-format="image/avif" class="format-btn">AVIF</button>
-      <button data-format="image/webp" class="format-btn">WEBP</button>
-      <button data-format="image/jpeg" class="format-btn">JPG</button>
-      <button data-format="image/png" class="format-btn">PNG</button>
+      <input id="quality" type="range" min="30" max="95" value="80" class="w-full" />
+
+      <div class="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
+        <span>Smaller</span>
+        <span>Better Quality</span>
+      </div>
     </div>
-  </div>
+  ) : (
+    <>
+      {/* Keep stable DOM IDs even if hidden (tools can still read defaults if needed) */}
+      <input id="quality" type="hidden" value="80" />
+      <span id="qualityLabel" class="hidden">80%</span>
+    </>
+  )}
 
-  <!-- Hidden shared state -->
-  <input type="hidden" id="targetFormat" value="auto" />
+  {/* ===================== Target Format ===================== */}
+  {showTargetFormat ? (
+    <div class="space-y-4">
+      <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Target Format</label>
+
+      <div class="grid grid-cols-2 gap-2">
+        <button data-format="auto" class="format-btn active">Auto</button>
+        <button data-format="image/avif" class="format-btn">AVIF</button>
+        <button data-format="image/webp" class="format-btn">WEBP</button>
+        <button data-format="image/jpeg" class="format-btn">JPG</button>
+        <button data-format="image/png" class="format-btn">PNG</button>
+      </div>
+
+      <input type="hidden" id="targetFormat" value="auto" />
+    </div>
+  ) : (
+    <input type="hidden" id="targetFormat" value="auto" />
+  )}
+
+  {/* ===================== Resize / Max Dimension ===================== */}
+  {showMaxDim ? (
+    <div class="space-y-3">
+      <div class="flex justify-between items-center text-xs font-bold text-slate-700">
+        <span>Max Dimension</span>
+        <span id="maxDimLabel" class="text-primary bg-primary/10 px-2 py-0.5 rounded">0</span>
+      </div>
+
+      <input id="maxDim" type="range" min="0" max="4096" value="0" step="16" class="w-full" />
+
+      <div class="text-[10px] text-slate-400 font-bold uppercase">
+        0 = keep original size • otherwise resize by longest side
+      </div>
+    </div>
+  ) : (
+    <>
+      <input id="maxDim" type="hidden" value="0" />
+      <span id="maxDimLabel" class="hidden">0</span>
+    </>
+  )}
+
+  {/* ===================== Resize Mode ===================== */}
+  {showResizeMode ? (
+    <div class="space-y-3">
+      <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Resize Mode</label>
+
+      <div class="grid grid-cols-3 gap-2">
+        <button data-resize="fit" class="chip-btn active">Fit</button>
+        <button data-resize="fill" class="chip-btn">Fill</button>
+        <button data-resize="exact" class="chip-btn">Exact</button>
+      </div>
+
+      <input type="hidden" id="resizeMode" value="fit" />
+
+      <div class="text-[10px] text-slate-400 font-bold uppercase">
+        Fit: keep aspect • Fill: crop • Exact: stretch
+      </div>
+    </div>
+  ) : (
+    <input type="hidden" id="resizeMode" value="fit" />
+  )}
+
+  {/* ===================== Allow Upscale ===================== */}
+  {showAllowUpscale ? (
+    <div class="space-y-2">
+      <label class="flex items-center justify-between gap-3 text-xs font-bold text-slate-700">
+        <span>Allow Upscale</span>
+        <input id="allowUpscale" type="checkbox" class="toggle" />
+      </label>
+      <div class="text-[10px] text-slate-400 font-bold uppercase">
+        When off, smaller images won’t be enlarged
+      </div>
+    </div>
+  ) : (
+    <input id="allowUpscale" type="hidden" value="off" />
+  )}
+
+  {/* ===================== JPEG Background ===================== */}
+  {showJpegBg ? (
+    <div class="space-y-3">
+      <label class="flex items-center justify-between gap-3 text-xs font-bold text-slate-700">
+        <span>JPEG Background for Transparency</span>
+        <input id="jpegBg" type="checkbox" class="toggle" />
+      </label>
+
+      <div class="grid grid-cols-3 gap-2">
+        <button data-jbg="white" class="chip-btn active">White</button>
+        <button data-jbg="black" class="chip-btn">Black</button>
+        <button data-jbg="neutral" class="chip-btn">Neutral</button>
+      </div>
+
+      <input type="hidden" id="jpegBgColor" value="white" />
+      <div class="text-[10px] text-slate-400 font-bold uppercase">
+        Applies when output is JPG
+      </div>
+    </div>
+  ) : (
+    <>
+      <input id="jpegBg" type="hidden" value="off" />
+      <input id="jpegBgColor" type="hidden" value="white" />
+    </>
+  )}
+
+  {/* ===================== Naming ===================== */}
+  {showNaming ? (
+    <div class="space-y-3">
+      <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Output Suffix</label>
+      <input
+        id="nameSuffix"
+        type="text"
+        value={slug === "image-resizer" ? "-resized" : slug === "image-converter" ? "-converted" : "-compressed"}
+        class="w-full rounded-xl border border-white/60 bg-white/60 px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/40"
+        placeholder="-compressed"
+      />
+      <div class="text-[10px] text-slate-400 font-bold uppercase">
+        Output name = original + suffix
+      </div>
+    </div>
+  ) : (
+    <input id="nameSuffix" type="hidden" value="-output" />
+  )}
+
+  {/* ===================== Metadata ===================== */}
+  {showMetadata ? (
+    <div class="space-y-2">
+      <label class="flex items-center justify-between gap-3 text-xs font-bold text-slate-700">
+        <span>Keep Metadata (EXIF)</span>
+        <input id="keepMetadata" type="checkbox" class="toggle" />
+      </label>
+      <div class="text-[10px] text-slate-400 font-bold uppercase">
+        Coming soon: not all browsers preserve EXIF when exporting
+      </div>
+    </div>
+  ) : (
+    <input id="keepMetadata" type="hidden" value="off" />
+  )}
 </section>
 
 <style>
-  .format-btn {
+  .format-btn, .chip-btn {
     padding: 0.6rem;
     font-size: 0.75rem;
-    font-weight: 700;
-    border-radius: 0.5rem;
-    border: 2px solid #e5e7eb;
-    background: white;
-    color: #64748b;
+    font-weight: 800;
+    border-radius: 0.75rem;
+    border: 2px solid rgba(226,232,240,1);
+    background: rgba(255,255,255,0.85);
+    color: rgba(100,116,139,1);
     transition: all 0.15s;
   }
-  .format-btn:hover {
-    border-color: #93c5fd;
+  .format-btn:hover, .chip-btn:hover { border-color: rgba(147,197,253,1); }
+  .format-btn.active, .chip-btn.active {
+    border-color: rgba(37,99,235,1);
+    background: rgba(239,246,255,1);
+    color: rgba(37,99,235,1);
   }
-  .format-btn.active {
-    border-color: #2563eb;
-    background: #eff6ff;
-    color: #2563eb;
+  .toggle {
+    width: 42px;
+    height: 24px;
+    accent-color: rgb(79,70,229);
   }
 </style>
 
 <script type="module">
+  // Quality label
   const quality = document.getElementById("quality");
-  const label = document.getElementById("qualityLabel");
+  const qualityLabel = document.getElementById("qualityLabel");
+  if (quality && qualityLabel && quality.type === "range") {
+    qualityLabel.textContent = quality.value + "%";
+    quality.addEventListener("input", () => (qualityLabel.textContent = quality.value + "%"));
+  }
+
+  // Format buttons -> hidden #targetFormat
   const target = document.getElementById("targetFormat");
-  const buttons = document.querySelectorAll(".format-btn");
-
-  label.textContent = quality.value + "%";
-
-  quality.addEventListener("input", () => {
-    label.textContent = quality.value + "%";
-  });
-
-  buttons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      buttons.forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      target.value = btn.dataset.format;
+  const formatBtns = document.querySelectorAll(".format-btn");
+  if (target && formatBtns.length) {
+    formatBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        formatBtns.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        target.value = btn.dataset.format;
+      });
     });
-  });
+  }
+
+  // MaxDim label
+  const maxDim = document.getElementById("maxDim");
+  const maxDimLabel = document.getElementById("maxDimLabel");
+  if (maxDim && maxDimLabel && maxDim.type === "range") {
+    const set = () => (maxDimLabel.textContent = String(maxDim.value));
+    set();
+    maxDim.addEventListener("input", set);
+  }
+
+  // Resize mode chips -> hidden #resizeMode
+  const resizeMode = document.getElementById("resizeMode");
+  const resizeBtns = document.querySelectorAll("[data-resize].chip-btn");
+  if (resizeMode && resizeBtns.length) {
+    resizeBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        resizeBtns.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        resizeMode.value = btn.dataset.resize;
+      });
+    });
+  }
+
+  // JPEG bg chips -> hidden #jpegBgColor
+  const jpegBgColor = document.getElementById("jpegBgColor");
+  const jbgBtns = document.querySelectorAll("[data-jbg].chip-btn");
+  if (jpegBgColor && jbgBtns.length) {
+    jbgBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        jbgBtns.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        jpegBgColor.value = btn.dataset.jbg;
+      });
+    });
+  }
 </script>

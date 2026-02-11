@@ -1,4 +1,5 @@
 ---
+// src/components/ui/AppSidebar.astro
 import { CATEGORY_ORDER, CATEGORY_META, getToolsByCategory } from "../../data/tools";
 
 const path = Astro.url.pathname;
@@ -12,29 +13,36 @@ const caret = "chevron_right";
 ---
 
 <aside class="w-72 glass-sidebar flex flex-col overflow-y-auto">
+  <!-- Brand -->
   <div class="p-6 border-b border-white/40">
     <a href="/" class="flex items-center gap-3 group">
-      <div class="size-9 rounded-xl bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center shadow-lg shadow-primary/20">
-        <span class="material-symbols-outlined text-xl">hub</span>
+      <div class="size-10 rounded-2xl bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/30 transition">
+        <span class="material-symbols-outlined text-xl">auto_fix_high</span>
       </div>
-      <div class="leading-tight">
-        <div class="text-base font-extrabold text-slate-900 tracking-tight">
+
+      <div class="leading-tight min-w-0">
+        <div class="text-base font-black text-slate-900 tracking-tight truncate">
           Easy2Go<span class="text-primary">Hub</span>
         </div>
-        <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Tool Suite</div>
+        <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+          Tool Suite
+        </div>
       </div>
     </a>
   </div>
 
-  <nav class="p-5 space-y-5">
+  <!-- Nav -->
+  <nav class="p-5 space-y-6">
     <div>
-      <p class="text-[11px] uppercase font-extrabold tracking-[0.18em] text-slate-400 px-1 mb-3">Navigation</p>
+      <p class="text-[11px] uppercase font-bold tracking-[0.18em] text-slate-400 px-1 mb-3">
+        Navigation
+      </p>
+
       <div class="space-y-2">
         <a
           href="/"
-          class={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-extrabold transition ${
-            isActive("/") ? "bg-primary/10 text-primary ring-1 ring-primary/10" : "text-slate-700 hover:bg-white/60 hover:text-primary"
-          }`}
+          class={`flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-bold transition
+            ${isActive("/") ? "bg-primary/10 text-primary ring-1 ring-primary/10" : "text-slate-700 hover:bg-white/60 hover:text-primary"}`}
         >
           <span class="material-symbols-outlined text-lg">home</span>
           Home
@@ -42,9 +50,8 @@ const caret = "chevron_right";
 
         <a
           href="/tools/"
-          class={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-extrabold transition ${
-            isActive("/tools/") ? "bg-primary/10 text-primary ring-1 ring-primary/10" : "text-slate-700 hover:bg-white/60 hover:text-primary"
-          }`}
+          class={`flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-bold transition
+            ${isActive("/tools/") ? "bg-primary/10 text-primary ring-1 ring-primary/10" : "text-slate-700 hover:bg-white/60 hover:text-primary"}`}
         >
           <span class="material-symbols-outlined text-lg">apps</span>
           All Tools
@@ -52,8 +59,11 @@ const caret = "chevron_right";
       </div>
     </div>
 
-    <div class="space-y-2">
-      <p class="text-[11px] uppercase font-extrabold tracking-[0.18em] text-slate-400 px-1">Explorer</p>
+    <!-- Explorer -->
+    <div class="space-y-3">
+      <p class="text-[11px] uppercase font-bold tracking-[0.18em] text-slate-400 px-1">
+        Explorer
+      </p>
 
       <div class="space-y-2">
         {CATEGORY_ORDER.map((cat) => {
@@ -61,14 +71,24 @@ const caret = "chevron_right";
           const list = getToolsByCategory(cat);
 
           return (
-            <details class="group rounded-2xl bg-white/40 border border-white/50 overflow-hidden" open={path.startsWith(`/${cat}/`)}>
-              <summary class="flex items-center gap-3 px-4 py-3 cursor-pointer select-none list-none">
-                <span class="material-symbols-outlined text-lg text-slate-400 group-open:rotate-90 transition-transform">{caret}</span>
-                <span class={`material-symbols-outlined text-lg ${meta.iconClass}`}>{meta.icon}</span>
+            <details
+              class="group rounded-3xl bg-white/40 border border-white/50 overflow-hidden"
+              open={path.startsWith(`/${cat}/`)}
+            >
+              <summary class="flex items-center gap-3 px-4 py-3 cursor-pointer select-none list-none hover:bg-white/40 transition">
+                <span class="material-symbols-outlined text-lg text-slate-400 group-open:rotate-90 transition-transform">
+                  {caret}
+                </span>
 
-                <div class="flex-1">
-                  <div class="text-sm font-extrabold text-slate-900">{meta.label}</div>
-                  <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">{list.length} tools</div>
+                <span class={`material-symbols-outlined text-lg ${meta.iconClass}`}>
+                  {meta.icon}
+                </span>
+
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-extrabold text-slate-900 truncate">{meta.label}</div>
+                  <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                    {list.length} tools
+                  </div>
                 </div>
               </summary>
 
@@ -80,14 +100,16 @@ const caret = "chevron_right";
                     .map((t) => {
                       const href = `/${t.category}/${t.slug}/`;
                       const active = isActive(href);
+
                       return (
                         <a
                           href={href}
-                          class={`flex items-center gap-2.5 px-3 py-2 rounded-r-xl text-sm font-extrabold transition ${
-                            active ? "text-primary bg-primary/10" : "text-slate-600 hover:bg-white/60 hover:text-primary"
-                          }`}
+                          class={`flex items-center gap-2.5 px-3 py-2 rounded-r-2xl text-sm font-bold transition
+                            ${active ? "text-primary bg-primary/10" : "text-slate-600 hover:bg-white/60 hover:text-primary"}`}
                         >
-                          <span class="material-symbols-outlined text-[18px] text-slate-400">{t.icon}</span>
+                          <span class="material-symbols-outlined text-[18px] text-slate-400">
+                            {t.icon}
+                          </span>
                           <span class="truncate">{t.title}</span>
                         </a>
                       );
@@ -101,12 +123,20 @@ const caret = "chevron_right";
     </div>
   </nav>
 
+  <!-- Bottom CTA -->
   <div class="p-6 mt-auto">
-    <div class="rounded-2xl p-5 bg-primary/5 border border-primary/10">
+    <div class="rounded-3xl p-5 bg-primary/5 border border-primary/10">
       <p class="text-xs font-extrabold text-primary mb-1">PRO (Coming Soon)</p>
-      <p class="text-xs text-slate-500 leading-relaxed">Batch processing, higher limits, and advanced presets.</p>
-      <a href="/tools/" class="inline-flex items-center gap-2 mt-4 text-xs font-extrabold text-primary hover:underline">
-        Explore tools <span class="material-symbols-outlined text-sm">arrow_right_alt</span>
+      <p class="text-xs text-slate-500 leading-relaxed">
+        Batch processing, higher limits, and advanced presets.
+      </p>
+
+      <a
+        href="/tools/"
+        class="inline-flex items-center gap-2 mt-4 text-xs font-extrabold text-primary hover:underline"
+      >
+        Explore tools
+        <span class="material-symbols-outlined text-sm">arrow_right_alt</span>
       </a>
     </div>
   </div>

@@ -1,0 +1,19 @@
+---
+const { title = "Tool", note = "This tool is coming soon." } = Astro.props;
+---
+
+<section class="tool-card p-10 space-y-6">
+  <div class="text-center">
+    <h2 class="text-3xl font-extrabold text-slate-900">{title}</h2>
+    <p class="text-slate-500 mt-2 text-lg">{note}</p>
+  </div>
+
+  <div class="bg-white/60 border border-white/60 rounded-2xl p-6 text-slate-600">
+    <div class="font-extrabold text-slate-800 mb-2">Coming soon</div>
+    <ul class="space-y-2 text-sm leading-relaxed">
+      <li>• UI + Settings + SEO/Ads layout are already ready.</li>
+      <li>• Next step is implementing the core processing logic (local-only, no upload).</li>
+      <li>• This placeholder keeps static build stable and allows early SEO indexing.</li>
+    </ul>
+  </div>
+</section>

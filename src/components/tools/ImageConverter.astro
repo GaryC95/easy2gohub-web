@@ -1,17 +1,20 @@
 ---
 /**
- * Image Resizer – Pro (Upgraded + Shared Settings)
- * Multi-file · Resize mode (fit/fill/exact) · Allow upscale · Target format · Quality · JPEG background · ZIP download
- * Reads Settings DOM: quality, targetFormat, maxDim, resizeMode, allowUpscale, jpegBg, jpegBgColor, nameSuffix
+ * Image Converter – Pro
+ * Batch convert images locally (no upload) · Quality · Target format · JPEG background for alpha · Naming suffix
+ * Single download / ZIP · Per-item status · Error handling · URL revoke
  *
- * Note: fill/exact currently uses maxDim as a SQUARE target (maxDim x maxDim).
+ * Reads Settings DOM: quality, targetFormat, jpegBg, jpegBgColor, nameSuffix
+ * Notes:
+ * - If targetFormat is "auto", converter keeps original format (when possible).
+ * - keepMetadata is currently not implemented (browser canvas export typically drops EXIF).
  */
 ---
 
 <section class="tool-card p-10 space-y-10">
   <div class="text-center">
-    <h2 class="text-3xl font-extrabold text-slate-900">Pro Image Resizer</h2>
-    <p class="text-slate-500 mt-2 text-lg">Resize images locally in your browser. No upload. 100% private.</p>
+    <h2 class="text-3xl font-extrabold text-slate-900">Pro Image Converter</h2>
+    <p class="text-slate-500 mt-2 text-lg">Convert images locally in your browser. No upload. 100% private.</p>
   </div>
 
   <div
@@ -21,7 +24,7 @@
            cursor-pointer h-72 flex flex-col items-center justify-center text-center glow-effect"
   >
     <div class="size-20 bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-600 mb-6">
-      <span class="material-symbols-outlined text-4xl">photo_size_select_large</span>
+      <span class="material-symbols-outlined text-4xl">swap_horiz</span>
     </div>
 
     <h3 class="text-xl font-extrabold text-slate-800 mb-2">Drop files here</h3>
@@ -59,7 +62,7 @@
         id="zipBtn"
         class="px-4 py-2 rounded-xl text-sm font-extrabold bg-white/60 border border-white/50 hover:bg-white transition disabled:opacity-50"
         disabled
-        title="Download all resized images as a ZIP"
+        title="Download all converted images as a ZIP"
       >
         Download ZIP
       </button>
@@ -70,7 +73,7 @@
                shadow-lg shadow-indigo-600/25 hover:bg-indigo-700 transition-all disabled:opacity-50"
         disabled
       >
-        Resize Images
+        Convert Images
       </button>
     </div>
   </div>
@@ -94,9 +97,6 @@
   // Settings (from right panel)
   const qualityEl = document.getElementById("quality");
   const formatEl = document.getElementById("targetFormat");
-  const maxDimEl = document.getElementById("maxDim");
-  const resizeModeEl = document.getElementById("resizeMode");
-  const allowUpscaleEl = document.getElementById("allowUpscale");
   const jpegBgEl = document.getElementById("jpegBg");
   const jpegBgColorEl = document.getElementById("jpegBgColor");
   const nameSuffixEl = document.getElementById("nameSuffix");
@@ -114,7 +114,7 @@
     return Math.random().toString(16).slice(2) + Date.now().toString(16);
   }
 
-  let items = []; // { id, file, status, error, srcUrl, inW,inH,outW,outH, inBytes,outBytes, outBlob,outName }
+  let items = []; // { id, file, status, error, srcUrl, inBytes, outBytes, outBlob, outName }
 
   function revokeAllPreviews() {
     for (const it of items) {
@@ -137,8 +137,8 @@
     return items.some((it) => it.status === "Done" && it.outBlob);
   }
 
-  function addFiles(fileList) {
-    for (const f of fileList) {
+  function addFiles(list) {
+    for (const f of list) {
       if (!f?.type?.startsWith("image/")) continue;
       if (f.size > MAX_SIZE) continue;
 
@@ -148,8 +148,6 @@
         status: "Queued",
         error: "",
         srcUrl: URL.createObjectURL(f),
-        inW: 0, inH: 0,
-        outW: 0, outH: 0,
         inBytes: f.size,
         outBytes: 0,
         outBlob: null,
@@ -159,12 +157,14 @@
     renderQueue();
   }
 
-  function resolveFormat(original, selected) {
-    if (selected && selected !== "auto") return selected;
-    if (original === "image/png") return "image/png";
-    if (original === "image/webp") return "image/webp";
-    if (original === "image/avif") return "image/avif";
-    return "image/jpeg";
+  function safeExtFromType(mime) {
+    const ext = (mime || "").split("/")[1] || "jpg";
+    return ext.replace("jpeg", "jpg");
+  }
+
+  function getSuffix(defaultSuffix) {
+    const s = nameSuffixEl?.value?.trim();
+    return s ? s : defaultSuffix;
   }
 
   function backgroundForJpeg() {
@@ -176,26 +176,18 @@
     return "#f8fafc";
   }
 
-  function safeExtFromType(mime) {
-    const ext = (mime || "").split("/")[1] || "jpg";
-    return ext.replace("jpeg", "jpg");
-  }
-
-  function getResizeMode() {
-    const m = resizeModeEl?.value;
-    return (m === "fit" || m === "fill" || m === "exact") ? m : "fit";
-  }
-
-  function getAllowUpscale() {
-    // checkbox when present; hidden when not
-    if (!allowUpscaleEl) return false;
-    if (allowUpscaleEl.type === "checkbox") return !!allowUpscaleEl.checked;
-    return allowUpscaleEl.value === "on";
-  }
-
-  function getSuffix(defaultSuffix) {
-    const s = nameSuffixEl?.value?.trim();
-    return s ? s : defaultSuffix;
+  function resolveFormatForConverter(original, selected) {
+    // selected: auto | image/avif | image/webp | image/jpeg | image/png
+    if (!selected || selected === "auto") {
+      // auto in converter = keep original format (best expectation for users)
+      // If original is missing, default to jpeg
+      if (original === "image/png") return "image/png";
+      if (original === "image/webp") return "image/webp";
+      if (original === "image/avif") return "image/avif";
+      if (original === "image/jpeg") return "image/jpeg";
+      return "image/jpeg";
+    }
+    return selected;
   }
 
   function downloadBlob(blob, name) {
@@ -228,7 +220,7 @@
     downloadBlob(out, "images-output.zip");
 
     zipBtn.disabled = false;
-    setStatus("Done", `${done.length} resized`);
+    setStatus("Done", `${done.length} converted`);
   }
 
   function renderQueue() {
@@ -276,15 +268,11 @@
       const sub = document.createElement("div");
       sub.className = "text-xs text-slate-400 flex flex-wrap gap-x-3 gap-y-1";
 
-      const dim = (it.inW && it.inH)
-        ? `${it.inW}×${it.inH} → ${it.outW || "—"}×${it.outH || "—"}`
-        : `—×— → —×—`;
-
       const sizePart = it.outBytes
         ? `${fmtBytes(it.inBytes)} → ${fmtBytes(it.outBytes)}`
         : `${fmtBytes(it.inBytes)} • ${it.file.type || "unknown"}`;
 
-      sub.innerHTML = `<span>${dim}</span><span>${sizePart}</span>`;
+      sub.innerHTML = `<span>${sizePart}</span>`;
 
       meta.appendChild(title);
       meta.appendChild(sub);
@@ -342,85 +330,29 @@
     renderQueue();
   }
 
-  function computeFitSize(inW, inH, maxDim, allowUpscale) {
-    if (!maxDim || maxDim <= 0) return { w: inW, h: inH };
-    const maxSide = Math.max(inW, inH);
-    const target = (!allowUpscale && maxDim > maxSide) ? maxSide : maxDim;
-
-    if (maxSide <= target) return { w: inW, h: inH };
-    const s = target / maxSide;
-    return { w: Math.max(1, Math.round(inW * s)), h: Math.max(1, Math.round(inH * s)) };
-  }
-
-  async function resizeOne(file, quality, outType, maxDim, mode, allowUpscale) {
+  async function convertOne(file, quality, outType) {
     const bmp = await createImageBitmap(file);
-    const inW = bmp.width, inH = bmp.height;
+    const w = bmp.width, h = bmp.height;
 
-    // If maxDim is 0, treat as "keep original" regardless of mode
-    if (!maxDim || maxDim <= 0) {
-      canvas.width = inW;
-      canvas.height = inH;
-
-      if (outType === "image/jpeg") {
-        const bg = backgroundForJpeg();
-        if (bg) { ctx.fillStyle = bg; ctx.fillRect(0, 0, inW, inH); }
-        else { ctx.clearRect(0, 0, inW, inH); }
-      } else {
-        ctx.clearRect(0, 0, inW, inH);
-      }
-
-      ctx.drawImage(bmp, 0, 0, inW, inH);
-      const blob0 = await new Promise((res) => canvas.toBlob(res, outType, quality));
-      return { blob: blob0, inW, inH, outW: inW, outH: inH };
-    }
-
-    if (mode === "fit") {
-      const { w, h } = computeFitSize(inW, inH, maxDim, allowUpscale);
-      canvas.width = w; canvas.height = h;
-
-      if (outType === "image/jpeg") {
-        const bg = backgroundForJpeg();
-        if (bg) { ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h); }
-        else { ctx.clearRect(0, 0, w, h); }
-      } else {
-        ctx.clearRect(0, 0, w, h);
-      }
-
-      ctx.drawImage(bmp, 0, 0, w, h);
-      const blob = await new Promise((res) => canvas.toBlob(res, outType, quality));
-      return { blob, inW, inH, outW: w, outH: h };
-    }
-
-    // fill/exact: square target (maxDim x maxDim)
-    const maxSide = Math.max(inW, inH);
-    const target = (!allowUpscale && maxDim > maxSide) ? maxSide : maxDim;
-    const outW = Math.max(1, Math.round(target));
-    const outH = outW;
-
-    canvas.width = outW;
-    canvas.height = outH;
+    canvas.width = w;
+    canvas.height = h;
 
     if (outType === "image/jpeg") {
       const bg = backgroundForJpeg();
-      if (bg) { ctx.fillStyle = bg; ctx.fillRect(0, 0, outW, outH); }
-      else { ctx.clearRect(0, 0, outW, outH); }
+      if (bg) {
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+      } else {
+        ctx.clearRect(0, 0, w, h);
+      }
     } else {
-      ctx.clearRect(0, 0, outW, outH);
+      ctx.clearRect(0, 0, w, h);
     }
 
-    if (mode === "fill") {
-      // center-crop to square from source, then scale to target
-      const side = Math.min(inW, inH);
-      const sx = Math.floor((inW - side) / 2);
-      const sy = Math.floor((inH - side) / 2);
-      ctx.drawImage(bmp, sx, sy, side, side, 0, 0, outW, outH);
-    } else {
-      // exact: stretch to square
-      ctx.drawImage(bmp, 0, 0, inW, inH, 0, 0, outW, outH);
-    }
+    ctx.drawImage(bmp, 0, 0, w, h);
 
     const blob = await new Promise((res) => canvas.toBlob(res, outType, quality));
-    return { blob, inW, inH, outW, outH };
+    return blob;
   }
 
   async function processAll() {
@@ -428,10 +360,7 @@
 
     const quality = qualityEl ? Number(qualityEl.value || 80) / 100 : 0.8;
     const selectedFormat = formatEl ? formatEl.value : "auto";
-    const maxDim = maxDimEl ? Number(maxDimEl.value || 0) : 0;
-    const mode = getResizeMode();
-    const allowUpscale = getAllowUpscale();
-    const suffix = getSuffix("-resized");
+    const suffix = getSuffix("-converted");
 
     processBtn.disabled = true;
     zipBtn.disabled = true;
@@ -441,8 +370,6 @@
       it.error = "";
       it.outBlob = null;
       it.outBytes = 0;
-      it.outW = 0; it.outH = 0;
-      it.inW = 0; it.inH = 0;
       it.outName = "";
     }
     renderQueue();
@@ -457,17 +384,14 @@
         renderQueue();
         setStatus("Processing…", `${i + 1}/${total}`);
 
-        const targetType = resolveFormat(it.file.type, selectedFormat);
-        const { blob, inW, inH, outW, outH } = await resizeOne(it.file, quality, targetType, maxDim, mode, allowUpscale);
+        const targetType = resolveFormatForConverter(it.file.type, selectedFormat);
+        const blob = await convertOne(it.file, quality, targetType);
         if (!blob) throw new Error("Failed to export image (toBlob returned null).");
 
         const ext = safeExtFromType(targetType);
         const base = it.file.name.replace(/\.[^.]+$/, "");
         it.outName = `${base}${suffix}.${ext}`;
         it.outBlob = blob;
-
-        it.inW = inW; it.inH = inH;
-        it.outW = outW; it.outH = outH;
         it.outBytes = blob.size || 0;
 
         it.status = "Done";
@@ -482,7 +406,7 @@
 
     processBtn.disabled = false;
     zipBtn.disabled = !anyDone();
-    setStatus("Done", `${doneCount}/${total} processed`);
+    setStatus("Done", `${doneCount}/${total} converted`);
   }
 
   selectBtn.onclick = () => fileInput.click();

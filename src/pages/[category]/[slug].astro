@@ -1,13 +1,16 @@
 ---
-// src/pages/[category]/[slug].astro
 import ToolLayout from "../../layouts/ToolLayout.astro";
 import ToolSeoBlock from "../../components/seo/ToolSeoBlock.astro";
-import { tools, CATEGORY_ORDER } from "../../data/tools";
+import { tools } from "../../data/tools";
 
-// ===== Tool components (add new tool component imports here) =====
+// ===== Tools =====
 import ImageCompressor from "../../components/tools/ImageCompressor.astro";
+import ImageResizer from "../../components/tools/ImageResizer.astro";
+import ImageConverter from "../../components/tools/ImageConverter.astro";
+import ImageToWebp from "../../components/tools/ImageToWebp.astro";
+import ToolPlaceholder from "../../components/tools/ToolPlaceholder.astro";
 
-// ===== Settings components (by settingsType) =====
+// ===== Settings =====
 import ImageSettings from "../../components/settings/ImageSettings.astro";
 import PdfSettings from "../../components/settings/PdfSettings.astro";
 import TextSettings from "../../components/settings/TextSettings.astro";
@@ -16,15 +19,14 @@ import DevSettings from "../../components/settings/DevSettings.astro";
 import ConvertSettings from "../../components/settings/ConvertSettings.astro";
 import MediaSettings from "../../components/settings/MediaSettings.astro";
 
-// ===== Component Maps =====
-const TOOL_COMPONENTS: Record<string, any> = {
+const TOOL_COMPONENTS = {
   "image-compressor": ImageCompressor,
-  // add more:
-  // "image-resizer": ImageResizer,
-  // "pdf-merge": PdfMerge,
+  "image-resizer": ImageResizer,
+  "image-converter": ImageConverter,
+  "image-to-webp": ImageToWebp,
 };
 
-const SETTINGS_COMPONENTS: Record<string, any> = {
+const SETTINGS_COMPONENTS = {
   image: ImageSettings,
   pdf: PdfSettings,
   text: TextSettings,
@@ -35,43 +37,27 @@ const SETTINGS_COMPONENTS: Record<string, any> = {
 };
 
 export async function getStaticPaths() {
-  return tools.map((t) => ({
-    params: { category: t.category, slug: t.slug },
+  return tools.map(t => ({
+    params: { category: t.category, slug: t.slug }
   }));
 }
 
 const { category, slug } = Astro.params;
+const tool = tools.find(t => t.category === category && t.slug === slug);
 
-const tool = tools.find((t) => t.category === category && t.slug === slug);
-if (!tool) throw new Error("Tool not found");
-
-const ToolComponent = TOOL_COMPONENTS[tool.slug] ?? null;
-
-const settingsType = tool.settingsType ?? "none";
-const SettingsComponent =
-  settingsType !== "none" ? (SETTINGS_COMPONENTS[settingsType] ?? null) : null;
-
-const canonical = `https://www.easy2gohub.com/${tool.category}/${tool.slug}/`;
-const adsProfile = tool.adsProfile ?? "default";
+const ToolComponent = tool ? TOOL_COMPONENTS[tool.slug] ?? ToolPlaceholder : ToolPlaceholder;
+const SettingsComponent = tool && tool.settingsType !== "none"
+  ? SETTINGS_COMPONENTS[tool.settingsType] ?? null
+  : null;
 ---
 
 <ToolLayout
-  title={tool.title}
-  description={tool.description}
-  canonical={canonical}
-  adsProfile={adsProfile}
+  title={tool?.title ?? "Tool"}
+  description={tool?.description ?? ""}
+  canonical={`https://www.easy2gohub.com/${category}/${slug}/`}
+  adsProfile={tool?.adsProfile ?? "default"}
 >
-  {ToolComponent ? (
-    <ToolComponent />
-  ) : (
-    <div class="tool-card p-10">
-      <h2 class="text-xl font-extrabold text-slate-900">Tool coming soon</h2>
-      <p class="text-slate-500 mt-2">
-        This tool page is wired. Add a component in <span class="font-mono">src/components/tools</span> and map it in
-        <span class="font-mono"> TOOL_COMPONENTS</span>.
-      </p>
-    </div>
-  )}
+  <ToolComponent />
 
   {SettingsComponent ? (
     <div slot="settings">
@@ -79,5 +65,5 @@ const adsProfile = tool.adsProfile ?? "default";
     </div>
   ) : null}
 
-  <ToolSeoBlock title={tool.title} seo={tool.seo} adsProfile={adsProfile} showAds={adsProfile !== "none"} />
+  <ToolSeoBlock title={tool?.title} seo={tool?.seo} adsProfile={tool?.adsProfile} />
 </ToolLayout>

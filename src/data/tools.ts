@@ -78,10 +78,17 @@ export type SettingsType =
    ========================================================= */
 
 export type ToolSEO = {
-  intro: string;
+  intro?: string;
+
+  // keep old name for compatibility
   howTo?: string[];
+
+  // new recommended name (ToolSeoBlock / future content)
+  steps?: string[];
+
   tips?: string[];
-  faq: { q: string; a: string }[];
+  faq?: { q: string; a: string }[];
+
   lastUpdated?: string;
 };
 
@@ -98,7 +105,7 @@ export type Tool = {
   icon: string;
   tags: string[];
 
-  seo: ToolSEO;
+  seo?: ToolSEO;
 
   settingsType?: SettingsType;
   order?: number;
@@ -145,25 +152,25 @@ export const tools: Tool[] = [
   },
 
   {
-    category: "image",
-    slug: "image-resizer",
-    title: "Image Resizer",
-    description: "Resize images to exact dimensions while keeping quality. No upload required.",
-    icon: "photo_size_select_large",
-    tags: ["Simple", "Accurate"],
-    settingsType: "image",
-    order: 2,
-    adsProfile: "default",
-    seo: {
-      intro:
-        "Resize images for social posts, websites, or documents. Everything runs locally in your browser.",
-      faq: [
-        { q: "Can I keep aspect ratio?", a: "Yes. Lock aspect ratio to prevent distortion." },
-        { q: "Does it upload my file?", a: "No. Everything runs client-side." },
-      ],
-      lastUpdated: "2026-02-10",
-    },
+  title: "Image Resizer",
+  slug: "image-resizer",
+  category: "image",
+  icon: "photo_size_select_large",
+  tags: ["resize", "dimensions", "bulk", "jpg", "png", "webp", "avif"],
+  description: "Resize images locally in your browser. Batch resize, keep quality, optional format output.",
+  seo: {
+    intro:
+      "Resize images directly in your browser with no uploads. Perfect for reducing dimensions for web, email, and social posts—fast, private, and batch-friendly.",
+    faq: [
+      { q: "Does it upload my images?", a: "No. Everything runs locally in your browser—your files never leave your device." },
+      { q: "Will it upscale small images?", a: "No by default. If an image is already smaller than the max dimension, it will be kept as-is." },
+      { q: "What output formats are supported?", a: "You can keep the original format or export to JPEG/PNG/WEBP/AVIF depending on your browser support." },
+    ],
   },
+  settingsType: "image",
+  order: 20,
+  adsProfile: "default",
+},
 
   {
     category: "image",
@@ -187,25 +194,24 @@ export const tools: Tool[] = [
   },
 
   {
-    category: "image",
-    slug: "image-to-webp",
-    title: "Image to WebP",
-    description: "Convert images to WebP for smaller size and faster web performance.",
-    icon: "web",
-    tags: ["Web", "Smaller"],
-    settingsType: "image",
-    order: 4,
-    adsProfile: "light",
-    seo: {
-      intro:
-        "WebP usually produces smaller files for the web. Convert locally with one click.",
-      faq: [
-        { q: "Why WebP?", a: "Smaller size and good quality for web usage." },
-        { q: "Does it work offline?", a: "After the page loads, conversion runs locally." },
-      ],
-      lastUpdated: "2026-02-10",
-    },
-  },
+  category: "image",
+  slug: "image-to-webp",
+  title: "Image to WebP",
+  description: "Convert images to WebP locally for faster websites and better performance.",
+  icon: "image",
+  tags: ["webp", "image", "convert"],
+  settingsType: "image",
+  adsProfile: "default",
+  order: 4,
+  seo: {
+    intro: "Convert PNG, JPG and other images to WebP directly in your browser.",
+    steps: [
+      "Upload your images",
+      "Adjust quality and optional resize settings",
+      "Convert and download WebP images"
+    ]
+  }
+},
 
   {
     category: "pdf",

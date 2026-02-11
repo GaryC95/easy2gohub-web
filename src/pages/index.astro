@@ -1,124 +1,225 @@
 ---
 import ToolLayout from "../layouts/ToolLayout.astro";
-import ToolSeoBlock from "../components/seo/ToolSeoBlock.astro";
-import AdsSlot from "../components/ads/AdsSlot.astro";
-import { CATEGORY_ORDER, CATEGORY_META, getToolsByCategory } from "../data/tools";
+import { CATEGORY_META, getToolsByCategory } from "../data/tools";
 
-const title = "Easy2GoHub - Free Online Tools (Fast & Private)";
+const title = "Easy2GoHub – Free Image Tools (Fast & Private)";
 const description =
-  "Free online tools for images, PDFs, files, and text. Fast and private. No upload required.";
+  "Free browser-based image tools for compression, resizing, and format conversion. 100% private. No uploads. Fast results.";
 const canonical = "https://www.easy2gohub.com/";
 
-const seo = {
-  intro:
-    "Fast, private tools that run locally in your browser — compress images, merge PDFs, format JSON, generate hashes and more. No uploads, no waiting.",
-  steps: [
-    "Choose a category from the left sidebar.",
-    "Open a tool and adjust settings if needed.",
-    "Download your result instantly.",
-  ],
-  tips: [
-    "Local processing: your files stay on your device.",
-    "Simple UI: fewer clicks, faster results.",
-    "New tools can be added without changing the layout.",
-  ],
-  faq: [
-    { q: "Is it free?", a: "Yes. The tools run in your browser and are free to use." },
-    { q: "Are my files uploaded?", a: "No. Tools process locally on your device." },
-  ],
-};
+const imageTools = getToolsByCategory("image");
+
+// 主页 Hero CTA：默认指向最强工具
+const primaryToolHref = "/image/image-compressor/";
 ---
 
-<ToolLayout title={title} description={description} canonical={canonical} adsProfile="default">
-  <section class="tool-card p-10 md:p-12">
-    <div class="grid lg:grid-cols-12 gap-10 items-start">
-      <div class="lg:col-span-7 space-y-5">
-        <h1 class="ty-h1 text-4xl md:text-5xl text-slate-900">
-          Fast, private tools — right in your browser.
-        </h1>
+<ToolLayout title={title} description={description} canonical={canonical} adsProfile="light">
+  {/* Hero */}
+  <section class="tool-card p-6 md:p-10">
+    <div class="grid lg:grid-cols-3 gap-8 items-start">
+      <div class="lg:col-span-2">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-700 text-xs font-extrabold">
+          <span class="material-symbols-outlined text-base">lock</span>
+          Privacy-first • Runs locally
+        </div>
 
-        <p class="ty-body text-base md:text-lg">
-          Compress images, merge PDFs, format JSON, generate hashes — all locally. No uploads.
+        <h2 class="mt-5 text-4xl md:text-5xl font-bold text-slate-900 tracking-tight leading-[1.05]">
+          Fast, private image tools
+          <span class="text-slate-900">— right in your browser.</span>
+        </h2>
+
+        <p class="mt-4 text-slate-600 text-base md:text-lg max-w-2xl leading-relaxed">
+          Compress, resize, and convert images locally on your device.
+          No uploads. No waiting. Just clean results you can trust.
         </p>
 
-        <div class="flex gap-3 flex-wrap">
+        <div class="mt-6 flex flex-col sm:flex-row gap-3">
           <a
             href="/tools/"
-            class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-primary text-white text-sm ty-ui shadow-lg shadow-primary/25 hover:shadow-primary/35 transition"
+            class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary text-white text-sm font-extrabold shadow-lg shadow-primary/25 hover:shadow-primary/35 transition"
           >
             <span class="material-symbols-outlined text-base">apps</span>
             Browse all tools
           </a>
 
           <a
-            href="/image/image-compressor/"
-            class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white/60 border border-white/50 text-sm ty-ui text-slate-900 hover:text-primary hover:bg-white/80 transition"
+            href={primaryToolHref}
+            class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/60 border border-white/60 text-slate-800 text-sm font-extrabold hover:bg-white transition"
           >
-            <span class="material-symbols-outlined text-base text-slate-400">compress</span>
+            <span class="material-symbols-outlined text-base">bolt</span>
             Try Image Compressor
           </a>
         </div>
+
+        <div class="mt-6 grid sm:grid-cols-3 gap-3 text-xs">
+          <div class="bg-white/60 border border-white/60 rounded-2xl p-4">
+            <div class="font-extrabold text-slate-900 flex items-center gap-2">
+              <span class="material-symbols-outlined text-indigo-600 text-base">offline_bolt</span>
+              Local processing
+            </div>
+            <p class="text-slate-500 mt-1 leading-relaxed">
+              Your images stay on your device.
+            </p>
+          </div>
+
+          <div class="bg-white/60 border border-white/60 rounded-2xl p-4">
+            <div class="font-extrabold text-slate-900 flex items-center gap-2">
+              <span class="material-symbols-outlined text-fuchsia-600 text-base">speed</span>
+              Fast results
+            </div>
+            <p class="text-slate-500 mt-1 leading-relaxed">
+              Optimized workflow. Minimal clicks.
+            </p>
+          </div>
+
+          <div class="bg-white/60 border border-white/60 rounded-2xl p-4">
+            <div class="font-extrabold text-slate-900 flex items-center gap-2">
+              <span class="material-symbols-outlined text-emerald-600 text-base">verified</span>
+              Simple & safe
+            </div>
+            <p class="text-slate-500 mt-1 leading-relaxed">
+              No signup required. Clear settings.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div class="lg:col-span-5 space-y-4">
-        <AdsSlot label="Sponsored" variant="banner" />
-        <AdsSlot label="Sponsored" height="h-40" />
-      </div>
-    </div>
-  </section>
+      {/* 右侧：工具预览卡（不放真实广告，保持审核友好） */}
+      <div class="space-y-4">
+        <div class="tool-card p-6">
+          <div class="flex items-center justify-between">
+            <div class="font-bold text-slate-900">Featured</div>
+            <div class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+              Image tools
+            </div>
+          </div>
 
-  <section class="tool-card p-8 md:p-10">
-    <div class="flex items-end justify-between gap-6 mb-6">
-      <h2 class="ty-h2 text-xl md:text-2xl text-slate-900">Explore categories</h2>
-      <p class="ty-body text-sm hidden md:block">Pick a category — then choose a tool inside.</p>
-    </div>
-
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {CATEGORY_ORDER.map((cat) => {
-        const meta = CATEGORY_META[cat];
-        const list = getToolsByCategory(cat);
-        const top = list.slice().sort((a, b) => (a.order ?? 999) - (b.order ?? 999)).slice(0, 3);
-
-        return (
-          <a
-            href={`/${cat}/`}
-            class="tool-card tool-card-hover p-6 rounded-2xl"
-          >
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="size-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center glow-soft">
-                  <span class="material-symbols-outlined">{meta.icon}</span>
-                </div>
-
-                <div class="min-w-0">
-                  <div class="ty-ui text-slate-900 truncate">{meta.label}</div>
-                  <div class="text-[11px] font-medium tracking-wide text-slate-400">
-                    {list.length} tools
+          <div class="mt-4 space-y-3">
+            {imageTools.slice(0, 4).map((t) => (
+              <a
+                href={`/${t.category}/${t.slug}/`}
+                class="flex items-center justify-between gap-3 bg-white/60 border border-white/60 rounded-2xl p-4 hover:bg-white transition"
+              >
+                <div class="flex items-center gap-3 min-w-0">
+                  <span class="material-symbols-outlined text-indigo-600">{t.icon}</span>
+                  <div class="min-w-0">
+                    <div class="font-extrabold text-slate-900 truncate">{t.title}</div>
+                    <div class="text-xs text-slate-500 truncate">{t.description}</div>
                   </div>
                 </div>
-              </div>
+                <span class="material-symbols-outlined text-slate-400">chevron_right</span>
+              </a>
+            ))}
+          </div>
+        </div>
 
-              <span class="material-symbols-outlined text-slate-300">arrow_right_alt</span>
-            </div>
-
-            <p class="ty-body text-sm mt-3">
-              {meta.desc}
-            </p>
-
-            {top.length ? (
-              <div class="mt-4 flex flex-wrap gap-2">
-                {top.map((t) => (
-                  <span class="text-xs font-medium text-slate-600 bg-white/60 border border-white/50 px-2.5 py-1 rounded-full">
-                    {t.title}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-          </a>
-        );
-      })}
+        <div class="tool-card p-6">
+          <div class="flex items-center gap-2 text-sm font-extrabold text-slate-900">
+            <span class="material-symbols-outlined text-indigo-600">info</span>
+            About this site
+          </div>
+          <p class="mt-2 text-slate-600 text-sm leading-relaxed">
+            Easy2GoHub focuses on privacy-first utilities. Most tools run locally in your browser so your files never leave your device.
+          </p>
+          <div class="mt-4 flex gap-2">
+            <a href="/about/" class="px-3 py-2 rounded-xl bg-white/60 border border-white/60 text-xs font-extrabold text-slate-700 hover:bg-white transition">
+              About
+            </a>
+            <a href="/privacy-policy/" class="px-3 py-2 rounded-xl bg-white/60 border border-white/60 text-xs font-extrabold text-slate-700 hover:bg-white transition">
+              Privacy
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <ToolSeoBlock title="Easy2GoHub" seo={seo} showAds={true} adsProfile="default" />
+  {/* Explore */}
+  <section class="tool-card p-6 md:p-10">
+    <div class="flex items-start justify-between gap-6">
+      <div>
+        <h3 class="text-2xl font-bold text-slate-900">Explore image tools</h3>
+        <p class="text-slate-600 mt-2">
+          Pick a tool to get started — everything runs locally in your browser.
+        </p>
+      </div>
+
+      <div class="hidden md:flex items-center gap-2 text-xs font-extrabold text-slate-500">
+        <span class="material-symbols-outlined text-slate-400">shield</span>
+        No uploads • 100% private
+      </div>
+    </div>
+
+    <div class="mt-6 grid lg:grid-cols-3 gap-6 items-start">
+      <div class="bg-white/60 border border-white/60 rounded-2xl p-6">
+        <div class="flex items-start gap-3">
+          <div class="size-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center">
+            <span class={`material-symbols-outlined ${CATEGORY_META.image.iconClass}`}>{CATEGORY_META.image.icon}</span>
+          </div>
+          <div class="min-w-0">
+            <div class="font-extrabold text-slate-900">{CATEGORY_META.image.label}</div>
+            <div class="text-xs text-slate-500 mt-1">{CATEGORY_META.image.desc}</div>
+            <div class="text-[11px] text-slate-400 mt-2 font-extrabold uppercase tracking-wider">
+              {imageTools.length} tools
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-2">
+          {imageTools.map((t) => (
+            <a
+              href={`/${t.category}/${t.slug}/`}
+              class="flex items-center justify-between gap-3 px-3 py-2 rounded-xl hover:bg-white transition"
+            >
+              <span class="text-sm font-semibold text-slate-700">{t.title}</span>
+              <span class="material-symbols-outlined text-slate-400">arrow_forward</span>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <div class="lg:col-span-2 bg-white/40 border border-white/50 rounded-2xl p-6 md:p-8">
+        <h4 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider">How it works</h4>
+        <ol class="mt-4 space-y-2 text-slate-600">
+          <li class="flex gap-3">
+            <span class="mt-0.5 size-6 rounded-full bg-indigo-500/10 text-indigo-700 flex items-center justify-center text-xs font-extrabold shrink-0">1</span>
+            <span>Choose a tool from the sidebar or the list above.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-0.5 size-6 rounded-full bg-indigo-500/10 text-indigo-700 flex items-center justify-center text-xs font-extrabold shrink-0">2</span>
+            <span>Upload images and adjust settings if needed.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-0.5 size-6 rounded-full bg-indigo-500/10 text-indigo-700 flex items-center justify-center text-xs font-extrabold shrink-0">3</span>
+            <span>Download results instantly — processed locally on your device.</span>
+          </li>
+        </ol>
+
+        <h4 class="mt-8 text-sm font-extrabold text-slate-900 uppercase tracking-wider">Tips</h4>
+        <ul class="mt-4 space-y-2 text-slate-600">
+          <li class="flex gap-3">
+            <span class="mt-1 size-2 rounded-full bg-fuchsia-500/60 shrink-0"></span>
+            <span>Use WebP for smaller image sizes on modern browsers.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-1 size-2 rounded-full bg-fuchsia-500/60 shrink-0"></span>
+            <span>Resize large images before uploading to websites to improve performance.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-1 size-2 rounded-full bg-fuchsia-500/60 shrink-0"></span>
+            <span>For photos, JPEG/WebP usually offers the best balance of quality and size.</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  {/* Brand / review-friendly paragraph */}
+  <section class="tool-card p-6 md:p-10">
+    <h3 class="text-2xl font-extrabold text-slate-900">Privacy-first by design</h3>
+    <p class="text-slate-600 mt-3 leading-relaxed max-w-3xl">
+      Easy2GoHub is built to keep your files private. Most tools run fully in your browser, so images are processed on your device
+      instead of being uploaded to a server. We focus on speed, clarity, and safe defaults.
+    </p>
+  </section>
 </ToolLayout>

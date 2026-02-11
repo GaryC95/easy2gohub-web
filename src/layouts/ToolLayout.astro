@@ -23,60 +23,90 @@ const showAds = adsProfile !== "none";
     ></script>
   )}
 
-  <div class="flex h-screen overflow-hidden">
-    <AppSidebar />
-
-    <main class="flex-1 flex flex-col overflow-y-auto">
-      <header class="sticky top-0 z-40 px-8 py-4 glass border-b border-white/40 flex items-center justify-between gap-6">
-        <div class="min-w-0">
-          <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight truncate">
-            {title}
-          </h1>
-          <p class="text-slate-500 mt-1 text-sm md:text-base max-w-3xl">
-            {description}
-          </p>
-          {canonical ? (
-            <p class="text-[11px] text-slate-400 mt-1 font-semibold truncate">
-              {canonical}
-            </p>
-          ) : null}
-        </div>
-
-        <div class="hidden md:flex items-center gap-3">
-          <a
-            href="/tools/"
-            class="px-4 py-2 rounded-xl bg-primary text-white text-sm font-extrabold shadow-lg shadow-primary/25 hover:shadow-primary/35 transition"
-          >
-            All Tools
-          </a>
-        </div>
-      </header>
-
-      <div class="flex-1 p-8 flex gap-8 max-w-7xl mx-auto w-full items-start">
-        {/* Main tool area */}
-        <div class="flex-1 space-y-8">
-          <slot />
-
-          {showAds ? (
-            <slot name="ads-below-tool">
-              <AdsSlot label="Sponsored" height="h-40" />
-            </slot>
-          ) : null}
-
-          <slot name="below-main" />
-        </div>
-
-        {/* Right sidebar */}
-        <aside class="w-80 space-y-6 flex-shrink-0 hidden lg:block">
-          <slot name="settings" />
-
-          {showAds ? (
-            <slot name="ads-right">
-              <AdsSlot label="Sponsored" height="h-56" />
-            </slot>
-          ) : null}
-        </aside>
+  <div class="min-h-screen">
+    <div class="flex">
+      {/* Sidebar: hidden on mobile, visible on md+ */}
+      <div class="hidden md:block">
+        <AppSidebar />
       </div>
-    </main>
+
+      <main class="flex-1">
+        {/* Header */}
+        <header class="sticky top-0 z-40 px-4 md:px-8 py-4 glass border-b border-white/40 flex items-center justify-between gap-4">
+          <div class="min-w-0">
+            <h1 class="text-2xl md:text-4xl font-extrabold text-slate-900 tracking-tight truncate">
+              {title}
+            </h1>
+            <p class="text-slate-500 mt-1 text-sm md:text-base max-w-3xl">
+              {description}
+            </p>
+            {canonical ? (
+              <p class="text-[11px] text-slate-400 mt-1 font-semibold truncate">
+                {canonical}
+              </p>
+            ) : null}
+          </div>
+
+          {/* Desktop CTA */}
+          <div class="hidden md:flex items-center gap-3">
+            <a
+              href="/tools/"
+              class="px-4 py-2 rounded-xl bg-primary text-white text-sm font-extrabold shadow-lg shadow-primary/25 hover:shadow-primary/35 transition"
+            >
+              All Tools
+            </a>
+          </div>
+
+          {/* Mobile CTA */}
+          <div class="md:hidden flex items-center gap-2 shrink-0">
+            <a
+              href="/"
+              class="px-3 py-2 rounded-xl bg-white/60 border border-white/50 text-xs font-extrabold text-slate-700"
+            >
+              Home
+            </a>
+            <a
+              href="/tools/"
+              class="px-3 py-2 rounded-xl bg-primary text-white text-xs font-extrabold shadow-lg shadow-primary/25"
+            >
+              Tools
+            </a>
+          </div>
+        </header>
+
+        <div class="p-4 md:p-8 max-w-7xl mx-auto w-full">
+          <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_20rem] gap-6 lg:gap-8 items-start">
+            {/* Main tool area */}
+            <div class="space-y-8">
+              <slot />
+
+              {/* ✅ Mobile Settings: show on <lg */}
+              <div class="block lg:hidden">
+                <slot name="settings" />
+              </div>
+
+              {showAds ? (
+                <slot name="ads-below-tool">
+                  <AdsSlot label="Sponsored" height="h-40" />
+                </slot>
+              ) : null}
+
+              <slot name="below-main" />
+            </div>
+
+            {/* ✅ Desktop Settings: show on lg+ */}
+            <aside class="space-y-6 hidden lg:block">
+              <slot name="settings" />
+
+              {showAds ? (
+                <slot name="ads-right">
+                  <AdsSlot label="Sponsored" height="h-56" />
+                </slot>
+              ) : null}
+            </aside>
+          </div>
+        </div>
+      </main>
+    </div>
   </div>
 </BaseLayout>

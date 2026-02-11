@@ -1,84 +1,45 @@
 ---
 import ToolLayout from "../../layouts/ToolLayout.astro";
-import ToolSeoBlock from "../../components/seo/ToolSeoBlock.astro";
 import { tools } from "../../data/tools";
-import { CATEGORY_ORDER, CATEGORY_META, getToolsByCategory } from "../../data/tools";
 
-const title = "All Tools - Easy2GoHub";
-const description = "Browse all Easy2GoHub tools by category. Everything runs locally in your browser.";
+const title = "All Tools";
+const description = "Browse all available tools on Easy2GoHub.";
 const canonical = "https://www.easy2gohub.com/tools/";
-
-const seo = {
-  intro:
-    "Browse all tools in one place. Everything runs locally in your browser — fast results, no uploads, and a clean interface.",
-  steps: [
-    "Pick a category card below (or use the left sidebar).",
-    "Open any tool and adjust settings.",
-    "Download your output instantly.",
-  ],
-  tips: [
-    "Most tools support drag & drop.",
-    "If a file is large, try reducing dimensions before heavy compression.",
-    "Bookmark your most-used tools for quick access.",
-  ],
-  faq: [
-    { q: "Do I need an account?", a: "No. Tools work instantly without signing in." },
-    { q: "Will you add more tools?", a: "Yes — categories will grow over time with more utilities." },
-  ],
-};
 ---
 
-<ToolLayout title={title} description={description} canonical={canonical} adsProfile="default">
-  <section class="tool-card p-8 md:p-10">
-    <div class="flex items-end justify-between gap-6 mb-6">
-      <h1 class="ty-h1 text-3xl md:text-4xl text-slate-900">All tools</h1>
-      <p class="ty-body text-sm hidden md:block">Fast • Private • No upload</p>
+<ToolLayout title={title} description={description} canonical={canonical} adsProfile="light">
+  <section class="space-y-6">
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {tools.map((tool) => (
+        <a
+          href={`/${tool.category}/${tool.slug}/`}
+          class="tool-card p-6 hover:scale-[1.02] transition"
+        >
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary">
+              {tool.icon}
+            </span>
+            <h3 class="font-extrabold text-slate-900">
+              {tool.title}
+            </h3>
+          </div>
+          <p class="text-sm text-slate-500 mt-2">
+            {tool.description}
+          </p>
+        </a>
+      ))}
     </div>
 
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {CATEGORY_ORDER.map((cat) => {
-        const meta = CATEGORY_META[cat];
-        const list = getToolsByCategory(cat);
-
-        const top = list.slice().sort((a, b) => (a.order ?? 999) - (b.order ?? 999)).slice(0, 4);
-
-        return (
-          <a
-            href={`/${cat}/`}
-            class="tool-card tool-card-hover p-6 rounded-2xl"
-          >
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="size-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center glow-soft">
-                  <span class="material-symbols-outlined">{meta.icon}</span>
-                </div>
-                <div class="min-w-0">
-                  <div class="ty-ui text-slate-900 truncate">{meta.label}</div>
-                  <div class="text-[11px] font-medium tracking-wide text-slate-400">
-                    {list.length} tools
-                  </div>
-                </div>
-              </div>
-
-              <span class="material-symbols-outlined text-slate-300">arrow_right_alt</span>
-            </div>
-
-            <p class="ty-body text-sm mt-3">{meta.desc}</p>
-
-            {top.length ? (
-              <div class="mt-4 grid grid-cols-2 gap-2">
-                {top.map((t) => (
-                  <span class="text-xs font-medium text-slate-600 bg-white/60 border border-white/50 px-2.5 py-1.5 rounded-xl truncate">
-                    {t.title}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-          </a>
-        );
-      })}
+    {/* SEO 加分段落 */}
+    <div class="tool-card p-8 mt-10">
+      <h2 class="text-xl font-extrabold text-slate-900">
+        Privacy-First Online Tools
+      </h2>
+      <p class="text-slate-600 mt-3 leading-relaxed">
+        All tools on Easy2GoHub run directly in your browser whenever possible.
+        Your files stay on your device and are not uploaded to any server.
+        We focus on speed, simplicity, and privacy-first design.
+      </p>
     </div>
   </section>
-
-  <ToolSeoBlock title="All Tools" seo={seo} showAds={true} adsProfile="default" />
 </ToolLayout>

@@ -1,191 +1,289 @@
 ---
 /**
  * Image to WebP – Pro
- * Batch convert to WebP locally · Quality · Optional resize · ZIP download
- *
- * Reads Settings DOM:
- * - quality
- * - maxDim
- * - resizeMode
- * - allowUpscale
- * - nameSuffix
+ * Multi-file · Quality · Optional resize (maxDim + mode) · ZIP download
  */
 ---
 
-<section class="tool-card p-10 space-y-10">
+<section class="tool-card p-10 space-y-10" data-tool="image-to-webp">
   <div class="text-center">
-    <h2 class="text-3xl font-extrabold text-slate-900">Image to WebP Converter</h2>
-    <p class="text-slate-500 mt-2 text-lg">
-      Convert images to WebP locally for better web performance. No upload. 100% private.
-    </p>
+    <h2 class="text-3xl font-extrabold text-slate-900">Image to WebP</h2>
+    <p class="text-slate-500 mt-2 text-lg">Convert images to WebP locally. No upload. 100% private.</p>
   </div>
 
   <div
-    id="dropzone"
+    data-id="dropzone"
     class="border-2 border-dashed border-indigo-500/30 rounded-2xl bg-white/40
            hover:bg-indigo-50/40 hover:border-indigo-500 transition-all
-           cursor-pointer h-72 flex flex-col items-center justify-center text-center"
+           cursor-pointer h-72 flex flex-col items-center justify-center text-center glow-effect"
   >
     <div class="size-20 bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-600 mb-6">
-      <span class="material-symbols-outlined text-4xl">image</span>
+      <span class="material-symbols-outlined text-4xl">cloud_upload</span>
     </div>
 
-    <h3 class="text-xl font-extrabold text-slate-800 mb-2">Drop images here</h3>
-    <p class="text-sm text-slate-400 mb-6">PNG, JPG, JPEG, WEBP</p>
+    <h3 class="text-xl font-extrabold text-slate-800 mb-2">Drop files here</h3>
+    <p class="text-sm text-slate-400 mb-6">PNG, JPG, WEBP, AVIF up to 25MB each</p>
 
     <button
-      id="selectBtn"
+      type="button"
+      data-id="selectBtn"
       class="bg-indigo-600 text-white px-10 py-3 rounded-full font-extrabold text-sm
              shadow-lg shadow-indigo-600/25 hover:bg-indigo-700 transition-all"
     >
       Select from computer
     </button>
 
-    <input id="fileInput" type="file" accept="image/*" multiple class="hidden" />
+    <input data-id="fileInput" type="file" accept="image/*" multiple class="hidden" />
   </div>
 
-  <div id="queue" class="hidden space-y-3"></div>
+  <div data-id="queue" class="hidden space-y-3"></div>
 
   <div class="flex justify-between items-center pt-6 border-t border-slate-200/60">
     <div class="text-xs text-slate-400 font-extrabold uppercase tracking-wider">
-      Status:
-      <span id="status" class="text-emerald-600">Idle</span>
-      <span id="statHint" class="ml-2"></span>
+      Status: <span data-id="status" class="text-emerald-600">Idle</span>
+      <span data-id="statHint" class="ml-2 text-slate-400 font-semibold normal-case"></span>
     </div>
 
-    <div class="flex gap-3">
-      <button id="clearBtn" class="btn-secondary" disabled>Clear</button>
-      <button id="zipBtn" class="btn-secondary" disabled>Download ZIP</button>
-      <button id="processBtn" class="btn-primary" disabled>Convert to WebP</button>
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        data-id="clearBtn"
+        class="px-4 py-2 rounded-xl text-sm font-extrabold bg-white/60 border border-white/50 hover:bg-white transition disabled:opacity-50"
+        disabled
+      >
+        Clear
+      </button>
+
+      <button
+        type="button"
+        data-id="processBtn"
+        class="bg-indigo-600 text-white px-8 py-3 rounded-xl font-extrabold text-sm
+               shadow-lg shadow-indigo-600/25 hover:bg-indigo-700 transition-all disabled:opacity-50"
+        disabled
+      >
+        Convert to WebP
+      </button>
     </div>
   </div>
 
-  <canvas id="canvas" class="hidden"></canvas>
+  <canvas data-id="canvas" class="hidden"></canvas>
 </section>
 
 <script type="module">
-  const fileInput = document.getElementById("fileInput");
-  const dropzone = document.getElementById("dropzone");
-  const selectBtn = document.getElementById("selectBtn");
-  const queueEl = document.getElementById("queue");
-  const processBtn = document.getElementById("processBtn");
-  const clearBtn = document.getElementById("clearBtn");
-  const zipBtn = document.getElementById("zipBtn");
-  const statusEl = document.getElementById("status");
-  const statHint = document.getElementById("statHint");
-  const canvas = document.getElementById("canvas");
-  const ctx = canvas.getContext("2d");
+  const root = document.querySelector('[data-tool="image-to-webp"]');
+  if (!root) throw new Error("ImageToWebp root not found");
 
-  // Settings
-  const qualityEl = document.getElementById("quality");
-  const maxDimEl = document.getElementById("maxDim");
-  const resizeModeEl = document.getElementById("resizeMode");
-  const allowUpscaleEl = document.getElementById("allowUpscale");
-  const nameSuffixEl = document.getElementById("nameSuffix");
+  if (root.dataset.inited === "1") {
+    // already initialized
+  } else {
+    root.dataset.inited = "1";
 
-  const MAX_SIZE = 25 * 1024 * 1024;
-  let items = [];
+    const $ = (key) => root.querySelector(`[data-id="${key}"]`);
 
-  const fmt = (n) => {
-    const u = ["B","KB","MB"];
-    let i = 0;
-    while (n >= 1024 && i < u.length-1) { n/=1024; i++; }
-    return `${n.toFixed(1)} ${u[i]}`;
-  };
+    const fileInput = $("fileInput");
+    const dropzone = $("dropzone");
+    const selectBtn = $("selectBtn");
+    const queueEl = $("queue");
+    const processBtn = $("processBtn");
+    const clearBtn = $("clearBtn");
+    const statusEl = $("status");
+    const statHint = $("statHint");
+    const canvas = $("canvas");
+    const ctx = canvas.getContext("2d");
 
-  function addFiles(list) {
-    for (const f of list) {
-      if (!f.type.startsWith("image/")) continue;
-      if (f.size > MAX_SIZE) continue;
-      items.push({ file: f, blob: null });
+    // Settings (global IDs from ImageSettings)
+    const qualityEl = document.getElementById("quality");
+    const maxDimEl = document.getElementById("maxDim");
+    const resizeModeEl = document.getElementById("resizeMode");
+    const allowUpscaleEl = document.getElementById("allowUpscale");
+    const nameSuffixEl = document.getElementById("nameSuffix");
+
+    let files = [];
+    const MAX_SIZE = 25 * 1024 * 1024;
+
+    const fmt = (n) => {
+      const u = ["B", "KB", "MB", "GB"];
+      let i = 0, v = n;
+      while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+      return `${v.toFixed(i ? 2 : 0)} ${u[i]}`;
+    };
+
+    function addFiles(list) {
+      for (const f of list) {
+        if (!f || !f.type?.startsWith("image/")) continue;
+        if (f.size > MAX_SIZE) continue;
+        files.push(f);
+      }
+      renderQueue();
     }
-    render();
-  }
 
-  function render() {
-    queueEl.innerHTML = "";
-    if (!items.length) {
-      queueEl.classList.add("hidden");
-      processBtn.disabled = clearBtn.disabled = zipBtn.disabled = true;
-      statusEl.textContent = "Idle";
-      return;
-    }
+    function renderQueue() {
+      if (!files.length) {
+        queueEl.classList.add("hidden");
+        processBtn.disabled = true;
+        clearBtn.disabled = true;
+        statHint.textContent = "";
+        return;
+      }
 
-    queueEl.classList.remove("hidden");
-    processBtn.disabled = clearBtn.disabled = false;
-    zipBtn.disabled = !items.some(i => i.blob);
-    statusEl.textContent = "Ready";
-    statHint.textContent = `• ${items.length} file(s)`;
+      queueEl.innerHTML = "";
+      queueEl.classList.remove("hidden");
+      processBtn.disabled = false;
+      clearBtn.disabled = false;
 
-    items.forEach((it, i) => {
-      const row = document.createElement("div");
-      row.className = "flex justify-between bg-white/70 rounded-xl p-3 text-sm";
-      row.innerHTML = `
-        <div>
-          <div class="font-bold">${it.file.name}</div>
-          <div class="text-xs text-slate-400">
-            ${fmt(it.file.size)} ${it.blob ? "→ " + fmt(it.blob.size) : ""}
+      const total = files.reduce((a, f) => a + f.size, 0);
+      statHint.textContent = `• ${files.length} file(s), ${fmt(total)}`;
+
+      files.forEach((f, i) => {
+        const row = document.createElement("div");
+        row.className = "flex items-center justify-between bg-white/70 rounded-2xl border border-white/60 p-4 text-sm";
+        row.innerHTML = `
+          <div class="min-w-0">
+            <div class="font-extrabold text-slate-800 truncate">${f.name}</div>
+            <div class="text-xs text-slate-400">${fmt(f.size)} • ${f.type || "unknown"}</div>
           </div>
-        </div>
-        <button data-i="${i}" class="text-red-500 font-bold">✕</button>
-      `;
-      row.querySelector("button").onclick = () => {
-        items.splice(i,1); render();
-      };
-      queueEl.appendChild(row);
+          <button type="button" class="text-slate-400 hover:text-red-500 font-extrabold px-2">✕</button>
+        `;
+
+        row.querySelector("button").onclick = () => {
+          files.splice(i, 1);
+          renderQueue();
+        };
+
+        queueEl.appendChild(row);
+      });
+    }
+
+    function readSettings() {
+      const quality = qualityEl ? Number(qualityEl.value || 80) / 100 : 0.8;
+      const maxDim = maxDimEl ? Number(maxDimEl.value || 0) : 0;
+      const resizeMode = resizeModeEl ? (resizeModeEl.value || "fit") : "fit";
+      const allowUpscale =
+        allowUpscaleEl
+          ? (allowUpscaleEl.type === "checkbox" ? allowUpscaleEl.checked : allowUpscaleEl.value === "on")
+          : false;
+      const suffix = nameSuffixEl ? (nameSuffixEl.value || "-webp") : "-webp";
+      return { quality, maxDim, resizeMode, allowUpscale, suffix };
+    }
+
+    function computeTargetSize(sw, sh, maxDim, resizeMode, allowUpscale) {
+      if (!maxDim || maxDim <= 0) return { tw: sw, th: sh, mode: "none" };
+
+      // If no upscale: keep original if already within bounds (for all modes)
+      if (!allowUpscale && sw <= maxDim && sh <= maxDim) {
+        return { tw: sw, th: sh, mode: "none" };
+      }
+
+      if (resizeMode === "exact") {
+        // exact = force square maxDim x maxDim
+        return { tw: maxDim, th: maxDim, mode: "exact" };
+      }
+
+      if (resizeMode === "fill") {
+        // fill = square cover crop into maxDim x maxDim
+        return { tw: maxDim, th: maxDim, mode: "fill" };
+      }
+
+      // fit = contain within maxDim (longest side = maxDim)
+      const s = Math.min(maxDim / sw, maxDim / sh);
+      const tw = Math.max(1, Math.round(sw * s));
+      const th = Math.max(1, Math.round(sh * s));
+      return { tw, th, mode: "fit" };
+    }
+
+    async function convertOne(file, settings) {
+      const bmp = await createImageBitmap(file);
+      const sw = bmp.width, sh = bmp.height;
+
+      const { tw, th, mode } = computeTargetSize(sw, sh, settings.maxDim, settings.resizeMode, settings.allowUpscale);
+
+      canvas.width = tw;
+      canvas.height = th;
+      ctx.clearRect(0, 0, tw, th);
+
+      if (mode === "fill") {
+        // cover crop into square tw x th
+        const scale = Math.max(tw / sw, th / sh);
+        const cw = tw / scale;
+        const ch = th / scale;
+        const sx = Math.max(0, (sw - cw) / 2);
+        const sy = Math.max(0, (sh - ch) / 2);
+        ctx.drawImage(bmp, sx, sy, cw, ch, 0, 0, tw, th);
+      } else if (mode === "exact") {
+        // stretch to square
+        ctx.drawImage(bmp, 0, 0, sw, sh, 0, 0, tw, th);
+      } else {
+        // fit / none
+        ctx.drawImage(bmp, 0, 0, sw, sh, 0, 0, tw, th);
+      }
+
+      const outType = "image/webp";
+      const blob = await new Promise((res) => canvas.toBlob(res, outType, settings.quality));
+      return blob;
+    }
+
+    async function processAll() {
+      statusEl.textContent = "Processing…";
+      processBtn.disabled = true;
+
+      const settings = readSettings();
+      const results = [];
+
+      for (const f of files) {
+        const blob = await convertOne(f, settings);
+        if (!blob) continue;
+
+        const base = f.name.replace(/\.[^.]+$/, "");
+        results.push({
+          name: `${base}${settings.suffix}.webp`,
+          blob,
+        });
+      }
+
+      if (results.length === 1) {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(results[0].blob);
+        a.download = results[0].name;
+        a.click();
+      } else if (results.length > 1) {
+        const { default: JSZip } = await import("https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm");
+        const zip = new JSZip();
+        results.forEach((r) => zip.file(r.name, r.blob));
+        const out = await zip.generateAsync({ type: "blob" });
+
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(out);
+        a.download = "images-webp.zip";
+        a.click();
+      }
+
+      statusEl.textContent = "Done";
+      files = [];
+      renderQueue();
+    }
+
+    // Click anywhere on dropzone -> open picker
+    dropzone.addEventListener("click", (e) => {
+      if (e.target === selectBtn) return;
+      fileInput.click();
     });
+
+    selectBtn.onclick = (e) => {
+      e.preventDefault();
+      fileInput.click();
+    };
+
+    fileInput.onchange = () => addFiles(fileInput.files);
+
+    dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add("ring-2", "ring-indigo-500"); };
+    dropzone.ondragleave = () => dropzone.classList.remove("ring-2", "ring-indigo-500");
+    dropzone.ondrop = (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("ring-2", "ring-indigo-500");
+      addFiles(e.dataTransfer.files);
+    };
+
+    clearBtn.onclick = () => { files = []; renderQueue(); statusEl.textContent = "Idle"; };
+    processBtn.onclick = processAll;
   }
-
-  async function convertOne(file) {
-    const bmp = await createImageBitmap(file);
-    let w = bmp.width, h = bmp.height;
-
-    const maxDim = Number(maxDimEl?.value || 0);
-    const allowUpscale = allowUpscaleEl?.checked;
-    if (maxDim && (w > maxDim || h > maxDim)) {
-      const s = Math.min(maxDim / w, maxDim / h);
-      w = Math.round(w * s);
-      h = Math.round(h * s);
-    }
-
-    canvas.width = w;
-    canvas.height = h;
-    ctx.clearRect(0,0,w,h);
-    ctx.drawImage(bmp,0,0,w,h);
-
-    const q = Number(qualityEl?.value || 80) / 100;
-    return new Promise(res => canvas.toBlob(res, "image/webp", q));
-  }
-
-  async function processAll() {
-    statusEl.textContent = "Processing…";
-    const suffix = nameSuffixEl?.value || "-webp";
-
-    for (const it of items) {
-      const blob = await convertOne(it.file);
-      it.blob = blob;
-      it.name = it.file.name.replace(/\.[^.]+$/, "") + suffix + ".webp";
-    }
-    zipBtn.disabled = false;
-    statusEl.textContent = "Done";
-    render();
-  }
-
-  zipBtn.onclick = async () => {
-    const { default: JSZip } = await import("https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm");
-    const zip = new JSZip();
-    items.forEach(it => zip.file(it.name, it.blob));
-    const out = await zip.generateAsync({ type:"blob" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(out);
-    a.download = "images-webp.zip";
-    a.click();
-  };
-
-  selectBtn.onclick = () => fileInput.click();
-  fileInput.onchange = () => addFiles(fileInput.files);
-  dropzone.ondragover = e => e.preventDefault();
-  dropzone.ondrop = e => { e.preventDefault(); addFiles(e.dataTransfer.files); };
-  clearBtn.onclick = () => { items = []; render(); };
-  processBtn.onclick = processAll;
 </script>

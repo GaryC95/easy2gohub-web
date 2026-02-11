@@ -7,14 +7,13 @@ const {
   title,
   description,
   canonical,
-  adsProfile = "default", // "default" | "light" | "none"
+  adsProfile = "default",
 } = Astro.props;
 
 const showAds = adsProfile !== "none";
 ---
 
 <BaseLayout title={title} description={description} canonical={canonical}>
-  {/* AdSense site verification & global loader (PROD only) */}
   {import.meta.env.PROD && (
     <script
       async
@@ -25,29 +24,19 @@ const showAds = adsProfile !== "none";
 
   <div class="min-h-screen">
     <div class="flex">
-      {/* Sidebar: hidden on mobile, visible on md+ */}
+      {/* Sidebar: mobile hidden */}
       <div class="hidden md:block">
         <AppSidebar />
       </div>
 
       <main class="flex-1">
-        {/* Header */}
         <header class="sticky top-0 z-40 px-4 md:px-8 py-4 glass border-b border-white/40 flex items-center justify-between gap-4">
           <div class="min-w-0">
-            <h1 class="text-2xl md:text-4xl font-extrabold text-slate-900 tracking-tight truncate">
-              {title}
-            </h1>
-            <p class="text-slate-500 mt-1 text-sm md:text-base max-w-3xl">
-              {description}
-            </p>
-            {canonical ? (
-              <p class="text-[11px] text-slate-400 mt-1 font-semibold truncate">
-                {canonical}
-              </p>
-            ) : null}
+            <h1 class="text-2xl md:text-4xl font-extrabold text-slate-900 tracking-tight truncate">{title}</h1>
+            <p class="text-slate-500 mt-1 text-sm md:text-base max-w-3xl">{description}</p>
+            {canonical ? <p class="text-[11px] text-slate-400 mt-1 font-semibold truncate">{canonical}</p> : null}
           </div>
 
-          {/* Desktop CTA */}
           <div class="hidden md:flex items-center gap-3">
             <a
               href="/tools/"
@@ -57,7 +46,6 @@ const showAds = adsProfile !== "none";
             </a>
           </div>
 
-          {/* Mobile CTA */}
           <div class="md:hidden flex items-center gap-2 shrink-0">
             <a
               href="/"
@@ -75,15 +63,11 @@ const showAds = adsProfile !== "none";
         </header>
 
         <div class="p-4 md:p-8 max-w-7xl mx-auto w-full">
+          {/* ✅ 单一 Grid：mobile 变单列，lg 变两列 */}
           <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_20rem] gap-6 lg:gap-8 items-start">
-            {/* Main tool area */}
+            {/* Main */}
             <div class="space-y-8">
               <slot />
-
-              {/* ✅ Mobile Settings: show on <lg */}
-              <div class="block lg:hidden">
-                <slot name="settings" />
-              </div>
 
               {showAds ? (
                 <slot name="ads-below-tool">
@@ -94,8 +78,8 @@ const showAds = adsProfile !== "none";
               <slot name="below-main" />
             </div>
 
-            {/* ✅ Desktop Settings: show on lg+ */}
-            <aside class="space-y-6 hidden lg:block">
+            {/* ✅ 只渲染一次 settings slot */}
+            <aside class="space-y-6">
               <slot name="settings" />
 
               {showAds ? (

@@ -1,20 +1,18 @@
 ---
 /**
- * Image Compressor – Pro (Upgraded + Shared Settings)
- * Multi-file · Quality · Target format · Max dimension · JPEG background for alpha
- * Per-item status · Error handling · Single download · ZIP download · Size savings stats · URL revoke
- * Reads Settings DOM: quality, targetFormat, maxDim, jpegBg, jpegBgColor, nameSuffix
+ * Image Compressor – Pro
+ * Multi-file · Quality · Target format · Max dimension · JPEG background for alpha · ZIP download
  */
 ---
 
-<section class="tool-card p-10 space-y-10">
+<section class="tool-card p-10 space-y-10" data-tool="image-compressor">
   <div class="text-center">
     <h2 class="text-3xl font-extrabold text-slate-900">Pro Image Compressor</h2>
     <p class="text-slate-500 mt-2 text-lg">Compress images locally in your browser. No upload. 100% private.</p>
   </div>
 
   <div
-    id="dropzone"
+    data-id="dropzone"
     class="border-2 border-dashed border-indigo-500/30 rounded-2xl bg-white/40
            hover:bg-indigo-50/40 hover:border-indigo-500 transition-all
            cursor-pointer h-72 flex flex-col items-center justify-center text-center glow-effect"
@@ -27,27 +25,29 @@
     <p class="text-sm text-slate-400 mb-6">PNG, JPG, WEBP, AVIF up to 25MB each</p>
 
     <button
-      id="selectBtn"
+      type="button"
+      data-id="selectBtn"
       class="bg-indigo-600 text-white px-10 py-3 rounded-full font-extrabold text-sm
              shadow-lg shadow-indigo-600/25 hover:bg-indigo-700 transition-all"
     >
       Select from computer
     </button>
 
-    <input id="fileInput" type="file" accept="image/*" multiple class="hidden" />
+    <input data-id="fileInput" type="file" accept="image/*" multiple class="hidden" />
   </div>
 
-  <div id="queue" class="hidden space-y-3"></div>
+  <div data-id="queue" class="hidden space-y-3"></div>
 
   <div class="flex justify-between items-center pt-6 border-t border-slate-200/60">
     <div class="text-xs text-slate-400 font-extrabold uppercase tracking-wider">
-      Status: <span id="status" class="text-emerald-600">Idle</span>
-      <span id="statHint" class="ml-2 text-slate-400 font-semibold normal-case"></span>
+      Status: <span data-id="status" class="text-emerald-600">Idle</span>
+      <span data-id="statHint" class="ml-2 text-slate-400 font-semibold normal-case"></span>
     </div>
 
     <div class="flex items-center gap-3">
       <button
-        id="clearBtn"
+        type="button"
+        data-id="clearBtn"
         class="px-4 py-2 rounded-xl text-sm font-extrabold bg-white/60 border border-white/50 hover:bg-white transition disabled:opacity-50"
         disabled
       >
@@ -55,16 +55,8 @@
       </button>
 
       <button
-        id="zipBtn"
-        class="px-4 py-2 rounded-xl text-sm font-extrabold bg-white/60 border border-white/50 hover:bg-white transition disabled:opacity-50"
-        disabled
-        title="Download all compressed images as a ZIP"
-      >
-        Download ZIP
-      </button>
-
-      <button
-        id="processBtn"
+        type="button"
+        data-id="processBtn"
         class="bg-indigo-600 text-white px-8 py-3 rounded-xl font-extrabold text-sm
                shadow-lg shadow-indigo-600/25 hover:bg-indigo-700 transition-all disabled:opacity-50"
         disabled
@@ -74,308 +66,211 @@
     </div>
   </div>
 
-  <canvas id="canvas" class="hidden"></canvas>
+  <canvas data-id="canvas" class="hidden"></canvas>
 </section>
 
 <script type="module">
-  const fileInput = document.getElementById("fileInput");
-  const dropzone = document.getElementById("dropzone");
-  const selectBtn = document.getElementById("selectBtn");
-  const queueEl = document.getElementById("queue");
-  const processBtn = document.getElementById("processBtn");
-  const clearBtn = document.getElementById("clearBtn");
-  const zipBtn = document.getElementById("zipBtn");
-  const statusEl = document.getElementById("status");
-  const statHint = document.getElementById("statHint");
-  const canvas = document.getElementById("canvas");
-  const ctx = canvas.getContext("2d");
+  const root = document.querySelector('[data-tool="image-compressor"]');
+  if (!root) throw new Error("ImageCompressor root not found");
 
-  // Settings (from right panel)
-  const qualityEl = document.getElementById("quality");
-  const formatEl = document.getElementById("targetFormat");
-  const maxDimEl = document.getElementById("maxDim");
-  const jpegBgEl = document.getElementById("jpegBg");
-  const jpegBgColorEl = document.getElementById("jpegBgColor");
-  const nameSuffixEl = document.getElementById("nameSuffix");
+  // prevent double init (e.g. view transitions)
+  if (root.dataset.inited === "1") {
+    // already initialized
+  } else {
+    root.dataset.inited = "1";
 
-  const MAX_SIZE = 25 * 1024 * 1024;
+    const $ = (key) => root.querySelector(`[data-id="${key}"]`);
 
-  const fmtBytes = (n) => {
-    const u = ["B", "KB", "MB", "GB"];
-    let i = 0, v = n;
-    while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
-    return `${v.toFixed(i ? 2 : 0)} ${u[i]}`;
-  };
+    const fileInput = $("fileInput");
+    const dropzone = $("dropzone");
+    const selectBtn = $("selectBtn");
+    const queueEl = $("queue");
+    const processBtn = $("processBtn");
+    const clearBtn = $("clearBtn");
+    const statusEl = $("status");
+    const statHint = $("statHint");
+    const canvas = $("canvas");
+    const ctx = canvas.getContext("2d");
 
-  const fmtPct = (x) => {
-    if (!Number.isFinite(x)) return "";
-    const v = Math.round(x);
-    return v > 0 ? `+${v}%` : `${v}%`;
-  };
+    // Settings (from right panel) — global IDs from ImageSettings
+    const qualityEl = document.getElementById("quality");
+    const formatEl = document.getElementById("targetFormat");
+    const maxDimEl = document.getElementById("maxDim");
+    const jpegBgEl = document.getElementById("jpegBg");
+    const jpegBgColorEl = document.getElementById("jpegBgColor");
 
-  function uid() {
-    return Math.random().toString(16).slice(2) + Date.now().toString(16);
-  }
+    let files = [];
+    const MAX_SIZE = 25 * 1024 * 1024;
 
-  let items = []; // { id, file, status, error, srcUrl, inBytes, outBytes, outBlob, outName }
+    const fmt = (n) => {
+      const u = ["B", "KB", "MB", "GB"];
+      let i = 0, v = n;
+      while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+      return `${v.toFixed(i ? 2 : 0)} ${u[i]}`;
+    };
 
-  function revokeAllPreviews() {
-    for (const it of items) {
-      if (it.srcUrl) URL.revokeObjectURL(it.srcUrl);
-      it.srcUrl = null;
+    function addFiles(list) {
+      for (const f of list) {
+        if (!f || !f.type?.startsWith("image/")) continue;
+        if (f.size > MAX_SIZE) continue;
+        files.push(f);
+      }
+      renderQueue();
     }
-  }
 
-  function setStatus(text, hint = "") {
-    statusEl.textContent = text;
-    statHint.textContent = hint ? `• ${hint}` : "";
-  }
+    function renderQueue() {
+      if (!files.length) {
+        queueEl.classList.add("hidden");
+        processBtn.disabled = true;
+        clearBtn.disabled = true;
+        statHint.textContent = "";
+        return;
+      }
 
-  function totalsHint() {
-    const totalBytes = items.reduce((a, it) => a + (it.inBytes || 0), 0);
-    return `${items.length} file(s), ${fmtBytes(totalBytes)}`;
-  }
+      queueEl.innerHTML = "";
+      queueEl.classList.remove("hidden");
+      processBtn.disabled = false;
+      clearBtn.disabled = false;
 
-  function anyDone() {
-    return items.some((it) => it.status === "Done" && it.outBlob);
-  }
+      const total = files.reduce((a, f) => a + f.size, 0);
+      statHint.textContent = `• ${files.length} file(s), ${fmt(total)}`;
 
-  function addFiles(list) {
-    for (const f of list) {
-      if (!f?.type?.startsWith("image/")) continue;
-      if (f.size > MAX_SIZE) continue;
+      files.forEach((f, i) => {
+        const row = document.createElement("div");
+        row.className = "flex items-center justify-between bg-white/70 rounded-2xl border border-white/60 p-4 text-sm";
+        row.innerHTML = `
+          <div class="min-w-0">
+            <div class="font-extrabold text-slate-800 truncate">${f.name}</div>
+            <div class="text-xs text-slate-400">${fmt(f.size)} • ${f.type || "unknown"}</div>
+          </div>
+          <button type="button" data-i="${i}" class="text-slate-400 hover:text-red-500 font-extrabold px-2">✕</button>
+        `;
 
-      items.push({
-        id: uid(),
-        file: f,
-        status: "Queued",
-        error: "",
-        srcUrl: URL.createObjectURL(f),
-        inBytes: f.size,
-        outBytes: 0,
-        outBlob: null,
-        outName: "",
+        row.querySelector("button").onclick = () => {
+          files.splice(i, 1);
+          renderQueue();
+        };
+
+        queueEl.appendChild(row);
       });
     }
-    renderQueue();
-  }
 
-  function resolveFormat(original, selected) {
-    if (selected && selected !== "auto") return selected;
-    if (original === "image/png") return "image/png";
-    if (original === "image/webp") return "image/webp";
-    if (original === "image/avif") return "image/avif";
-    return "image/jpeg";
-  }
-
-  function backgroundForJpeg() {
-    const enabled = jpegBgEl?.checked;
-    const mode = jpegBgColorEl?.value || "white";
-    if (!enabled) return null;
-    if (mode === "white") return "#ffffff";
-    if (mode === "black") return "#000000";
-    return "#f8fafc";
-  }
-
-  function safeExtFromType(mime) {
-    const ext = (mime || "").split("/")[1] || "jpg";
-    return ext.replace("jpeg", "jpg");
-  }
-
-  function getSuffix(defaultSuffix) {
-    const s = nameSuffixEl?.value?.trim();
-    return s ? s : defaultSuffix;
-  }
-
-  function downloadBlob(blob, name) {
-    const a = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    a.href = url;
-    a.download = name;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1500);
-  }
-
-  function downloadOne(id) {
-    const it = items.find((x) => x.id === id);
-    if (!it?.outBlob) return;
-    downloadBlob(it.outBlob, it.outName || "image-output");
-  }
-
-  async function downloadZip() {
-    const done = items.filter((it) => it.status === "Done" && it.outBlob);
-    if (!done.length) return;
-
-    setStatus("Zipping…", `${done.length} file(s)`);
-    zipBtn.disabled = true;
-
-    const { default: JSZip } = await import("https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm");
-    const zip = new JSZip();
-    for (const it of done) zip.file(it.outName, it.outBlob);
-
-    const out = await zip.generateAsync({ type: "blob" });
-    downloadBlob(out, "images-output.zip");
-
-    zipBtn.disabled = false;
-    setStatus("Done", `${done.length} file(s)`);
-  }
-
-  function renderQueue() {
-    if (!items.length) {
-      queueEl.classList.add("hidden");
-      processBtn.disabled = true;
-      clearBtn.disabled = true;
-      zipBtn.disabled = true;
-      setStatus("Idle", "");
-      return;
+    function resolveFormat(original, selected) {
+      if (selected && selected !== "auto") return selected;
+      if (original === "image/png") return "image/png";
+      if (original === "image/webp") return "image/webp";
+      if (original === "image/avif") return "image/avif";
+      return "image/jpeg";
     }
 
-    queueEl.classList.remove("hidden");
-    processBtn.disabled = false;
-    clearBtn.disabled = false;
-    zipBtn.disabled = !anyDone();
-    setStatus("Ready", totalsHint());
+    function backgroundForJpeg() {
+      const enabled = jpegBgEl?.checked;
+      const mode = jpegBgColorEl?.value || "white";
+      if (!enabled) return null;
+      if (mode === "white") return "#ffffff";
+      if (mode === "black") return "#000000";
+      return "#f8fafc";
+    }
 
-    queueEl.innerHTML = "";
-    for (const it of items) {
-      const row = document.createElement("div");
-      row.className = "flex items-center justify-between bg-white/70 rounded-2xl border border-white/60 p-4 text-sm gap-4";
+    async function compressOne(file, quality, outType, maxDim) {
+      const bmp = await createImageBitmap(file);
+      let w = bmp.width, h = bmp.height;
 
-      const badgeClass =
-        it.status === "Done" ? "bg-emerald-500/10 text-emerald-700" :
-        it.status === "Processing" ? "bg-indigo-500/10 text-indigo-700" :
-        it.status === "Error" ? "bg-red-500/10 text-red-700" :
-        "bg-slate-500/10 text-slate-700";
-
-      const left = document.createElement("div");
-      left.className = "min-w-0 flex items-center gap-4";
-
-      const thumb = document.createElement("img");
-      thumb.src = it.srcUrl || "";
-      thumb.alt = "";
-      thumb.className = "w-12 h-12 rounded-xl object-cover border border-white/60 bg-white/60 shrink-0";
-
-      const meta = document.createElement("div");
-      meta.className = "min-w-0";
-
-      const title = document.createElement("div");
-      title.className = "font-extrabold text-slate-800 truncate";
-      title.textContent = it.file.name;
-
-      const sub = document.createElement("div");
-      sub.className = "text-xs text-slate-400 flex flex-wrap gap-x-3 gap-y-1";
-
-      const sizePart = it.outBytes
-        ? `${fmtBytes(it.inBytes)} → ${fmtBytes(it.outBytes)} (${fmtPct(((it.outBytes - it.inBytes) / it.inBytes) * 100)})`
-        : `${fmtBytes(it.inBytes)} • ${it.file.type || "unknown"}`;
-
-      sub.innerHTML = `<span>${sizePart}</span>`;
-      meta.appendChild(title);
-      meta.appendChild(sub);
-
-      left.appendChild(thumb);
-      left.appendChild(meta);
-
-      const right = document.createElement("div");
-      right.className = "flex items-center gap-2 shrink-0";
-
-      const badge = document.createElement("div");
-      badge.className = `px-3 py-1 rounded-full text-xs font-extrabold ${badgeClass}`;
-      badge.textContent = it.status;
-
-      const downloadBtn = document.createElement("button");
-      downloadBtn.className = "px-3 py-2 rounded-xl text-xs font-extrabold bg-white/60 border border-white/50 hover:bg-white transition disabled:opacity-50";
-      downloadBtn.textContent = "Download";
-      downloadBtn.disabled = !(it.status === "Done" && it.outBlob);
-      downloadBtn.onclick = () => downloadOne(it.id);
-
-      const removeBtn = document.createElement("button");
-      removeBtn.className = "text-slate-400 hover:text-red-500 font-extrabold px-2";
-      removeBtn.textContent = "✕";
-      removeBtn.onclick = () => removeOne(it.id);
-
-      right.appendChild(badge);
-      right.appendChild(downloadBtn);
-      right.appendChild(removeBtn);
-
-      row.appendChild(left);
-      row.appendChild(right);
-
-      if (it.status === "Error" && it.error) {
-        const err = document.createElement("div");
-        err.className = "mt-3 text-xs font-semibold text-red-600 bg-red-500/10 border border-red-500/10 rounded-xl p-3";
-        err.textContent = it.error;
-
-        const wrap = document.createElement("div");
-        wrap.className = "w-full";
-        wrap.appendChild(row);
-        wrap.appendChild(err);
-        queueEl.appendChild(wrap);
-      } else {
-        queueEl.appendChild(row);
+      if (maxDim && (w > maxDim || h > maxDim)) {
+        const s = Math.min(maxDim / w, maxDim / h);
+        w = Math.max(1, Math.round(w * s));
+        h = Math.max(1, Math.round(h * s));
       }
+
+      canvas.width = w;
+      canvas.height = h;
+
+      if (outType === "image/jpeg") {
+        const bg = backgroundForJpeg();
+        if (bg) {
+          ctx.fillStyle = bg;
+          ctx.fillRect(0, 0, w, h);
+        } else {
+          ctx.clearRect(0, 0, w, h);
+        }
+      } else {
+        ctx.clearRect(0, 0, w, h);
+      }
+
+      ctx.drawImage(bmp, 0, 0, w, h);
+
+      const blob = await new Promise((res) => canvas.toBlob(res, outType, quality));
+      return blob;
     }
+
+    async function processAll() {
+      statusEl.textContent = "Processing…";
+      processBtn.disabled = true;
+
+      const quality = qualityEl ? Number(qualityEl.value || 80) / 100 : 0.8;
+      const selectedFormat = formatEl ? formatEl.value : "auto";
+      const maxDim = maxDimEl ? Number(maxDimEl.value || 0) : 0;
+
+      const results = [];
+
+      for (const f of files) {
+        const targetType = resolveFormat(f.type, selectedFormat);
+        const blob = await compressOne(f, quality, targetType, maxDim);
+        if (!blob) continue;
+
+        const ext = targetType.split("/")[1].replace("jpeg", "jpg");
+        results.push({
+          name: f.name.replace(/\.[^.]+$/, "") + `-compressed.${ext}`,
+          blob,
+        });
+      }
+
+      if (results.length === 1) {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(results[0].blob);
+        a.download = results[0].name;
+        a.click();
+      } else if (results.length > 1) {
+        const { default: JSZip } = await import("https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm");
+        const zip = new JSZip();
+        results.forEach((r) => zip.file(r.name, r.blob));
+        const out = await zip.generateAsync({ type: "blob" });
+
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(out);
+        a.download = "images-compressed.zip";
+        a.click();
+      }
+
+      statusEl.textContent = "Done";
+      files = [];
+      renderQueue();
+    }
+
+    // ✅ Click anywhere on dropzone -> open picker
+    dropzone.addEventListener("click", (e) => {
+      // avoid double trigger when clicking button
+      if (e.target === selectBtn) return;
+      fileInput.click();
+    });
+
+    selectBtn.onclick = (e) => {
+      e.preventDefault();
+      fileInput.click();
+    };
+
+    fileInput.onchange = () => addFiles(fileInput.files);
+
+    dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add("ring-2", "ring-indigo-500"); };
+    dropzone.ondragleave = () => dropzone.classList.remove("ring-2", "ring-indigo-500");
+    dropzone.ondrop = (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("ring-2", "ring-indigo-500");
+      addFiles(e.dataTransfer.files);
+    };
+
+    clearBtn.onclick = () => { files = []; renderQueue(); statusEl.textContent = "Idle"; };
+
+    processBtn.onclick = processAll;
   }
-
-  function removeOne(id) {
-    const idx = items.findIndex((x) => x.id === id);
-    if (idx === -1) return;
-    const it = items[idx];
-    if (it?.srcUrl) URL.revokeObjectURL(it.srcUrl);
-    items.splice(idx, 1);
-    renderQueue();
-  }
-
-  async function compressOne(file, quality, outType, maxDim) {
-    const bmp = await createImageBitmap(file);
-    let w = bmp.width, h = bmp.height;
-
-    if (maxDim && (w > maxDim || h > maxDim)) {
-      const s = Math.min(maxDim / w, maxDim / h);
-      w = Math.max(1, Math.round(w * s));
-      h = Math.max(1, Math.round(h * s));
-    }
-
-    canvas.width = w;
-    canvas.height = h;
-
-    if (outType === "image/jpeg") {
-      const bg = backgroundForJpeg();
-      if (bg) { ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h); }
-      else { ctx.clearRect(0, 0, w, h); }
-    } else {
-      ctx.clearRect(0, 0, w, h);
-    }
-
-    ctx.drawImage(bmp, 0, 0, w, h);
-
-    const blob = await new Promise((res) => canvas.toBlob(res, outType, quality));
-    return blob;
-  }
-
-  async function processAll() {
-    if (!items.length) return;
-
-    setStatus("Processing…", totalsHint());
-    processBtn.disabled = true;
-    zipBtn.disabled = true;
-
-    const quality = qualityEl ? Number(qualityEl.value || 80) / 100 : 0.8;
-    const selectedFormat = formatEl ? formatEl.value : "auto";
-    const maxDim = maxDimEl ? Number(maxDimEl.value || 0) : 0;
-    const suffix = getSuffix("-compressed");
-
-    for (const it of items) {
-      it.status = "Queued";
-      it.error = "";
-      it.outBlob = null;
-      it.outBytes = 0;
-      it.outName = "";
-    }
-    renderQueue();
-
-    const total = items.length;
-    let doneCount = 0;
-
-    for (let i = 0; i < items.length; i++) {
-      const it =
+</script>

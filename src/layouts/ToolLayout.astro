@@ -3,6 +3,7 @@ import BaseLayout from "./BaseLayout.astro";
 import AppSidebar from "../components/ui/AppSidebar.astro";
 import AdsSlot from "../components/ads/AdsSlot.astro";
 import StickyAd from "../components/ads/StickyAd.astro";
+import toolBootUrl from "../lib/image/tool-boot.js?url";
 
 const {
   title,
@@ -99,22 +100,5 @@ const isToolPage = !!toolSlug;
     </div>
   </div>
 
-  <script type="module">
-    import { initImageTool } from "/src/lib/image/image-engine.js";
-
-    const scope = document.querySelector("[data-tool-scope]");
-    if (!scope) {
-      console.warn("[tool-init] missing [data-tool-scope]");
-    } else {
-      scope.querySelectorAll("[data-tool-root]").forEach((root) => {
-        const slug = root.getAttribute("data-tool-root");
-        if (!slug) return;
-        try {
-          initImageTool({ slug, root });
-        } catch (e) {
-          console.error("[tool-init] failed", slug, e);
-        }
-      });
-    }
-  </script>
+  <script type="module" src={toolBootUrl}></script>
 </BaseLayout>

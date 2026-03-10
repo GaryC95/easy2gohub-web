@@ -18,13 +18,7 @@ const isToolPage = !!toolSlug;
 ---
 
 <BaseLayout title={title} description={description} canonical={canonical}>
-  {import.meta.env.PROD && (
-    <script
-      async
-      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1409463603356964"
-      crossorigin="anonymous"
-    ></script>
-  )}
+  
 
   <div class="min-h-screen bg-slate-50">
     <div class="flex">
@@ -35,7 +29,7 @@ const isToolPage = !!toolSlug;
       <main class="flex-1 min-w-0 relative bg-gradient-to-br from-slate-50 via-indigo-100/60 to-fuchsia-100/45">
   {/* ✅ Simple but more visible gradient background */}
   <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-    <div class="absolute inset-0 bg-gradient-to-br from-slate-50 via-indigo-50/55 to-fuchsia-50/45"></div>
+    
     <div class="absolute -top-24 -right-24 size-[560px] rounded-full bg-indigo-500/18 blur-3xl"></div>
   <div class="absolute -bottom-28 -left-24 size-[560px] rounded-full bg-sky-500/18 blur-3xl"></div>
 </div>

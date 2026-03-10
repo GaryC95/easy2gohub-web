@@ -3,76 +3,106 @@ import ToolLayout from "../layouts/ToolLayout.astro";
 
 const title = "Privacy Policy";
 const description =
-  "Privacy Policy for Easy2GoHub. Learn how we handle data, cookies, and third-party advertising (Google AdSense).";
+  "Easy2GoHub Privacy Policy: local processing (no uploads by default), cookies, analytics, and Google AdSense advertising.";
 const canonical = "https://www.easy2gohub.com/privacy-policy/";
 ---
 
 <ToolLayout title={title} description={description} canonical={canonical} adsProfile="none">
   <section class="tool-card p-10 space-y-6">
-    <h2 class="text-3xl font-extrabold text-slate-900">Privacy Policy</h2>
-    <p class="text-slate-600 leading-relaxed">
-      This Privacy Policy describes how Easy2GoHub (“we”, “our”, “us”) collects, uses, and shares information when you
-      use our website and tools.
+    <h1 class="text-3xl font-semibold text-slate-900 text-center">Privacy Policy</h1>
+
+    <p class="text-slate-700 leading-relaxed max-w-3xl mx-auto">
+      This Privacy Policy explains how Easy2GoHub (“we”, “our”, “us”) handles information when you use our website and
+      browser-based tools. Easy2GoHub focuses on privacy-first utilities that run locally in your browser.
     </p>
 
     <div class="space-y-3">
-      <h3 class="text-xl font-extrabold text-slate-900">1) Local Processing</h3>
-      <p class="text-slate-600 leading-relaxed">
-        Our tools are designed to run locally in your browser whenever possible. Files you process (such as images or PDFs)
-        are not uploaded to our servers unless a feature explicitly states otherwise.
+      <h2 class="text-xl font-semibold text-slate-900">1) Local Processing (No Uploads by Default)</h2>
+      <p class="text-slate-700 leading-relaxed">
+        Most Easy2GoHub tools process your files locally in your browser. For our current image tools, the images you add
+        are processed on your device and are not uploaded to our servers by default.
+      </p>
+      <p class="text-slate-700 leading-relaxed">
+        If we introduce any feature that requires uploading files to a server in the future, we will clearly disclose that
+        on the tool page before you use it.
       </p>
     </div>
 
     <div class="space-y-3">
-      <h3 class="text-xl font-extrabold text-slate-900">2) Analytics & Log Data</h3>
-      <p class="text-slate-600 leading-relaxed">
-        Like most websites, we may collect basic usage data (for example, pages visited, browser type, and approximate
-        region) to improve performance and user experience. This data is used in aggregate and does not directly identify you.
+      <h2 class="text-xl font-semibold text-slate-900">2) Information We Collect</h2>
+      <p class="text-slate-700 leading-relaxed">
+        We may collect limited information to operate and improve the website:
+      </p>
+      <ul class="mt-2 space-y-2 text-slate-700 leading-relaxed list-disc pl-6">
+        <li>
+          <span class="font-semibold text-slate-900">Basic usage and log data:</span> pages visited, approximate region,
+          device/browser type, and performance metrics.
+        </li>
+        <li>
+          <span class="font-semibold text-slate-900">Cookies and similar technologies:</span> used for site preferences,
+          analytics, and advertising (see below).
+        </li>
+      </ul>
+      <p class="text-slate-700 leading-relaxed">
+        We do not intentionally collect sensitive personal information through our tools. Do not submit sensitive personal
+        data to the site.
       </p>
     </div>
 
     <div class="space-y-3">
-      <h3 class="text-xl font-extrabold text-slate-900">3) Cookies</h3>
-      <p class="text-slate-600 leading-relaxed">
-        We and our partners may use cookies or similar technologies to deliver and measure ads and to understand site usage.
-        You can control cookies through your browser settings.
+      <h2 class="text-xl font-semibold text-slate-900">3) Cookies</h2>
+      <p class="text-slate-700 leading-relaxed">
+        Cookies are small files stored by your browser. We and our partners may use cookies (or similar technologies) to:
+      </p>
+      <ul class="mt-2 space-y-2 text-slate-700 leading-relaxed list-disc pl-6">
+        <li>remember preferences and improve user experience</li>
+        <li>measure site performance and understand aggregated usage</li>
+        <li>deliver and measure ads (if ads are enabled)</li>
+      </ul>
+      <p class="text-slate-700 leading-relaxed">
+        You can control cookies through your browser settings. Disabling cookies may affect some site functionality.
       </p>
     </div>
 
     <div class="space-y-3">
-      <h3 class="text-xl font-extrabold text-slate-900">4) Google AdSense</h3>
-      <p class="text-slate-600 leading-relaxed">
-        We may display advertisements served by Google AdSense. Google may use cookies to serve ads based on your visits to
-        this and other websites. You can opt out of personalized advertising by visiting Google’s Ads Settings.
+      <h2 class="text-xl font-semibold text-slate-900">4) Google AdSense (Advertising)</h2>
+      <p class="text-slate-700 leading-relaxed">
+        We may display ads served by Google AdSense. Google and its partners may use cookies to serve ads based on your
+        visits to this and other websites. Depending on your settings, this may include personalized advertising.
       </p>
-      <p class="text-slate-600 leading-relaxed">
-        Learn more about how Google uses information from sites or apps that use its services in Google’s policies.
+      <p class="text-slate-700 leading-relaxed">
+        You can manage or opt out of personalized ads in Google’s Ads Settings, and learn more about how Google uses
+        information in Google’s privacy and advertising resources.
       </p>
     </div>
 
     <div class="space-y-3">
-      <h3 class="text-xl font-extrabold text-slate-900">5) Data Security</h3>
-      <p class="text-slate-600 leading-relaxed">
+      <h2 class="text-xl font-semibold text-slate-900">5) Data Security</h2>
+      <p class="text-slate-700 leading-relaxed">
         We take reasonable steps to protect the website. However, no method of transmission over the internet or method of
         electronic storage is 100% secure.
       </p>
     </div>
 
     <div class="space-y-3">
-      <h3 class="text-xl font-extrabold text-slate-900">6) Changes</h3>
-      <p class="text-slate-600 leading-relaxed">
-        We may update this policy from time to time. The updated version will be posted on this page.
+      <h2 class="text-xl font-semibold text-slate-900">6) Children’s Privacy</h2>
+      <p class="text-slate-700 leading-relaxed">
+        Easy2GoHub is not directed to children under 13, and we do not knowingly collect personal information from children.
       </p>
     </div>
 
     <div class="space-y-3">
-      <h3 class="text-xl font-extrabold text-slate-900">7) Contact</h3>
-      <p class="text-slate-600 leading-relaxed">
-        If you have questions about this policy, you can contact us at:
-        <span class="font-semibold"> easy2gohub@gmail.com</span>
+      <h2 class="text-xl font-semibold text-slate-900">7) Changes to This Policy</h2>
+      <p class="text-slate-700 leading-relaxed">
+        We may update this policy from time to time. The most recent version will be posted on this page.
       </p>
-      <p class="text-xs text-slate-400 font-semibold">
-        Last updated: 2026-02-11
+    </div>
+
+    <div class="space-y-3">
+      <h2 class="text-xl font-semibold text-slate-900">8) Contact</h2>
+      <p class="text-slate-700 leading-relaxed">
+        If you have questions about this policy, contact us at:
+        <span class="font-semibold text-slate-900"> easy2gohub@gmail.com</span>
       </p>
     </div>
   </section>

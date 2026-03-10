@@ -1,43 +1,46 @@
 ---
 import ToolLayout from "../layouts/ToolLayout.astro";
 
-const title = "About Easy2GoHub";
+const title = "About";
 const description =
-  "Learn more about Easy2GoHub — a privacy-first collection of browser-based tools for images, documents, and developers.";
+  "About Easy2GoHub: privacy-first image tools that run locally in your browser (no uploads by default).";
 const canonical = "https://www.easy2gohub.com/about/";
 ---
 
 <ToolLayout title={title} description={description} canonical={canonical} adsProfile="none">
   <section class="tool-card p-10 space-y-6">
-    <h2 class="text-3xl font-extrabold text-slate-900">About Easy2GoHub</h2>
+    <h1 class="text-3xl font-semibold text-slate-900 text-center">About Easy2GoHub</h1>
 
-    <p class="text-slate-600 leading-relaxed">
-      Easy2GoHub is a collection of simple, fast, and privacy-first tools designed to help you get everyday tasks done
-      directly in your browser.
-    </p>
-
-    <p class="text-slate-600 leading-relaxed">
-      Our tools focus on common needs such as image processing, PDF handling, text formatting, and developer utilities.
-      Whenever possible, processing happens locally on your device — meaning your files are not uploaded to our servers.
-    </p>
-
-    <p class="text-slate-600 leading-relaxed">
-      We believe useful tools should be accessible, transparent, and respectful of user privacy. Easy2GoHub is built with
-      modern web technologies and is continuously improved based on real-world usage.
+    <p class="text-slate-700 leading-relaxed max-w-3xl mx-auto">
+      Easy2GoHub is a collection of simple, fast, privacy-first tools designed to help you complete everyday tasks directly
+      in your browser.
     </p>
 
     <div class="space-y-3">
-      <h3 class="text-xl font-extrabold text-slate-900">Contact</h3>
-      <p class="text-slate-600 leading-relaxed">
-        If you have questions, feedback, or suggestions, feel free to reach out:
-      </p>
-      <p class="text-slate-700 font-semibold">
-        easy2gohub@gmail.com
+      <h2 class="text-xl font-semibold text-slate-900">What Easy2GoHub Does</h2>
+      <p class="text-slate-700 leading-relaxed">
+        Right now, Easy2GoHub focuses on image tools — compressing, resizing, converting formats, cropping, and basic edits.
+        More categories (PDF, files, and text utilities) may be added later.
       </p>
     </div>
 
-    <p class="text-xs text-slate-400 font-semibold">
-      Last updated: 2026-02-11
-    </p>
+    <div class="space-y-3">
+      <h2 class="text-xl font-semibold text-slate-900">Privacy First</h2>
+      <p class="text-slate-700 leading-relaxed">
+        Our goal is to keep your files on your device. Most tools run locally in your browser, which means your images are
+        processed without being uploaded to our servers by default.
+      </p>
+      <p class="text-slate-700 leading-relaxed">
+        If a future tool requires uploading files, that will be clearly disclosed on the tool page before you use it.
+      </p>
+    </div>
+
+    <div class="space-y-3">
+      <h2 class="text-xl font-semibold text-slate-900">Contact</h2>
+      <p class="text-slate-700 leading-relaxed">
+        Questions, feedback, or suggestions?
+        Email us at <span class="font-semibold text-slate-900">easy2gohub@gmail.com</span>.
+      </p>
+    </div>
   </section>
 </ToolLayout>

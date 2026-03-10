@@ -1,8 +1,12 @@
+// src/lib/image/tool-boot.js
 import { initImageTool } from "./image-engine.js";
 
-function boot() {
+function initAllTools() {
   const scope = document.querySelector("[data-tool-scope]");
-  if (!scope) return;
+  if (!scope) {
+    console.warn("[tool-init] missing [data-tool-scope]");
+    return; // ✅ return 在函数内没问题
+  }
 
   scope.querySelectorAll("[data-tool-root]").forEach((root) => {
     const slug = root.getAttribute("data-tool-root");
@@ -16,7 +20,7 @@ function boot() {
 }
 
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", boot);
+  document.addEventListener("DOMContentLoaded", initAllTools);
 } else {
-  boot();
+  initAllTools();
 }

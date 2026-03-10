@@ -115,7 +115,7 @@ export function initImageTool({ slug, root }) {
       isResizer,
       forceRemount: false,
       onPreviewUpdated: ({ file0, previewBlob, previewMs, previewFallback }) => {
-        stats.updatePreview(file0, previewBlob, previewMs, previewFallback);
+        stats.updatePreview(file0, previewBlob, previewMs, previewFallback, state);
       },
       onPreviewFallbackToast: () => {
         if (shouldShowPreviewFallbackToast()) {
@@ -150,7 +150,6 @@ export function initImageTool({ slug, root }) {
     state.ui.warnedAdvanced = false;
     state.ui.lastProcessHadFallback = false;
     state.ui.lastProcessHadAnySaved = false;
-    lastPngNoticeSig: "";
 
     const f0 = state.files[0];
     if (f0) {
@@ -188,7 +187,7 @@ export function initImageTool({ slug, root }) {
       isResizer,
       forceRemount: true,
       onPreviewUpdated: ({ file0, previewBlob, previewMs, previewFallback }) => {
-        stats.updatePreview(file0, previewBlob, previewMs, previewFallback);
+        stats.updatePreview(file0, previewBlob, previewMs, previewFallback, state);
       },
       onPreviewFallbackToast: () => {
         if (shouldShowPreviewFallbackToast()) {
@@ -208,7 +207,7 @@ export function initImageTool({ slug, root }) {
     stats.idle();
     if (f0) {
       const entry = state.previews.get(f0.id);
-      if (entry) stats.updatePreview(f0, entry.previewBlob, entry.previewMs, entry.previewFallback);
+      if (entry) stats.updatePreview(f0, entry.previewBlob, entry.previewMs, entry.previewFallback, state);
     }
   }
 
@@ -358,6 +357,7 @@ if (isUserInput && !state.ui.warnedAdvanced) {
 
           renderResults({ dom, state });
           setZipEnabled(state.results.size > 1);
+          stats.afterProcess(state);
           if (state.slug === "image-cropper") {
   showToast({ tone: "success", message: "Cropped! Scroll down to download.", ms: 2200 });
 }
@@ -426,7 +426,7 @@ if (isUserInput && !state.ui.warnedAdvanced) {
           isResizer,
           forceRemount: false,
           onPreviewUpdated: ({ file0, previewBlob, previewMs, previewFallback }) => {
-            stats.updatePreview(file0, previewBlob, previewMs, previewFallback);
+            stats.updatePreview(file0, previewBlob, previewMs, previewFallback, state);
           },
           onPreviewFallbackToast: () => {
             if (shouldShowPreviewFallbackToast()) {

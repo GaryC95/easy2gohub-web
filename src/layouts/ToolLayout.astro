@@ -3,7 +3,6 @@ import BaseLayout from "./BaseLayout.astro";
 import AppSidebar from "../components/ui/AppSidebar.astro";
 import AdsSlot from "../components/ads/AdsSlot.astro";
 import StickyAd from "../components/ads/StickyAd.astro";
-import toolBootUrl from "../lib/image/tool-boot.js?url";
 
 const {
   title,
@@ -94,5 +93,5 @@ const isToolPage = !!toolSlug;
     </div>
   </div>
 
-  <script type="module" src={toolBootUrl}></script>
+  <script src="../lib/image/tool-boot.js"></script>
 </BaseLayout>

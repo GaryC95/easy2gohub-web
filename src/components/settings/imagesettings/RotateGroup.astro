@@ -1,0 +1,32 @@
+---
+// src/components/settings/imagesettings/RotateGroup.astro
+---
+
+<div class="space-y-3">
+  <label class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 block">
+    Rotate & Flip
+  </label>
+
+  <select
+    class="w-full px-3 py-2 rounded-xl bg-white/70 border border-slate-200/70"
+    data-setting="rotateDeg"
+    data-bind="settings.rotateDeg"
+  >
+    <option value="0">0°</option>
+    <option value="90">90°</option>
+    <option value="180">180°</option>
+    <option value="270">270°</option>
+  </select>
+
+  <div class="flex items-center justify-between gap-3">
+    <label class="flex items-center gap-2 text-sm text-slate-700">
+      <input type="checkbox" class="accent-blue-600" data-setting="flipX" data-bind="settings.flipX" />
+      Flip X
+    </label>
+
+    <label class="flex items-center gap-2 text-sm text-slate-700">
+      <input type="checkbox" class="accent-blue-600" data-setting="flipY" data-bind="settings.flipY" />
+      Flip Y
+    </label>
+  </div>
+</div>

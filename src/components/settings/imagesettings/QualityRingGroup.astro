@@ -1,0 +1,40 @@
+---
+---
+
+<div class="flex flex-col items-center">
+  <div class="relative w-48 h-48 flex items-center justify-center select-none">
+    <svg class="w-full h-full -rotate-90">
+      <circle class="text-slate-200" cx="96" cy="96" r="80" fill="transparent" stroke="currentColor" stroke-width="12"></circle>
+      <circle
+        data-role="quality-ring"
+        cx="96"
+        cy="96"
+        r="80"
+        fill="transparent"
+        stroke="#137fec"
+        stroke-width="12"
+        stroke-linecap="round"
+        stroke-dasharray="502"
+        stroke-dashoffset="150"
+        class="drop-shadow-[0_0_10px_rgba(19,127,236,0.35)]"
+      ></circle>
+    </svg>
+
+    <div class="absolute inset-0 flex flex-col items-center justify-center">
+      <span class="text-5xl font-semibold text-slate-900" data-role="quality-number">85</span>
+      <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mt-1">
+        Quality Level
+      </span>
+    </div>
+  </div>
+
+  <input
+    class="w-full mt-6 h-1.5 rounded-lg appearance-none cursor-pointer"
+    type="range"
+    min="1"
+    max="100"
+    value="85"
+    data-setting="quality"
+    data-bind="settings.quality"
+  />
+</div>

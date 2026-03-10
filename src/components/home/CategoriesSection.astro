@@ -1,0 +1,137 @@
+---
+import ToolGrid from "../ToolGrid.astro";
+import AdsSlot from "../ads/AdsSlot.astro";
+
+const { categories, showInFeed, showExtraBox } = Astro.props as {
+  categories: Array<{ cat: string; meta: any; list: any[] }>;
+  showInFeed: boolean;
+  showExtraBox: boolean;
+};
+
+const themeByCat: Record<string, { header: string; badge: string; iconWrap: string }> = {
+  image: {
+    header: "bg-gradient-to-br from-indigo-500/12 to-sky-500/12",
+    badge: "bg-indigo-500/10 text-indigo-800",
+    iconWrap: "bg-indigo-500/10",
+  },
+  pdf: {
+    header: "bg-gradient-to-br from-violet-500/12 to-fuchsia-500/12",
+    badge: "bg-violet-500/10 text-violet-800",
+    iconWrap: "bg-violet-500/10",
+  },
+  text: {
+    header: "bg-gradient-to-br from-emerald-500/12 to-teal-500/12",
+    badge: "bg-emerald-500/10 text-emerald-800",
+    iconWrap: "bg-emerald-500/10",
+  },
+  file: {
+    header: "bg-gradient-to-br from-orange-500/12 to-amber-500/12",
+    badge: "bg-orange-500/10 text-orange-800",
+    iconWrap: "bg-orange-500/10",
+  },
+  video: {
+    header: "bg-gradient-to-br from-rose-500/12 to-pink-500/12",
+    badge: "bg-rose-500/10 text-rose-800",
+    iconWrap: "bg-rose-500/10",
+  },
+};
+
+function shortDesc(s: string) {
+  const t = (s || "").trim();
+  if (t.length <= 84) return t;
+  return t.slice(0, 84) + "…";
+}
+---
+
+<section class="space-y-5 mt-6">
+  {categories.map((c, idx) => {
+    const theme = themeByCat[c.cat] ?? {
+      header: "bg-gradient-to-br from-slate-500/10 to-slate-500/5",
+      badge: "bg-slate-900/5 text-slate-800",
+      iconWrap: "bg-slate-900/5",
+    };
+
+    return (
+      <>
+        {/* ✅ 整块分类卡：Hero 风格渐层背景（无小图标） */}
+        <div class="glass rounded-3xl overflow-hidden border border-slate-200/70 bg-white/40 backdrop-blur shadow-[0_16px_50px_rgba(2,6,23,0.06)] relative">
+          {/* Global bg layer inside this category block */}
+          <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+            <div class="absolute inset-0 bg-gradient-to-br from-slate-50 via-indigo-50/35 to-fuchsia-50/25"></div>
+
+            {/* soft blobs */}
+            <div class="absolute -top-16 -right-16 size-[420px] rounded-full bg-indigo-500/10 blur-3xl"></div>
+            <div class="absolute -bottom-20 -left-16 size-[420px] rounded-full bg-sky-500/10 blur-3xl"></div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[520px] rounded-full bg-violet-500/5 blur-3xl"></div>
+
+            {/* light texture */}
+            <div class="absolute inset-0 opacity-[0.30] [background:radial-gradient(circle_at_20%_20%,rgba(2,6,23,0.04)_0,transparent_45%),radial-gradient(circle_at_80%_30%,rgba(2,6,23,0.03)_0,transparent_45%),radial-gradient(circle_at_50%_80%,rgba(2,6,23,0.03)_0,transparent_50%)]"></div>
+          </div>
+
+          {/* Header */}
+          <div class={`p-5 md:p-6 ${theme.header} border-b border-slate-200/60`}>
+            <div class="flex items-start justify-between gap-6">
+              <div class="min-w-0">
+                <div class="flex items-center gap-3">
+                  <div class={`size-10 rounded-2xl ${theme.iconWrap} flex items-center justify-center`}>
+                    <span class={`material-symbols-outlined ${c.meta.iconClass}`}>{c.meta.icon}</span>
+                  </div>
+                  <div>
+                    <div class="text-lg md:text-xl font-bold text-slate-950">{c.meta.label}</div>
+                    <div class="text-sm text-slate-700 font-medium">{shortDesc(c.meta.desc)}</div>
+                  </div>
+                </div>
+
+                <div class="mt-3 inline-flex items-center gap-2 text-xs uppercase tracking-wider">
+                  <span class={`px-2.5 py-1 rounded-full ${theme.badge} font-bold`}>
+                    {c.list.length} tools
+                  </span>
+                  <span class="text-slate-700 font-semibold">
+                    Fast • Private • Local
+                  </span>
+                </div>
+              </div>
+
+              <a
+                href={`/${c.cat}/`}
+                class="shrink-0 hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-white transition"
+              >
+                View all
+                <span class="material-symbols-outlined text-base">chevron_right</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div class="p-5 md:p-8">
+            <ToolGrid tools={c.list.slice(0, 6)} />
+
+            <div class="mt-5 md:hidden">
+              <a
+                href={`/${c.cat}/`}
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-white transition"
+              >
+                View all {c.meta.label}
+                <span class="material-symbols-outlined text-base">chevron_right</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* ✅ after first category: box ad (natural break) */}
+        {showInFeed && idx === 0 ? (
+          <div class="pt-2">
+            <AdsSlot label="Home – Mid Box" variant="box" height={240} className="w-full" />
+          </div>
+        ) : null}
+
+        {/* ✅ heavy only: extra banner after second block */}
+        {showExtraBox && idx === 1 ? (
+          <div class="pt-2">
+            <AdsSlot label="Home – Extra Banner" variant="banner" height={120} className="w-full" />
+          </div>
+        ) : null}
+      </>
+    );
+  })}
+</section>

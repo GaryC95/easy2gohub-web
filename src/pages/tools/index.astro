@@ -1,45 +1,69 @@
 ---
 import ToolLayout from "../../layouts/ToolLayout.astro";
-import { tools } from "../../data/tools";
+import ToolGrid from "../../components/ToolGrid.astro";
+import AdsSlot from "../../components/ads/AdsSlot.astro";
+import { liveTools as tools } from "../../data/tools";
 
 const title = "All Tools";
 const description = "Browse all available tools on Easy2GoHub.";
 const canonical = "https://www.easy2gohub.com/tools/";
+
+const adsProfile: "light" | "default" | "heavy" = "default";
+const showInFeed = adsProfile !== "light";
 ---
 
-<ToolLayout title={title} description={description} canonical={canonical} adsProfile="light">
+<ToolLayout title={title} description={description} canonical={canonical} adsProfile={adsProfile}>
   <section class="space-y-6">
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {tools.map((tool) => (
-        <a
-          href={`/${tool.category}/${tool.slug}/`}
-          class="tool-card p-6 hover:scale-[1.02] transition"
-        >
-          <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary">
-              {tool.icon}
-            </span>
-            <h3 class="font-extrabold text-slate-900">
-              {tool.title}
-            </h3>
-          </div>
-          <p class="text-sm text-slate-500 mt-2">
-            {tool.description}
-          </p>
-        </a>
-      ))}
+    {/* ✅ 顶部说明卡（别用 glass/tool-card，避免覆盖背景；保持清爽） */}
+    <div class="p-8 rounded-3xl border border-slate-200/70 bg-white/70 backdrop-blur shadow-[0_16px_50px_rgba(2,6,23,0.08)] text-center">
+  <h1 class="text-3xl font-semibold text-slate-900">All Tools</h1>
+  <p class="mt-2 text-slate-700 leading-relaxed max-w-2xl mx-auto">
+    Browse tools by category. Everything runs locally whenever possible — fast and private.
+  </p>
+</div>
+
+    {/* ✅ In-feed banner before grid */}
+    {showInFeed ? (
+      <div>
+        <div class="hidden md:block">
+          <AdsSlot label="Tools – In-feed Banner" variant="banner" height={120} className="w-full" />
+        </div>
+        <div class="md:hidden">
+          <AdsSlot label="Tools – In-feed Banner" variant="banner" height={100} className="w-full" />
+        </div>
+      </div>
+    ) : null}
+
+    {/* Grid + mid ad */}
+    <div class="space-y-6">
+      <ToolGrid tools={tools.slice(0, 9)} />
+
+      {showInFeed ? (
+        <AdsSlot label="Tools – Mid Box" variant="box" height={260} className="w-full" />
+      ) : null}
+
+      <ToolGrid tools={tools.slice(9)} />
     </div>
 
-    {/* SEO 加分段落 */}
-    <div class="tool-card p-8 mt-10">
-      <h2 class="text-xl font-extrabold text-slate-900">
-        Privacy-First Online Tools
-      </h2>
-      <p class="text-slate-600 mt-3 leading-relaxed">
-        All tools on Easy2GoHub run directly in your browser whenever possible.
-        Your files stay on your device and are not uploaded to any server.
-        We focus on speed, simplicity, and privacy-first design.
-      </p>
-    </div>
+    {/* ✅ After grid banner */}
+    {showInFeed ? (
+      <div class="pt-2">
+        <div class="hidden md:block">
+          <AdsSlot label="Tools – After Grid Banner" variant="banner" height={120} className="w-full" />
+        </div>
+        <div class="md:hidden">
+          <AdsSlot label="Tools – After Grid Banner" variant="banner" height={100} className="w-full" />
+        </div>
+      </div>
+    ) : null}
+
+    {/* ✅ 底部说明卡 */}
+    <div class="p-8 rounded-3xl border border-slate-200/70 bg-white/70 backdrop-blur shadow-[0_16px_50px_rgba(2,6,23,0.08)] text-center">
+  <h2 class="text-xl font-semibold text-slate-900">Privacy-First Online Tools</h2>
+  <p class="text-slate-700 mt-3 leading-relaxed max-w-2xl mx-auto">
+    Your files stay on your device and are not uploaded to any server.
+    We focus on speed, clarity, and privacy-first design.
+  </p>
+</div>
   </section>
 </ToolLayout>

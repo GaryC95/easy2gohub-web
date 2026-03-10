@@ -1,0 +1,275 @@
+---
+const {
+  dzId = "main",
+  accept = "image/*",
+  multiple = true,
+  maxFiles,
+  label = "Drop images here",
+  hint = "Local processing • Auto-first • Batch supported",
+  showClear = true,
+  fixedStage = false,
+} = Astro.props;
+
+const maxFilesAttr = typeof maxFiles === "number" ? String(maxFiles) : "";
+---
+
+<div
+  class="dz glass tool-card rounded-3xl p-6 relative select-none shadow-[0_18px_60px_rgba(2,6,23,0.08)] w-full h-full min-h-0"
+  data-role="dropzone"
+  data-dz-id={dzId}
+  data-accept={accept}
+  data-multiple={multiple ? "1" : "0"}
+  data-max-files={maxFilesAttr}
+  data-fixed-stage={fixedStage ? "1" : "0"}
+  tabindex="0"
+  aria-label="Upload files"
+>
+  <input class="sr-only" type="file" accept={accept} multiple={multiple} data-role="file-input" />
+
+  <div class="dz-empty" data-role="dz-empty">
+    <div class="dz-empty-card rounded-3xl p-10 bg-white/60">
+      <div class="text-center max-w-md mx-auto">
+        <div class="w-14 h-14 rounded-2xl bg-[#137fec]/10 mx-auto grid place-items-center">
+          <span class="material-symbols-outlined text-3xl text-[#137fec]">cloud_upload</span>
+        </div>
+
+        <div class="mt-4 font-semibold text-slate-900">{label}</div>
+        <div class="mt-1 text-sm text-slate-600">{hint}</div>
+
+        <div class="mt-5">
+          <button type="button" class="dz-pick" data-role="pick-btn">
+            Select from computer
+          </button>
+        </div>
+
+        <div class="mt-4 text-xs text-slate-500 flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-base">lock</span>
+          100% local • no upload
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dz-stage hidden" data-role="dz-stage" data-no-pick="1"></div>
+
+  {showClear ? (
+    <button type="button" class="dz-clear hidden" data-role="clear-btn">Clear</button>
+  ) : null}
+
+  <div class="dz-overlay" data-role="drag-overlay"></div>
+</div>
+
+<script type="module" define:vars={{ dzId }}>
+  const dz = document.querySelector(`[data-role="dropzone"][data-dz-id="${dzId}"]`);
+  if (!dz) {
+    console.warn("[DropZone] root not found", { dzId });
+  } else {
+    const input = dz.querySelector('[data-role="file-input"]');
+    const overlay = dz.querySelector('[data-role="drag-overlay"]');
+    const pickBtn = dz.querySelector('[data-role="pick-btn"]');
+    const clearBtn = dz.querySelector('[data-role="clear-btn"]');
+    const emptyEl = dz.querySelector('[data-role="dz-empty"]');
+    const stageEl = dz.querySelector('[data-role="dz-stage"]');
+
+    const accept = dz.getAttribute("data-accept") || "";
+    const multiple = dz.getAttribute("data-multiple") === "1";
+    const maxFilesStr = dz.getAttribute("data-max-files") || "";
+    const maxFiles = maxFilesStr ? Number(maxFilesStr) : Infinity;
+    const fixed = dz.getAttribute("data-fixed-stage") === "1";
+
+    const setDragging = (on) => overlay.classList.toggle("is-on", !!on);
+
+    const normalizeFiles = (fileList) => {
+      const arr = Array.from(fileList || []);
+      const filtered =
+        accept && accept !== "*/*"
+          ? arr.filter((f) => (accept.includes("image/") ? f.type.startsWith("image/") : true))
+          : arr;
+      return filtered.slice(0, multiple ? maxFiles : 1);
+    };
+
+    const emit = (files) => {
+      dz.dispatchEvent(new CustomEvent("dropzone:change", { bubbles: true, detail: { files } }));
+    };
+
+    const emitClear = () => {
+      dz.dispatchEvent(new CustomEvent("dropzone:clear", { bubbles: true }));
+      stageEl.innerHTML = "";
+      stageEl.classList.add("hidden");
+      emptyEl.classList.remove("hidden");
+      clearBtn?.classList.add("hidden");
+      stageEl.style.height = "";
+    };
+
+    const showStage = () => {
+      emptyEl.classList.add("hidden");
+      stageEl.classList.remove("hidden");
+      clearBtn?.classList.remove("hidden");
+    };
+
+    const pickFiles = () => input.click();
+
+    dz.addEventListener("click", (e) => {
+      if (e?.target?.closest?.('[data-role="clear-btn"]')) return;
+      if (e?.target?.closest?.('[data-role="pick-btn"]')) return;
+      if (e?.target?.closest?.('[data-no-pick="1"]')) return;
+      if (!stageEl.classList.contains("hidden")) return;
+      pickFiles();
+    });
+
+    pickBtn?.addEventListener("click", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      pickFiles();
+    });
+
+    clearBtn?.addEventListener("click", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      emitClear();
+    });
+
+    dz.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        if (emptyEl.classList.contains("hidden")) return;
+        e.preventDefault();
+        pickFiles();
+      }
+    });
+
+    input.addEventListener("change", () => {
+      const files = normalizeFiles(input.files);
+      input.value = "";
+      if (files.length) {
+        showStage();
+        emit(files);
+      }
+    });
+
+    dz.addEventListener("dragenter", (e) => { e.preventDefault(); setDragging(true); });
+    dz.addEventListener("dragover", (e) => { e.preventDefault(); setDragging(true); });
+    dz.addEventListener("dragleave", (e) => { e.preventDefault(); setDragging(false); });
+    dz.addEventListener("drop", (e) => {
+      e.preventDefault(); setDragging(false);
+      const files = normalizeFiles(e.dataTransfer?.files);
+      if (files.length) {
+        showStage();
+        emit(files);
+      }
+    });
+
+    // auto-height 只在非 fixed 时使用
+    let ro = null, raf = 0;
+    const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+    const setStageHeight = (px) => stageEl.style.height = clamp(Math.round(px), 320, 760) + "px";
+
+    const measureAndFit = (node) => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const img = node.querySelector?.("img");
+        const stageW = stageEl.clientWidth || 900;
+        if (img && img.naturalWidth && img.naturalHeight) {
+          setStageHeight(stageW * (img.naturalHeight / img.naturalWidth));
+          return;
+        }
+        const rect = node.getBoundingClientRect?.();
+        if (rect?.height) setStageHeight(rect.height + 24);
+      });
+    };
+
+    dz.addEventListener("dropzone:mount", (e) => {
+      const node = e?.detail?.node;
+      if (!node) return;
+      showStage();
+      stageEl.innerHTML = "";
+      stageEl.appendChild(node);
+
+      if (fixed) {
+        stageEl.style.height = "";
+        if (ro) { try { ro.disconnect(); } catch {} ro = null; }
+        return;
+      }
+
+      if (ro) { try { ro.disconnect(); } catch {} ro = null; }
+      measureAndFit(node);
+      ro = new ResizeObserver(() => measureAndFit(node));
+      try { ro.observe(node); } catch {}
+      node.querySelectorAll?.("img")?.forEach((im) => im.addEventListener("load", () => measureAndFit(node), { once: true }));
+    });
+  }
+</script>
+
+<style>
+  .dz { cursor: default; }
+
+  .dz-pick{
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 13px;
+    border: 1px solid rgba(19,127,236,0.30);
+    background: rgba(255,255,255,0.75);
+    color: rgb(15 23 42);
+  }
+  .dz-pick:hover{ background: rgba(255,255,255,0.95); }
+
+  .dz-overlay{
+    position:absolute; inset: 18px;
+    border-radius: 18px;
+    pointer-events:none;
+    opacity:0;
+    transition: opacity .15s ease;
+    border: 2px dashed rgba(19,127,236,0.35);
+    background: rgba(19,127,236,0.06);
+    backdrop-filter: blur(10px);
+  }
+  .dz-overlay.is-on{ opacity:1; }
+
+  /* fixedStage: empty/stage 全填满 */
+  .dz[data-fixed-stage="1"] .dz-empty,
+  .dz[data-fixed-stage="1"] .dz-stage{
+    height: 100%;
+    min-height: 0;
+  }
+  .dz[data-fixed-stage="1"] .dz-empty-card{
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+  }
+
+  .dz-stage{
+    border-radius: 18px;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    position: relative;
+  }
+
+  /* ✅ 关键：让 mount 进来的 slider/多层 wrapper 都拿到 100% 高度，避免白屏 */
+  .dz-stage > *,
+  .dz-stage > * > *,
+  .dz-stage > * > * > *{
+    width: 100%;
+    height: 100%;
+  }
+  .dz-stage .comparison-slider{ width: 100%; height: 100%; }
+
+  .dz-stage img{
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .dz-clear{
+    position:absolute;
+    right: 18px;
+    bottom: 18px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.78);
+    border: 1px solid rgba(226,232,240,0.95);
+    color: rgb(15 23 42);
+  }
+  .dz-clear:hover{ background: rgba(255,255,255,0.95); }
+</style>

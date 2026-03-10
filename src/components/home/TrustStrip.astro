@@ -1,0 +1,24 @@
+---
+const aboutHref = "/about/";
+const privacyHref = "/privacy-policy/";
+---
+
+<section class="rounded-2xl bg-white/60 border border-slate-200 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+  <div class="text-sm text-slate-700">
+    <span class="font-semibold">Privacy-first.</span> Most tools run locally in your browser — your files never leave your device.
+  </div>
+  <div class="flex gap-2">
+    <a
+      href={aboutHref}
+      class="px-3 py-2 rounded-xl bg-white/70 border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-white transition"
+    >
+      About
+    </a>
+    <a
+      href={privacyHref}
+      class="px-3 py-2 rounded-xl bg-white/70 border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-white transition"
+    >
+      Privacy
+    </a>
+  </div>
+</section>

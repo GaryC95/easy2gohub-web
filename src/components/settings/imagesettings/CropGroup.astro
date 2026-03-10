@@ -1,0 +1,194 @@
+---
+type Props = { slug: string };
+const { slug } = Astro.props;
+---
+
+<div class="space-y-4" data-role="crop-group">
+  <!-- hidden binds (normalized) -->
+  <input type="number" class="hidden" step="0.0001" data-bind="settings.cropX" />
+  <input type="number" class="hidden" step="0.0001" data-bind="settings.cropY" />
+  <input type="number" class="hidden" step="0.0001" data-bind="settings.cropW" />
+  <input type="number" class="hidden" step="0.0001" data-bind="settings.cropH" />
+  <input type="text" class="hidden" data-bind="settings.cropAspect" />
+
+  <div class="space-y-2">
+    <label class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 block">Crop Rectangle</label>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 block mb-1">Width</label>
+        <input class="w-full px-3 py-2 rounded-xl bg-white/70 border border-slate-200/70"
+          type="number" min="1" data-role="crop-wpx" />
+      </div>
+      <div>
+        <label class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 block mb-1">Height</label>
+        <input class="w-full px-3 py-2 rounded-xl bg-white/70 border border-slate-200/70"
+          type="number" min="1" data-role="crop-hpx" />
+      </div>
+    </div>
+  </div>
+
+  <div class="space-y-2">
+    <label class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 block">Aspect Ratio</label>
+    <select class="w-full px-3 py-2 rounded-xl bg-white/70 border border-slate-200/70" data-role="crop-aspect">
+      <option value="free">FreeForm</option>
+
+      <optgroup label="Common">
+        <option value="1:1">1:1 (Square)</option>
+        <option value="4:5">4:5</option>
+        <option value="16:9">16:9</option>
+        <option value="9:16">9:16</option>
+        <option value="3:2">3:2</option>
+        <option value="2:3">2:3</option>
+      </optgroup>
+
+      <optgroup label="Instagram">
+        <option value="1:1">IG Post Square (1:1)</option>
+        <option value="4:5">IG Post Portrait (4:5)</option>
+        <option value="1.91:1">IG Post Landscape (1.91:1)</option>
+        <option value="9:16">IG Story / Reels (9:16)</option>
+      </optgroup>
+
+      <optgroup label="Facebook">
+        <option value="1:1">FB Profile / Square (1:1)</option>
+        <option value="1.91:1">FB Feed Landscape (1.91:1)</option>
+        <option value="4:5">FB Feed Portrait (4:5)</option>
+        <option value="820:312">FB Cover (820:312)</option>
+      </optgroup>
+
+      <optgroup label="TikTok / Shorts">
+        <option value="9:16">TikTok / Shorts (9:16)</option>
+      </optgroup>
+
+      <optgroup label="YouTube / X">
+        <option value="16:9">YouTube Thumbnail (16:9)</option>
+        <option value="3:1">X(Twitter) Header (3:1)</option>
+      </optgroup>
+    </select>
+  </div>
+
+  <div class="space-y-2">
+    <label class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 block">Crop Position</label>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 block mb-1">Position (X)</label>
+        <input class="w-full px-3 py-2 rounded-xl bg-white/70 border border-slate-200/70"
+          type="number" min="0" data-role="crop-xpx" />
+      </div>
+      <div>
+        <label class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 block mb-1">Position (Y)</label>
+        <input class="w-full px-3 py-2 rounded-xl bg-white/70 border border-slate-200/70"
+          type="number" min="0" data-role="crop-ypx" />
+      </div>
+    </div>
+  </div>
+
+  <button
+    type="button"
+    class="w-full px-4 py-3 rounded-xl bg-white/70 border border-slate-200/70 text-slate-800 font-semibold hover:bg-white transition"
+    data-role="crop-reset"
+  >
+    Reset
+  </button>
+
+  <div class="text-[11px] text-slate-500">
+    Batch mode: the crop rectangle is saved as a <b>relative</b> area and applied to all images.
+  </div>
+</div>
+
+<script type="module" define:vars={{ slug }}>
+  (() => {
+    const root = document.querySelector(`[data-role="settings"][data-tool="${slug}"]`);
+    if (!root) return; // ✅ IIFE 内 return 合法
+
+    const getBind = (k) => root.querySelector(`[data-bind="settings.${k}"]`);
+    const setBind = (k, v) => {
+      const el = getBind(k);
+      if (!el) return;
+      el.value = String(v);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+
+    const $w = root.querySelector('[data-role="crop-wpx"]');
+    const $h = root.querySelector('[data-role="crop-hpx"]');
+    const $x = root.querySelector('[data-role="crop-xpx"]');
+    const $y = root.querySelector('[data-role="crop-ypx"]');
+    const $aspect = root.querySelector('[data-role="crop-aspect"]');
+    const $reset = root.querySelector('[data-role="crop-reset"]');
+
+    let imgW = 0, imgH = 0;
+
+    const clamp01 = (n) => Math.max(0, Math.min(1, Number(n) || 0));
+    const clampInt = (n, lo, hi) => Math.max(lo, Math.min(hi, Math.round(Number(n) || 0)));
+
+    function syncPxFromNorm() {
+      if (!imgW || !imgH) return;
+
+      const rx = clamp01(getBind("cropX")?.value);
+      const ry = clamp01(getBind("cropY")?.value);
+      const rw = clamp01(getBind("cropW")?.value);
+      const rh = clamp01(getBind("cropH")?.value);
+
+      if ($x) $x.value = String(clampInt(rx * imgW, 0, imgW));
+      if ($y) $y.value = String(clampInt(ry * imgH, 0, imgH));
+      if ($w) $w.value = String(Math.max(1, clampInt(rw * imgW, 1, imgW)));
+      if ($h) $h.value = String(Math.max(1, clampInt(rh * imgH, 1, imgH)));
+
+      const ca = String(getBind("cropAspect")?.value || "free");
+      if ($aspect && $aspect.value !== ca) $aspect.value = ca;
+    }
+
+    function applyPxToNorm() {
+      if (!imgW || !imgH) return;
+
+      let xpx = clampInt($x?.value, 0, imgW - 1);
+      let ypx = clampInt($y?.value, 0, imgH - 1);
+      let wpx = Math.max(1, clampInt($w?.value, 1, imgW));
+      let hpx = Math.max(1, clampInt($h?.value, 1, imgH));
+
+      if (xpx + wpx > imgW) wpx = imgW - xpx;
+      if (ypx + hpx > imgH) hpx = imgH - ypx;
+
+      setBind("cropX", clamp01(xpx / imgW));
+      setBind("cropY", clamp01(ypx / imgH));
+      setBind("cropW", clamp01(wpx / imgW));
+      setBind("cropH", clamp01(hpx / imgH));
+    }
+
+    // ✅ Aspect 只写 cropAspect，snap 交给 preview-slider.js 处理
+    $aspect?.addEventListener("change", () => {
+      setBind("cropAspect", $aspect.value || "free");
+    });
+
+    [$x, $y, $w, $h].forEach((el) => {
+      el?.addEventListener("change", () => {
+        applyPxToNorm();
+        queueMicrotask(syncPxFromNorm);
+      });
+    });
+
+    $reset?.addEventListener("click", (e) => {
+      e.preventDefault();
+      setBind("cropAspect", "free");
+      setBind("cropX", 0);
+      setBind("cropY", 0);
+      setBind("cropW", 1);
+      setBind("cropH", 1);
+    });
+
+    root.addEventListener("image-settings:sync", (ev) => {
+      const d = ev?.detail || {};
+      if (d.key === "__cropImgW") imgW = Number(d.value || 0);
+      if (d.key === "__cropImgH") imgH = Number(d.value || 0);
+
+      if (
+        d.key === "__cropImgW" || d.key === "__cropImgH" ||
+        d.key === "cropX" || d.key === "cropY" || d.key === "cropW" || d.key === "cropH" || d.key === "cropAspect"
+      ) {
+        queueMicrotask(syncPxFromNorm);
+      }
+    });
+
+    queueMicrotask(syncPxFromNorm);
+  })();
+</script>

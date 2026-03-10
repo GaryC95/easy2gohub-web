@@ -1,0 +1,9 @@
+---
+type Props = { mode: string };
+const { mode } = Astro.props;
+---
+
+<h2 class="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500 mb-6 flex items-center gap-2">
+  <span class="material-symbols-outlined text-sm">settings_suggest</span>
+  {mode === "convert" ? "Conversion Controls" : "Optimization Controls"}
+</h2>

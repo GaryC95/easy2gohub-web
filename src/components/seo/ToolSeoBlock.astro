@@ -6,13 +6,15 @@ type FaqItem = { q: string; a: string };
 type ToolSeo = {
   intro?: string;
   tips?: string[];
-  // 支持两种字段名：steps / howTo
-  steps?: string[];
-  howTo?: string[];
+  steps?: string[];   // ✅ 与 tools.ts 的 ToolSEO.steps 对齐
+  howTo?: string[];   // ✅ 兼容旧字段
   faq?: FaqItem[];
+  lastUpdated?: string; // ✅ 新增：显示更新时间（你 tools.ts 已有）
 };
 
 type ToolLike = {
+  category?: string;
+  slug?: string;
   title?: string;
   description?: string;
   adsProfile?: "light" | "default" | "heavy" | "none";
@@ -21,11 +23,9 @@ type ToolLike = {
 
 const {
   tool,
-  // 旧传参方式
   seo: seoProp,
   showAds: showAdsProp,
 
-  // 兼容散 props
   title,
   description,
   adsProfile: adsProfileProp,
@@ -50,81 +50,301 @@ const {
   faq?: FaqItem[];
 };
 
+// -----------------------
+// Helpers
+// -----------------------
+function isPlaceholder(s?: string) {
+  const t = (s ?? "").trim();
+  return !t || t === "..." || t === "…";
+}
+function cleanLines(arr?: string[]) {
+  if (!Array.isArray(arr)) return [];
+  return arr
+    .map((x) => (x ?? "").trim())
+    .filter((x) => x && !isPlaceholder(x));
+}
+function cleanFaq(arr?: FaqItem[]) {
+  if (!Array.isArray(arr)) return [];
+  return arr
+    .map((it) => ({ q: (it?.q ?? "").trim(), a: (it?.a ?? "").trim() }))
+    .filter((it) => it.q && it.a && !isPlaceholder(it.q) && !isPlaceholder(it.a));
+}
+
+// ✅ 针对你当前“已上线的 8 个 image tools”提供默认 SEO（当 tools.ts 里没写或写了 "..." 时自动补）
+const DEFAULT_BY_SLUG: Record<string, ToolSeo> = {
+  "image-compressor": {
+    intro:
+      "Free online image compressor that runs locally in your browser. Compress JPG/PNG/WebP with no uploads — fast and private.",
+    steps: [
+      "Add images (drag & drop or select from computer).",
+      "Choose target format and quality in Settings.",
+      "Optional: set max dimension to downscale large images.",
+      "Process and download results (ZIP for multiple files).",
+    ],
+    tips: [
+      "WebP usually gives smaller files on modern browsers.",
+      "Use JPG for photos, PNG for sharp edges or transparency.",
+      "Downscaling large images can reduce size dramatically.",
+    ],
+    faq: [
+      { q: "Are my images uploaded?", a: "No. Everything runs locally in your browser." },
+      { q: "Does it support batch?", a: "Yes. Multiple files download as a ZIP." },
+    ],
+  },
+  "image-resizer": {
+    intro:
+      "Resize images online (locally in your browser). Batch resize with no uploads — fast, private, and simple.",
+    steps: [
+      "Add images (drag & drop or select).",
+      "Set max dimension and resize mode (fit/fill/exact) in Settings.",
+      "Optional: choose output format and quality.",
+      "Download resized images (ZIP for batch).",
+    ],
+    tips: [
+      "Keep aspect ratio on for natural resizing.",
+      "Avoid upscaling unless necessary to prevent blur.",
+      "For web, convert to WebP after resizing for smaller size.",
+    ],
+    faq: [
+      { q: "Does it upscale small images?", a: "Only if you enable Allow Upscale." },
+      { q: "Is it private?", a: "Yes. Files never leave your device." },
+    ],
+  },
+  "image-converter": {
+    intro:
+      "Convert images online (JPG/PNG/WebP) locally in your browser. No uploads. Fast conversions.",
+    steps: [
+      "Add images.",
+      "Select target format (JPG/PNG/WebP) in Settings.",
+      "Optional: adjust quality for JPG/WebP.",
+      "Convert and download results (ZIP for batch).",
+    ],
+    tips: [
+      "Use PNG for transparency; use JPG for photos.",
+      "WebP is a great default for the web.",
+      "If AVIF isn’t supported, WebP is the safest modern option.",
+    ],
+    faq: [
+      { q: "Which formats can I convert to?", a: "JPG, PNG, WebP, AVIF (depends on browser support)." },
+      { q: "Do you upload my files?", a: "No. Conversion happens locally in your browser." },
+    ],
+  },
+  "image-to-webp": {
+    intro:
+      "Convert images to WebP online (locally in your browser) for faster websites. No uploads — private and fast.",
+    steps: [
+      "Add images.",
+      "Adjust WebP quality (and optional resize) in Settings.",
+      "Convert and download WebP results (ZIP for batch).",
+    ],
+    tips: [
+      "Quality around 75–85 is a strong default for photos.",
+      "If your image has transparency, WebP can still keep it.",
+    ],
+    faq: [
+      { q: "Why WebP?", a: "WebP often loads faster with good quality at smaller size." },
+      { q: "Is it private?", a: "Yes. Files stay on your device." },
+    ],
+  },
+  "image-to-jpg": {
+    intro:
+      "Convert images to JPG online (locally in your browser) for compatibility and smaller photo sizes. No uploads.",
+    steps: [
+      "Add images.",
+      "Convert to JPG and download results (ZIP for multiple).",
+    ],
+    tips: [
+      "JPG is best for photos; it does not support transparency.",
+      "If you need transparency, convert to PNG instead.",
+    ],
+    faq: [
+      { q: "What about transparency?", a: "JPG doesn’t support transparency; transparent areas may be filled." },
+      { q: "Do you upload files?", a: "No. Everything runs locally." },
+    ],
+  },
+  "image-to-png": {
+    intro:
+      "Convert images to PNG online (locally in your browser) for lossless quality and transparency support. No uploads.",
+    steps: [
+      "Add images.",
+      "Convert to PNG and download results (ZIP for batch).",
+    ],
+    tips: [
+      "PNG is lossless and can be larger for photos.",
+      "Use PNG when you need transparency or sharp edges.",
+    ],
+    faq: [
+      { q: "Is PNG always smaller?", a: "Not always. PNG can be larger for photos." },
+      { q: "Is it private?", a: "Yes. Files never leave your device." },
+    ],
+  },
+  "image-rotator": {
+    intro:
+      "Rotate or flip images online (locally in your browser). Fix orientation in batch with no uploads.",
+    steps: [
+      "Add images.",
+      "Choose rotation angle and flip options in Settings.",
+      "Optional: set output format/quality.",
+      "Download rotated/flipped images (ZIP for batch).",
+    ],
+    tips: [
+      "Use 90° steps for camera orientation fixes.",
+      "Flip horizontally to un-mirror selfies or scans.",
+    ],
+    faq: [
+      { q: "Does it support batch?", a: "Yes. Multiple images download as a ZIP." },
+      { q: "Is it private?", a: "Yes. Everything runs locally." },
+    ],
+  },
+  "image-cropper": {
+    intro:
+      "Crop images online (locally in your browser). Use a draggable crop box with no uploads — fast and private.",
+    steps: [
+      "Add an image.",
+      "Drag/resize the crop box to select the area.",
+      "Apply crop and download the cropped result.",
+      "For multiple files, repeat or use the same crop ratio if supported.",
+    ],
+    tips: [
+      "Use a fixed aspect ratio for profile photos or thumbnails.",
+      "Zoom in for precise cropping on small details.",
+    ],
+    faq: [
+      { q: "Are images uploaded?", a: "No. Cropping happens locally in your browser." },
+      { q: "Can I crop multiple images?", a: "Batch depends on your tool UI; you can crop images one by one safely." },
+    ],
+  },
+};
+
+// -----------------------
+// Resolve content
+// -----------------------
 const resolvedTitle = title ?? tool?.title ?? "Tool";
 const resolvedDesc = description ?? tool?.description ?? "";
-
-// SEO 数据来源优先级：显式 seo prop > tool.seo > 空对象
 const seo = (seoProp ?? tool?.seo ?? {}) as ToolSeo;
 
 const adsProfile = adsProfileProp ?? tool?.adsProfile ?? "default";
-const showAds = (typeof showAdsProp === "boolean") ? showAdsProp : (adsProfile !== "none");
+const showAds =
+  typeof showAdsProp === "boolean" ? showAdsProp : adsProfile !== "none";
 
-const intro =
-  introProp ??
-  seo.intro ??
-  resolvedDesc ??
-  "";
+const slug = String(tool?.slug ?? "").trim();
+const fallback = slug && DEFAULT_BY_SLUG[slug] ? DEFAULT_BY_SLUG[slug] : ({} as ToolSeo);
+
+const introRaw = introProp ?? seo.intro ?? resolvedDesc ?? "";
+const intro = isPlaceholder(introRaw) ? (fallback.intro ?? "This tool runs locally in your browser. No uploads. 100% private.") : introRaw;
 
 // tips
-const tips: string[] =
+const tips = cleanLines(
   Array.isArray(tipsProp) ? tipsProp :
-  Array.isArray(seo.tips) ? seo.tips! :
-  [];
+  Array.isArray(seo.tips) ? seo.tips :
+  fallback.tips
+);
 
-// steps/howTo 兼容：优先 stepsProp，再 howToProp，再 seo.steps，再 seo.howTo
-const steps: string[] =
+// steps/howTo（优先 props -> seo.steps/howTo -> fallback）
+const steps = cleanLines(
   Array.isArray(stepsProp) ? stepsProp :
   Array.isArray(howToProp) ? howToProp :
-  Array.isArray(seo.steps) ? seo.steps! :
-  Array.isArray(seo.howTo) ? seo.howTo! :
-  [];
+  Array.isArray(seo.steps) ? seo.steps :
+  Array.isArray(seo.howTo) ? seo.howTo :
+  fallback.steps
+);
 
 // faq
-const faq: FaqItem[] =
+const faq = cleanFaq(
   Array.isArray(faqProp) ? faqProp :
-  Array.isArray(seo.faq) ? seo.faq! :
-  [];
+  Array.isArray(seo.faq) ? seo.faq :
+  fallback.faq
+);
 
+
+// --- Ad density control (keep 4-5 total on page, not stacked here) ---
 const showLightExtras = adsProfile === "light";
 const showDefaultExtras = adsProfile === "default";
 const showHeavyExtras = adsProfile === "heavy";
 
-// SEO 区块内额外广告位规则
+// In this SEO block:
+// - default/heavy: 2 ads max (top + after faq)
+// - heavy: +1 optional in-content box (between steps & tips) with generous spacing
 const showTopBanner = showAds && (showDefaultExtras || showHeavyExtras);
-const showMidBox = showAds && showHeavyExtras;
+const showInContentBox = showAds && showHeavyExtras; // only heavy
 const showAfterFaqBanner = showAds && (showDefaultExtras || showHeavyExtras);
+
+// -----------------------
+// Structured data (JSON-LD)
+// -----------------------
+const faqJsonLd =
+  faq.length > 0
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faq.map((f) => ({
+          "@type": "Question",
+          name: f.q,
+          acceptedAnswer: { "@type": "Answer", text: f.a },
+        })),
+      }
+    : null;
+
+const howToJsonLd =
+  steps.length > 0
+    ? {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        name: `How to use ${resolvedTitle}`,
+        description: intro,
+        step: steps.map((s, i) => ({
+          "@type": "HowToStep",
+          position: i + 1,
+          name: `Step ${i + 1}`,
+          text: s,
+        })),
+      }
+    : null;
 ---
 
 <section class="mt-10 space-y-6">
-  <div class="tool-card p-8 space-y-5">
+  {/* ✅ JSON-LD (SEO) */}
+  {howToJsonLd ? (
+    <script type="application/ld+json" is:inline>
+      {JSON.stringify(howToJsonLd)}
+    </script>
+  ) : null}
+
+  {faqJsonLd ? (
+    <script type="application/ld+json" is:inline>
+      {JSON.stringify(faqJsonLd)}
+    </script>
+  ) : null}
+
+  <div class="glass tool-card p-8 space-y-6">
     <div class="flex items-start justify-between gap-6">
       <div class="min-w-0">
-        <h3 class="text-2xl font-extrabold text-slate-900">About {resolvedTitle}</h3>
-        <p class="text-slate-500 mt-2 leading-relaxed">
-          {intro || "This tool runs locally in your browser. No uploads. 100% private."}
+        <h3 class="text-2xl font-semibold text-slate-900">About {resolvedTitle}</h3>
+        <p class="text-slate-600 mt-2 leading-relaxed">
+          {intro}
         </p>
       </div>
 
       <div class="hidden md:flex shrink-0">
-        <div class="px-4 py-2 rounded-full bg-indigo-500/10 text-indigo-700 font-extrabold text-xs">
-          SEO & Tips
+        <div class="px-4 py-2 rounded-full bg-indigo-500/10 text-indigo-700 font-semibold text-xs">
+          How it works
         </div>
       </div>
     </div>
 
     {showTopBanner ? (
-      <div class="pt-4">
+      <div class="pt-2">
         <AdsSlot label="SEO – Top Banner" variant="banner" height={120} className="w-full" />
       </div>
     ) : null}
 
     {(steps.length > 0) ? (
-      <div class="pt-2">
-        <h4 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider">How it works</h4>
+      <div class="pt-1">
+        <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">How it works</h4>
         <ol class="mt-3 space-y-2 text-slate-600">
           {steps.map((s, i) => (
             <li class="flex gap-3">
-              <span class="mt-0.5 size-6 rounded-full bg-indigo-500/10 text-indigo-700 flex items-center justify-center text-xs font-extrabold shrink-0">
+              <span class="mt-0.5 size-6 rounded-full bg-indigo-500/10 text-indigo-700 flex items-center justify-center text-xs font-semibold shrink-0">
                 {i + 1}
               </span>
               <span class="leading-relaxed">{s}</span>
@@ -134,9 +354,15 @@ const showAfterFaqBanner = showAds && (showDefaultExtras || showHeavyExtras);
       </div>
     ) : null}
 
+    {showInContentBox ? (
+      <div class="pt-4">
+        <AdsSlot label="SEO – In-content Box" variant="box" height={240} className="w-full" />
+      </div>
+    ) : null}
+
     {(tips.length > 0) ? (
-      <div class="pt-2">
-        <h4 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider">Tips</h4>
+      <div class="pt-1">
+        <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Tips</h4>
         <ul class="mt-3 space-y-2 text-slate-600">
           {tips.map((t) => (
             <li class="flex gap-3">
@@ -148,20 +374,14 @@ const showAfterFaqBanner = showAds && (showDefaultExtras || showHeavyExtras);
       </div>
     ) : null}
 
-    {showMidBox ? (
-      <div class="pt-4">
-        <AdsSlot label="SEO – Mid Box" variant="box" height={250} className="w-full" />
-      </div>
-    ) : null}
-
     {(faq.length > 0) ? (
-      <div class="pt-2">
-        <h4 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider">FAQ</h4>
+      <div class="pt-1">
+        <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">FAQ</h4>
 
         <div class="mt-3 space-y-3">
           {faq.map((item) => (
-            <details class="bg-white/60 border border-white/60 rounded-2xl p-4">
-              <summary class="cursor-pointer font-extrabold text-slate-800">
+            <details class="bg-white/70 border border-slate-200/70 rounded-2xl p-4">
+              <summary class="cursor-pointer font-semibold text-slate-800">
                 {item.q}
               </summary>
               <p class="mt-2 text-slate-600 leading-relaxed">
@@ -172,7 +392,7 @@ const showAfterFaqBanner = showAds && (showDefaultExtras || showHeavyExtras);
         </div>
 
         {showAfterFaqBanner ? (
-          <div class="pt-5">
+          <div class="pt-6">
             <AdsSlot label="SEO – After FAQ Banner" variant="banner" height={120} className="w-full" />
           </div>
         ) : null}
@@ -180,8 +400,8 @@ const showAfterFaqBanner = showAds && (showDefaultExtras || showHeavyExtras);
     ) : null}
 
     {showAds && showLightExtras ? (
-      <div class="pt-4 text-xs text-slate-400 font-semibold">
-        Tip: Light ad profile keeps SEO area cleaner to improve reading experience.
+      <div class="pt-2 text-xs text-slate-500 font-medium">
+        Tip: Light ad profile keeps this section cleaner to improve reading experience.
       </div>
     ) : null}
   </div>

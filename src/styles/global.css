@@ -1,11 +1,23 @@
-/* src/styles/global.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* =========================================================
-   Base (Home-like gradient + glass)
+   Light Pro UI (soft tinted background)
    ========================================================= */
 
 :root {
-  --sidebar-width: 18rem;
+  --primary: #137fec;
+
+  /* soft app background */
+  --app-bg: #f5f8ff;
+
+  /* card surfaces */
+  --surface: rgba(255, 255, 255, 0.80);
+  --surface-strong: rgba(255, 255, 255, 0.92);
+  --border: rgba(15, 23, 42, 0.08); /* slate-900 @ low alpha */
+  --text: rgb(30 41 59);           /* slate-800 */
+  --muted: rgb(100 116 139);       /* slate-500 */
 }
 
 html,
@@ -14,98 +26,136 @@ body {
 }
 
 body {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji",
-    "Segoe UI Emoji";
-  color: rgb(15 23 42);
-  background-color: rgb(248 250 252);
-  background-image:
-    radial-gradient(at top left, rgb(224 231 255), transparent 55%),
-    radial-gradient(at top, rgb(219 234 254), transparent 55%),
-    radial-gradient(at bottom right, rgb(243 232 255), transparent 55%);
-  background-attachment: fixed;
+body{
+  background:
+    radial-gradient(900px 600px at 20% 10%, rgba(19,127,236,0.08), transparent 60%),
+    radial-gradient(900px 600px at 80% 20%, rgba(168,85,247,0.07), transparent 60%),
+    linear-gradient(180deg, #f8fbff 0%, #f4f7fb 60%, #f7f9ff 100%);
+}
 }
 
 /* Material Symbols defaults */
-.material-symbols-outlined {
-  font-variation-settings: "FILL" 0, "wght" 360, "GRAD" 0, "opsz" 20;
+.material-symbols-outlined,
+.material-symbols-rounded {
+  font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 24;
 }
 
 /* =========================================================
-   Typography presets (avoid heavy bold)
-   ========================================================= */
-
-.ty-h1 {
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.ty-h2 {
-  font-weight: 500;
-  letter-spacing: -0.01em;
-}
-
-.ty-h3 {
-  font-weight: 500;
-}
-
-.ty-ui {
-  font-weight: 500;
-}
-
-.ty-body {
-  font-weight: 400;
-  line-height: 1.7;
-  color: rgb(71 85 105);
-}
-
-/* =========================================================
-   Home-like glass + cards
+   Glass (light)
    ========================================================= */
 
 .glass {
+  background: var(--surface);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid var(--border);
+  box-shadow: 0 18px 50px rgba(2, 6, 23, 0.08);
 }
 
 .glass-sidebar {
+  background: var(--surface-strong);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  background: rgba(255, 255, 255, 0.62);
-  border-right: 1px solid rgba(255, 255, 255, 0.45);
+  border: 1px solid var(--border);
+  box-shadow: 0 18px 50px rgba(2, 6, 23, 0.08);
 }
 
-/* “Tool card” base */
+/* Tool card */
 .tool-card {
-  border-radius: 1.25rem; /* 20px */
-  background: rgba(255, 255, 255, 0.62);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  box-shadow:
-    0 20px 50px rgba(15, 23, 42, 0.06),
-    0 2px 10px rgba(15, 23, 42, 0.04);
-}
-
-/* hover polish */
-.tool-card-hover {
-  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease;
-}
-.tool-card-hover:hover {
-  transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.72);
-  border-color: rgba(99, 102, 241, 0.18);
-  box-shadow:
-    0 26px 70px rgba(15, 23, 42, 0.08),
-    0 6px 18px rgba(15, 23, 42, 0.05);
+  border-radius: 1.5rem;
 }
 
 /* =========================================================
-   Inputs / range
+   Scrollbar
    ========================================================= */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(2, 6, 23, 0.18);
+  border-radius: 10px;
+}
 
+/* =========================================================
+   Comparison Slider (fix: fill parent, avoid white screen)
+   ========================================================= */
+.comparison-slider {
+  position: relative;
+  overflow: hidden;
+
+  /* ✅ 关键：让 slider 填满 DropZone 的 stage */
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+/* ✅ 让左右两层（或任何 wrapper）都铺满 */
+.comparison-slider > * ,
+.comparison-slider .mask-right {
+  position: absolute;
+  inset: 0;
+}
+
+/* 如果你还有 mask-left / layer / pane 之类名字，也一起兜底 */
+.comparison-slider .mask-left,
+.comparison-slider .layer,
+.comparison-slider .pane {
+  position: absolute;
+  inset: 0;
+}
+
+/* ✅ 图片/画布必须跟随容器大小，否则会显示空白或只占一点 */
+.comparison-slider img,
+.comparison-slider canvas,
+.comparison-slider video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* ✅ 尽量完整显示整个图 */
+  display: block;
+}
+
+.mask-right {
+  clip-path: inset(0 0 0 50%);
+}
+
+/* 你的 handle/button 可以保留原样 */
+.slider-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--primary);
+  left: 50%;
+  cursor: ew-resize;
+  z-index: 10;
+  user-select: none;
+  touch-action: none;
+}
+.slider-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  background: var(--primary);
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(19, 127, 236, 0.35);
+  pointer-events: none;
+}
+/* =========================================================
+   Range (light)
+   ========================================================= */
 input[type="range"] {
   appearance: none;
   height: 6px;
-  background: rgb(226 232 240);
+  background: rgba(2, 6, 23, 0.10);
   border-radius: 999px;
   cursor: pointer;
 }
@@ -113,24 +163,224 @@ input[type="range"]::-webkit-slider-thumb {
   appearance: none;
   width: 16px;
   height: 16px;
-  background: rgb(79 70 229); /* indigo-600 */
+  background: var(--primary);
   border-radius: 999px;
   cursor: pointer;
-  box-shadow: 0 0 0 6px rgba(79, 70, 229, 0.14);
+  box-shadow: 0 0 0 6px rgba(19, 127, 236, 0.18);
 }
 
-/* Hide scrollbar (sidebar) */
-.no-scrollbar::-webkit-scrollbar {
+/* utility */
+.hidden {
   display: none;
 }
-.no-scrollbar {
-  scrollbar-width: none;
+
+/* Results list items (engine usually renders into [data-role=result-list]) */
+.result-item,
+[data-role="result-list"] > * {
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(226,232,240,0.95);
+  border-radius: 16px;
+  padding: 14px 14px;
+  box-shadow: 0 18px 50px rgba(2, 6, 23, 0.06);
+}
+/* make result card fully opaque (avoid washed look) */
+[data-role="result-list"] > * {
+  background: rgba(255,255,255,0.92);
 }
 
+/* common row layout helpers if your JS creates them */
+.result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.result-meta {
+  min-width: 0;
+}
+.result-name {
+  font-weight: 600;
+  color: rgb(15 23 42);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.result-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Download button — match primary */
+.btn-primary,
+.result-download,
+[data-role="result-list"] button {
+  background: var(--primary);
+  color: white;
+  border: 1px solid rgba(19,127,236,0.15);
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-weight: 600;
+  box-shadow: 0 14px 36px rgba(19,127,236,0.18);
+  cursor: pointer;
+}
+.btn-primary:hover,
+.result-download:hover,
+[data-role="result-list"] button:hover {
+  filter: brightness(1.06);
+}
+[data-role="result-list"] img {
+  filter: none !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+}
 /* =========================================================
-   Utility: subtle “glow”
+   Results: fix gray / washed preview
    ========================================================= */
 
-.glow-soft {
-  box-shadow: 0 0 22px rgba(79, 70, 229, 0.10);
+/* 1) 永远不要让结果缩略图被滤镜/透明度影响 */
+[data-role="result-list"] img,
+[data-role="result-list"] canvas,
+[data-role="result-list"] video {
+  filter: none !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+}
+
+/* 2) 如果父容器用了 opacity，强制把“缩略图区域”隔离出来 */
+[data-role="result-list"] .result-preview,
+[data-role="result-list"] [data-role="result-preview"],
+[data-role="result-list"] .preview,
+[data-role="result-list"] .thumb {
+  opacity: 1 !important;
+  background: #fff;
+  border: 1px solid rgba(226,232,240,0.95);
+  border-radius: 14px;
+  padding: 6px;
+}
+
+/* 3) 让缩略图本身更清晰 */
+[data-role="result-list"] .result-preview img,
+[data-role="result-list"] [data-role="result-preview"] img,
+[data-role="result-list"] .preview img,
+[data-role="result-list"] .thumb img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+/* Force result item to light card (override engine dark class) */
+[data-role="result-list"] > div.bg-slate-950\/30 {
+  background: rgba(255,255,255,0.82) !important;
+  border-color: rgba(226,232,240,0.95) !important;
+  box-shadow: 0 18px 50px rgba(2,6,23,0.06) !important;
+}
+/* ===========================
+   Workbench (Fixed Rail + Fixed Stage)
+   =========================== */
+
+:root{
+  --tool-header-h: 64px;                 /* header h-16 */
+  --tool-maxw: 1200px;                   /* ToolLayout 里的 max-w */
+  --tool-pad: clamp(24px, 3vw, 32px);    /* p-6 ~ p-8 */
+  --tool-rail-w: 20rem;                  /* 右侧 320px */
+}
+
+@media (min-width: 1024px){
+  /* 右侧“焊死”面板：对齐到居中容器的右边缘 + padding */
+  .tool-rail-fixed{
+    position: fixed;
+    top: calc(var(--tool-header-h) + var(--tool-pad));
+    right: calc((100vw - min(100vw, var(--tool-maxw))) / 2 + var(--tool-pad));
+    width: var(--tool-rail-w);
+    height: calc(100vh - var(--tool-header-h) - var(--tool-pad) * 2);
+    overflow: auto;
+  }
+
+  /* 占位：防止 fixed 脱离文档流导致布局塌陷 */
+  .tool-rail-placeholder{
+    width: var(--tool-rail-w);
+    height: calc(100vh - var(--tool-header-h) - var(--tool-pad) * 2);
+  }
+
+  /* 左侧“电视工作台”：和右侧同高 */
+  .tool-workbench{
+    height: calc(100vh - var(--tool-header-h) - var(--tool-pad) * 2);
+    display: flex;
+    flex-direction: column;
+    gap: 16px; /* 你可以调 */
+    min-width: 0;
+  }
+
+  .tool-workbench-preview{
+    flex: 1 1 auto;
+    min-height: 0; /* 允许内部撑满而不挤爆 */
+  }
+
+  .tool-workbench-stats{
+    flex: 0 0 auto;
+  }
+}
+
+/* ===========================
+   Workbench (Right rail fixed + Left panel equal height)
+   =========================== */
+@media (min-width: 1024px){
+  /* 右侧控制台：固定 + 往左挪一点 + 不要内部滚动条 */
+  .tool-rail-fixed{
+    position: fixed;
+    top: 96px;                 /* header(64) + gap(32) */
+    right: 72px;               /* ✅ 往左挪：你可以改 56/64/80 */
+    width: 20rem;              /* 320px */
+    height: calc(100vh - 120px);
+    overflow: hidden;          /* ✅ 不要 scroll bar */
+    z-index: 50;
+  }
+
+  /* 主内容给右侧 fixed rail 预留空间 + 留一点空白 */
+  .tool-main-reserve{
+    padding-right: 30rem;      /* ✅ 留更大空白：防止左侧太宽贴近右侧 */
+  }
+
+  /* 紫色外壳面板：高度与右侧一致 */
+  .tool-workbench-panel{
+    height: calc(100vh - 120px);
+  }
+
+  /* 紫色工作台内部：上 dropzone + 下 4 卡 */
+  .tool-workbench{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+  .tool-workbench-preview{
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+  }
+  .tool-workbench-stats{
+    flex: 0 0 auto;
+  }
+}
+/* ===== Tool responsive grid (always works, no Tailwind arbitrary) ===== */
+.tool-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  align-items: start;
+  min-width: 0;
+}
+
+/* >=1024px 两栏：右侧宽度跟着窗口缩放（整体一起缩小） */
+@media (min-width: 1024px) {
+  .tool-grid {
+    grid-template-columns: minmax(0, 1fr) clamp(240px, 22vw, 320px);
+  }
+}
+
+/* 左右同高（考虑 header + 外层 padding） */
+.tool-panel-h {
+  height: calc(100dvh - 120px); /* 64(header) + 56(上下留白/你 top-24 体系) */
 }

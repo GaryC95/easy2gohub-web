@@ -1,0 +1,104 @@
+Folder PATH listing
+Volume serial number is 7A13-878A
+C:.
+¦   dev-files.txt
+¦   project-structure.txt
+¦   tree.txt
+¦   
++---assets
+¦       astro.svg
+¦       background.svg
+¦       
++---components
+¦   ¦   Footer.astro
+¦   ¦   Header.astro
+¦   ¦   Sidebar.astro
+¦   ¦   ToolCard.astro
+¦   ¦   ToolGrid.astro
+¦   ¦   Welcome.astro
+¦   ¦   
+¦   +---ads
+¦   ¦       AdsSlot.astro
+¦   ¦       StickyAd.astro
+¦   ¦       
+¦   +---core
+¦   ¦       DropZone.astro
+¦   ¦       
+¦   +---seo
+¦   ¦       ToolSeoBlock.astro
+¦   ¦       
+¦   +---settings
+¦   ¦       ConvertSettings.astro
+¦   ¦       DevSettings.astro
+¦   ¦       FileSettings.astro
+¦   ¦       ImageSettings.astro
+¦   ¦       MediaSettings.astro
+¦   ¦       PdfSettings.astro
+¦   ¦       TextSettings.astro
+¦   ¦       
+¦   +---tools
+¦   ¦       CollageMaker.astro
+¦   ¦       ColorPicker.astro
+¦   ¦       ExifTool.astro
+¦   ¦       FaviconGenerator.astro
+¦   ¦       ImageBorder.astro
+¦   ¦       ImageCompressor.astro
+¦   ¦       ImageConverter.astro
+¦   ¦       ImageCropper.astro
+¦   ¦       ImageEnlarger.astro
+¦   ¦       ImageResizer.astro
+¦   ¦       ImageRotator.astro
+¦   ¦       ImageToWebp.astro
+¦   ¦       ImageWatermark.astro
+¦   ¦       MemeGenerator.astro
+¦   ¦       ToolPlaceholder.astro
+¦   ¦       
+¦   +---ui
+¦           AppSidebar.astro
+¦           
++---data
+¦       tools.ts
+¦       
++---layouts
+¦       BaseLayout.astro
+¦       HomeLayout.astro
+¦       Layout.astro
+¦       ToolLayout.astro
+¦       
++---lib
+¦   +---image
+¦       ¦   image-engine.js
+¦       ¦   image-ui-bridge.js
+¦       ¦   tool-registry.js
+¦       ¦   
+¦       +---processors
+¦               border.js
+¦               compressor.js
+¦               converter.js
+¦               exif.js
+¦               favicon.js
+¦               meme.js
+¦               resizer.js
+¦               rotator.js
+¦               watermark.js
+¦               
++---pages
+¦   ¦   about.astro
+¦   ¦   index.astro
+¦   ¦   privacy-policy.astro
+¦   ¦   privacy.astro
+¦   ¦   terms.astro
+¦   ¦   
+¦   +---tools
+¦   ¦       index.astro
+¦   ¦       
+¦   +---[category]
+¦           index.astro
+¦           [slug].astro
+¦           
++---styles
+¦       global.css
+¦       
++---utils
+        zip.ts
+        

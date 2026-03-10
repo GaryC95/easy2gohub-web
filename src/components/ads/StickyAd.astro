@@ -1,0 +1,119 @@
+---
+import AdsSlot from "./AdsSlot.astro";
+
+const {
+  label = "Sticky",
+  // 你未来 AdSense 通过后再填 adSlot
+  adSlot,
+  // 仅桌面启用
+  desktopOnly = true,
+  // 滚动到多少才显示
+  showAfter = 520,
+  // 默认展开
+  defaultOpen = true,
+} = Astro.props as {
+  label?: string;
+  adSlot?: string | number;
+  desktopOnly?: boolean;
+  showAfter?: number;
+  defaultOpen?: boolean;
+};
+---
+
+<div
+  data-role="sticky-ad"
+  class={`fixed z-[70] right-4 bottom-4 ${desktopOnly ? "hidden md:block" : ""}`}
+  style="display:none;"
+>
+  <div class="rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-[0_18px_60px_rgba(2,6,23,0.18)] overflow-hidden w-[340px]">
+    <!-- Top bar -->
+    <div class="flex items-center justify-between px-3 py-2 border-b border-slate-200/60">
+      <div class="flex items-center gap-2 text-[11px] font-semibold tracking-wider uppercase text-slate-400">
+        <span class="material-symbols-outlined text-base">campaign</span>
+        <span>{label}</span>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <button
+          type="button"
+          data-action="min"
+          class="w-9 h-8 rounded-xl hover:bg-white transition flex items-center justify-center text-slate-500"
+          title="Minimize"
+        >
+          <span class="material-symbols-outlined text-base">expand_more</span>
+        </button>
+
+        <button
+          type="button"
+          data-action="close"
+          class="w-9 h-8 rounded-xl hover:bg-white transition flex items-center justify-center text-slate-500"
+          title="Close"
+        >
+          <span class="material-symbols-outlined text-base">close</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div data-role="sticky-body" class={`${defaultOpen ? "" : "hidden"}`}>
+      <div class="p-3">
+        <AdsSlot
+          label="Sticky – Box"
+          variant="box"
+          height={260}
+          className="w-full"
+          adSlot={adSlot}
+        />
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ showAfter, defaultOpen }}>
+  (function () {
+    const root = document.querySelector('[data-role="sticky-ad"]');
+    if (!root) return;
+
+    const KEY = "sticky_ad_closed_v1";
+    if (sessionStorage.getItem(KEY) === "1") return;
+
+    const body = root.querySelector('[data-role="sticky-body"]');
+    const btnMin = root.querySelector('[data-action="min"]');
+    const btnClose = root.querySelector('[data-action="close"]');
+
+    let opened = !!defaultOpen;
+
+    const setOpen = (on) => {
+      opened = !!on;
+      if (!body) return;
+      body.classList.toggle("hidden", !opened);
+
+      // icon swap
+      const icon = btnMin?.querySelector(".material-symbols-outlined");
+      if (icon) icon.textContent = opened ? "expand_more" : "expand_less";
+    };
+
+    setOpen(opened);
+
+    btnMin?.addEventListener("click", (e) => {
+      e.preventDefault();
+      setOpen(!opened);
+    });
+
+    btnClose?.addEventListener("click", (e) => {
+      e.preventDefault();
+      sessionStorage.setItem(KEY, "1");
+      root.remove();
+    });
+
+    const maybeShow = () => {
+      if (window.scrollY >= Number(showAfter || 520)) {
+        root.style.display = "block";
+        window.removeEventListener("scroll", maybeShow, { passive: true });
+      }
+    };
+
+    window.addEventListener("scroll", maybeShow, { passive: true });
+    maybeShow();
+  })();
+</script>

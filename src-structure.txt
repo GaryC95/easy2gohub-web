@@ -1,0 +1,94 @@
+Folder PATH listing
+Volume serial number is 7A13-878A
+C:\USERS\USER\DESKTOP\WEB PROJECT\ASTRO\EASY2GOHUB-WEB\SRC
++---assets
+|       astro.svg
+|       background.svg
+|       
++---components
+|   |   Footer.astro
+|   |   Header.astro
+|   |   Sidebar.astro
+|   |   ToolCard.astro
+|   |   ToolGrid.astro
+|   |   Welcome.astro
+|   |   
+|   +---ads
+|   |       AdsSlot.astro
+|   |       
+|   +---core
+|   |       DropZone.astro
+|   |       
+|   +---image
+|   |       ImageDropZone.astro
+|   |       
+|   +---seo
+|   |       ToolSeoBlock.astro
+|   |       
+|   +---settings
+|   |       ConvertSettings.astro
+|   |       DevSettings.astro
+|   |       FileSettings.astro
+|   |       ImageSettings.astro
+|   |       MediaSettings.astro
+|   |       PdfSettings.astro
+|   |       TextSettings.astro
+|   |       
+|   +---tools
+|   |       CollageMaker.astro
+|   |       ColorPicker.astro
+|   |       ExifTool.astro
+|   |       FaviconGenerator.astro
+|   |       ImageBorder.astro
+|   |       ImageConverter.astro
+|   |       ImageCropper.astro
+|   |       ImageEnlarger.astro
+|   |       ImageResizer.astro
+|   |       ImageRotator.astro
+|   |       ImageToWebp.astro
+|   |       ImageWatermark.astro
+|   |       MemeGenerator.astro
+|   |       ToolPlaceholder.astro
+|   |       
+|   \---ui
+|           AppSidebar.astro
+|           
++---data
+|       tools.ts
+|       
++---layouts
+|       BaseLayout.astro
+|       Layout.astro
+|       ToolLayout.astro
+|       
++---lib
+|   \---image
+|           image-dropzone.js
+|           image-engine.js
+|           
++---pages
+|   |   about.astro
+|   |   index.astro
+|   |   privacy-policy.astro
+|   |   privacy.astro
+|   |   terms.astro
+|   |   
+|   +---image
+|   |       ImageCompressor.astro
+|   |       
+|   +---tools
+|   |       index.astro
+|   |       
+|   \---[category]
+|           index.astro
+|           [slug].astro
+|           
++---scripts
+|       image-engine.js
+|       
++---styles
+|       global.css
+|       
+\---utils
+        zip.ts
+        

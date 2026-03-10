@@ -1,20 +1,26 @@
 ---
-import ToolCard from "./ToolCard.astro";
-const { tools } = Astro.props;
+const { tools = [] } = Astro.props as {
+  tools?: Array<{
+    category: string;
+    slug: string;
+    title: string;
+    description: string;
+    icon?: string;
+    badge?: string;
+  }>;
+};
 
-function buildSearch(t){
-  return [t.title, t.description, t.category, ...(t.tags||[])].join(" | ");
-}
+import ToolCard from "./ToolCard.astro";
 ---
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-  {tools.map(t => (
+
+<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  {tools.map((t) => (
     <ToolCard
       href={`/${t.category}/${t.slug}/`}
-      icon={t.icon}
+      icon={t.icon || "apps"}
       title={t.title}
       description={t.description}
-      tags={t.tags}
-      search={buildSearch(t)}
+      badge={t.badge}
     />
   ))}
 </div>

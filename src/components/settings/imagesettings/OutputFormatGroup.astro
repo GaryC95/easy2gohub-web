@@ -1,0 +1,41 @@
+---
+type Props = { mode: string };
+const { mode } = Astro.props;
+---
+
+<div class="space-y-3">
+  <label class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 block">
+    {mode === "convert" ? "Target Format" : "Output Format"}
+  </label>
+
+  <select class="hidden" data-bind="settings.outputFormat" data-setting="outputFormat">
+    <option value="keep">keep</option>
+    <option value="webp">webp</option>
+    <option value="jpg">jpg</option>
+    <option value="png">png</option>
+  </select>
+
+  <div class="grid grid-cols-4 gap-0 p-1.5 bg-white/60 rounded-2xl border border-slate-200/70 overflow-hidden" data-role="fmt">
+    <button
+      type="button"
+      class="py-2.5 rounded-xl text-slate-600 text-xs font-semibold hover:bg-white/80 transition border-r border-slate-200/70"
+      data-fmt="keep"
+      title={mode === "convert" ? "Keep original format" : "Auto (default)"}
+    >
+      {mode === "convert" ? "KEEP" : "AUTO"}
+    </button>
+
+    <button type="button" class="py-2.5 rounded-xl text-slate-600 text-xs font-semibold hover:bg-white/80 transition border-r border-slate-200/70" data-fmt="webp">WEBP</button>
+    <button type="button" class="py-2.5 rounded-xl text-slate-600 text-xs font-semibold hover:bg-white/80 transition border-r border-slate-200/70" data-fmt="jpg">JPG</button>
+    <button type="button" class="py-2.5 rounded-xl text-slate-600 text-xs font-semibold hover:bg-white/80 transition" data-fmt="png">PNG</button>
+  </div>
+
+  {mode !== "convert" && (
+    <div class="text-[11px] text-slate-500" data-role="fmt-tip">
+      Tip: WEBP usually gives best compression.
+    </div>
+  )}
+  {mode !== "convert" && (
+    <div class="text-[11px] text-slate-500/90" data-role="fmt-hint"></div>
+  )}
+</div>

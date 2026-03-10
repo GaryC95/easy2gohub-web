@@ -1,0 +1,29 @@
+---
+// src/components/tools/ImageCropper.astro
+import DropZone from "../core/DropZone.astro";
+const slug = "image-cropper";
+---
+
+<section class="tool-root space-y-6 min-w-0" data-tool-root={slug}>
+  <DropZone
+    dzId={slug}
+    accept="image/*"
+    multiple={true}
+    label="Drop images here"
+    hint="Local processing • Crop (Batch via relative crop) • No upload"
+    fixedStage={true}
+  />
+
+  <section class="glass tool-card rounded-2xl p-5">
+    <div class="flex items-center justify-between mb-3">
+      <div class="font-extrabold text-slate-900">Results</div>
+      <div class="text-sm text-slate-500">Per-file download • ZIP from right panel</div>
+    </div>
+    <div class="space-y-3" data-role="result-list"></div>
+  </section>
+</section>
+<style is:global>
+  [data-role="settings"][data-tool="image-cropper"] [data-role="reset"] {
+    display: none !important;
+  }
+</style>

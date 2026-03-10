@@ -1,6 +1,7 @@
 ---
 // src/components/ui/AppSidebar.astro
 import { CATEGORY_ORDER, CATEGORY_META, getToolsByCategory } from "../../data/tools";
+import AdsSlot from "../ads/AdsSlot.astro";
 
 const path = Astro.url.pathname;
 
@@ -12,132 +13,141 @@ const isActive = (href: string) => {
 const caret = "chevron_right";
 ---
 
-<aside class="w-72 glass-sidebar flex flex-col overflow-y-auto">
-  <!-- Brand -->
-  <div class="p-6 border-b border-white/40">
-    <a href="/" class="flex items-center gap-3 group">
-      <div class="size-10 rounded-2xl bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/30 transition">
-        <span class="material-symbols-outlined text-xl">auto_fix_high</span>
+<aside class="w-72 glass-sidebar sticky top-0 self-start h-[100dvh] overflow-hidden">
+  <!-- ✅ one continuous sidebar surface -->
+  <div class="h-full flex flex-col p-6">
+    <!-- Brand -->
+    <a href="/" class="flex items-center gap-3 group pb-5">
+      <!-- ✅ Pure logo (no gradient / no background) -->
+      <div class="size-14 rounded-2xl overflow-hidden shadow-sm">
+        <img
+          src="/brand/logo.png"
+          alt="Easy2GoHub"
+          class="h-full w-full object-contain"
+        />
       </div>
 
       <div class="leading-tight min-w-0">
-        <div class="text-base font-black text-slate-900 tracking-tight truncate">
+        <div class="text-xl font-semibold text-slate-900 tracking-tight truncate">
           Easy2Go<span class="text-primary">Hub</span>
         </div>
-        <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+        <div class="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">
           Tool Suite
         </div>
       </div>
     </a>
-  </div>
 
-  <!-- Nav -->
-  <nav class="p-5 space-y-6">
-    <div>
-      <p class="text-[11px] uppercase font-bold tracking-[0.18em] text-slate-400 px-1 mb-3">
-        Navigation
-      </p>
+    <!-- ✅ single scroll area (scroll ends at ads) -->
+    <div class="flex-1 overflow-y-auto custom-scrollbar -mx-2 px-2">
+      <!-- Navigation -->
+      <div class="space-y-3">
+        <p class="text-[11px] uppercase font-semibold tracking-[0.18em] text-slate-500 px-1">
+          Navigation
+        </p>
 
-      <div class="space-y-2">
-        <a
-          href="/"
-          class={`flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-bold transition
-            ${isActive("/") ? "bg-primary/10 text-primary ring-1 ring-primary/10" : "text-slate-700 hover:bg-white/60 hover:text-primary"}`}
-        >
-          <span class="material-symbols-outlined text-lg">home</span>
-          Home
-        </a>
+        <div class="space-y-2">
+          <a
+            href="/"
+            class={`flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-semibold transition
+              ${isActive("/") ? "bg-primary/10 text-primary ring-1 ring-primary/10" : "text-slate-700 hover:bg-white/60 hover:text-primary"}`}
+          >
+            <span class="material-symbols-outlined text-lg">home</span>
+            Home
+          </a>
 
-        <a
-          href="/tools/"
-          class={`flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-bold transition
-            ${isActive("/tools/") ? "bg-primary/10 text-primary ring-1 ring-primary/10" : "text-slate-700 hover:bg-white/60 hover:text-primary"}`}
-        >
-          <span class="material-symbols-outlined text-lg">apps</span>
-          All Tools
-        </a>
+          <a
+            href="/tools/"
+            class={`flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-semibold transition
+              ${isActive("/tools/") ? "bg-primary/10 text-primary ring-1 ring-primary/10" : "text-slate-700 hover:bg-white/60 hover:text-primary"}`}
+          >
+            <span class="material-symbols-outlined text-lg">apps</span>
+            All Tools
+          </a>
+        </div>
       </div>
-    </div>
 
-    <!-- Explorer -->
-    <div class="space-y-3">
-      <p class="text-[11px] uppercase font-bold tracking-[0.18em] text-slate-400 px-1">
-        Explorer
-      </p>
+      <!-- Explorer -->
+      <div class="mt-6 space-y-3">
+        <p class="text-[11px] uppercase font-semibold tracking-[0.18em] text-slate-500 px-1">
+          Explorer
+        </p>
 
-      <div class="space-y-2">
-        {CATEGORY_ORDER.map((cat) => {
-          const meta = CATEGORY_META[cat];
-          const list = getToolsByCategory(cat);
+        <div class="space-y-2">
+          {CATEGORY_ORDER.map((cat) => {
+  const meta = CATEGORY_META[cat];
+  const list = getToolsByCategory(cat);
 
-          return (
-            <details
-              class="group rounded-3xl bg-white/40 border border-white/50 overflow-hidden"
-              open={path.startsWith(`/${cat}/`)}
-            >
-              <summary class="flex items-center gap-3 px-4 py-3 cursor-pointer select-none list-none hover:bg-white/40 transition">
-                <span class="material-symbols-outlined text-lg text-slate-400 group-open:rotate-90 transition-transform">
-                  {caret}
-                </span>
+  // ✅ 没有工具就不显示这个分类
+  if (!list || list.length === 0) return null;
 
-                <span class={`material-symbols-outlined text-lg ${meta.iconClass}`}>
-                  {meta.icon}
-                </span>
 
-                <div class="flex-1 min-w-0">
-                  <div class="text-sm font-extrabold text-slate-900 truncate">{meta.label}</div>
-                  <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                    {list.length} tools
+            return (
+              <details
+                class="group rounded-3xl bg-white/50 border border-slate-200/70 overflow-hidden"
+                open={path.startsWith(`/${cat}/`)}
+              >
+                <summary class="flex items-center gap-3 px-4 py-3 cursor-pointer select-none list-none hover:bg-white/50 transition">
+                  <span class="material-symbols-outlined text-lg text-slate-400 group-open:rotate-90 transition-transform">
+                    {caret}
+                  </span>
+
+                  <span class={`material-symbols-outlined text-lg ${meta.iconClass}`}>
+                    {meta.icon}
+                  </span>
+
+                  <div class="flex-1 min-w-0">
+                    <div class="text-sm font-semibold text-slate-900 truncate">{meta.label}</div>
+                    <div class="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">
+                      {list.length} tools
+                    </div>
+                  </div>
+                </summary>
+
+                <div class="px-2 pb-3">
+                  <div class="ml-9 pl-3 border-l-2 border-slate-100 space-y-1">
+                    {list
+                      .slice()
+                      .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
+                      .map((t) => {
+                        const href = `/${t.category}/${t.slug}/`;
+                        const active = isActive(href);
+
+                        return (
+                          <a
+                            href={href}
+                            class={`flex items-center gap-2.5 px-3 py-2 rounded-r-2xl text-sm font-semibold transition
+                              ${active ? "text-primary bg-primary/10" : "text-slate-700 hover:bg-white/60 hover:text-primary"}`}
+                          >
+                            <span class="material-symbols-outlined text-[18px] text-slate-400">
+                              {t.icon}
+                            </span>
+                            <span class="truncate">{t.title}</span>
+                          </a>
+                        );
+                      })}
                   </div>
                 </div>
-              </summary>
-
-              <div class="px-2 pb-3">
-                <div class="ml-9 pl-3 border-l-2 border-slate-100 space-y-1">
-                  {list
-                    .slice()
-                    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
-                    .map((t) => {
-                      const href = `/${t.category}/${t.slug}/`;
-                      const active = isActive(href);
-
-                      return (
-                        <a
-                          href={href}
-                          class={`flex items-center gap-2.5 px-3 py-2 rounded-r-2xl text-sm font-bold transition
-                            ${active ? "text-primary bg-primary/10" : "text-slate-600 hover:bg-white/60 hover:text-primary"}`}
-                        >
-                          <span class="material-symbols-outlined text-[18px] text-slate-400">
-                            {t.icon}
-                          </span>
-                          <span class="truncate">{t.title}</span>
-                        </a>
-                      );
-                    })}
-                </div>
-              </div>
-            </details>
-          );
-        })}
+              </details>
+            );
+          })}
+        </div>
       </div>
-    </div>
-  </nav>
 
-  <!-- Bottom CTA -->
-  <div class="p-6 mt-auto">
-    <div class="rounded-3xl p-5 bg-primary/5 border border-primary/10">
-      <p class="text-xs font-extrabold text-primary mb-1">PRO (Coming Soon)</p>
-      <p class="text-xs text-slate-500 leading-relaxed">
-        Batch processing, higher limits, and advanced presets.
-      </p>
+      <!-- ✅ bottom section is part of same scroll content (no visual split) -->
+      <div class="mt-6 space-y-4">
+        
 
-      <a
-        href="/tools/"
-        class="inline-flex items-center gap-2 mt-4 text-xs font-extrabold text-primary hover:underline"
-      >
-        Explore tools
-        <span class="material-symbols-outlined text-sm">arrow_right_alt</span>
-      </a>
+        <AdsSlot
+          label="Sponsored"
+          variant="box"
+          height="h-56"
+          className="w-full"
+          /* adSlot="YOUR_SLOT_ID" */
+        />
+      </div>
+
+      <!-- spacer to keep last card comfortable (still no “empty scroll after ads”) -->
+      <div class="h-3"></div>
     </div>
   </div>
 </aside>

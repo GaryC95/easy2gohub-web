@@ -1,0 +1,134 @@
+---
+---
+
+<div class="space-y-4">
+  <script is:inline>
+    // no-op (Astro keeps)
+  </script>
+
+  <!-- hidden binds for engine (✅ use hidden class, not type="hidden") -->
+  <input type="text" class="hidden" value="size" data-bind="settings.resizeTab" />
+  <input type="text" class="hidden" value="fit" data-bind="settings.resizeMode" />
+
+  <input type="number" class="hidden" value="" data-bind="settings.width" />
+  <input type="number" class="hidden" value="" data-bind="settings.height" />
+
+  <input type="checkbox" class="hidden" checked data-bind="settings.keepAspect" />
+  <input type="checkbox" class="hidden" data-bind="settings.allowUpscale" />
+
+  <input type="number" class="hidden" value="50" data-bind="settings.scalePercent" />
+  <input type="checkbox" class="hidden" data-bind="settings.backgroundFill" />
+  <input type="text" class="hidden" value="#ffffff" data-bind="settings.backgroundColor" />
+
+  <!-- Tabs -->
+  <div class="grid grid-cols-3 gap-2 p-1.5 bg-white/60 rounded-2xl border border-slate-200/70" data-role="rz-tabs">
+    <button type="button" class="py-2.5 rounded-xl text-xs font-semibold" data-tab="size">Size</button>
+    <button type="button" class="py-2.5 rounded-xl text-xs font-semibold" data-tab="percent">Percent</button>
+    <button type="button" class="py-2.5 rounded-xl text-xs font-semibold" data-tab="preset">Preset</button>
+  </div>
+
+  <!-- Panels -->
+  <div class="space-y-4" data-role="rz-panels">
+    <!-- Size -->
+    <div class="space-y-3" data-panel="size">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 block mb-1">Width (px)</label>
+          <input class="w-full px-3 py-2 rounded-xl bg-white/70 border border-slate-200/70"
+            type="number" min="1" placeholder="auto" data-role="rz-width" />
+        </div>
+        <div>
+          <label class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 block mb-1">Height (px)</label>
+          <input class="w-full px-3 py-2 rounded-xl bg-white/70 border border-slate-200/70"
+            type="number" min="1" placeholder="auto" data-role="rz-height" />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-3">
+        <label class="flex items-center gap-2 text-sm text-slate-700">
+          <input type="checkbox" class="accent-blue-600" checked data-role="rz-keep" />
+          Keep aspect
+        </label>
+
+        <label class="flex items-center gap-2 text-sm text-slate-700">
+          <input type="checkbox" class="accent-blue-600" data-role="rz-upscale" />
+          Allow upscale
+        </label>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 block">Mode</label>
+        <div class="grid grid-cols-3 gap-2 p-1.5 bg-white/60 rounded-2xl border border-slate-200/70" data-role="rz-mode">
+          <button type="button" class="py-2.5 rounded-xl text-xs font-semibold" data-mode="fit">Fit</button>
+          <button type="button" class="py-2.5 rounded-xl text-xs font-semibold" data-mode="fill">Fill</button>
+          <button type="button" class="py-2.5 rounded-xl text-xs font-semibold" data-mode="exact">Exact</button>
+        </div>
+        <div class="text-[11px] text-slate-500">
+          Fill will crop. Exact will stretch.
+        </div>
+      </div>
+
+      <div class="rounded-2xl bg-white/60 border border-slate-200/70 p-3 space-y-2">
+        <label class="flex items-center justify-between text-sm text-slate-700">
+          <span>Background fill</span>
+          <input type="checkbox" class="accent-blue-600" data-role="rz-bgfill" />
+        </label>
+        <div class="flex items-center justify-between">
+          <div class="text-[11px] text-slate-500">When enabled: Fit + fixed box + fill background.</div>
+          <input type="color" value="#ffffff" class="w-10 h-8 rounded-lg border border-slate-200/70 bg-white" data-role="rz-bgcolor" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Percent -->
+    <div class="space-y-3 hidden" data-panel="percent">
+      <label class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 block">Scale percent</label>
+      <input class="w-full" type="range" min="1" max="200" value="50" data-role="rz-percent" />
+      <div class="flex justify-between text-xs text-slate-500">
+        <span>1%</span><span data-role="rz-percent-label">50%</span><span>200%</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <label class="flex items-center gap-2 text-sm text-slate-700">
+          <input type="checkbox" class="accent-blue-600" checked data-role="rz-keep2" />
+          Keep aspect
+        </label>
+        <label class="flex items-center gap-2 text-sm text-slate-700">
+          <input type="checkbox" class="accent-blue-600" data-role="rz-upscale2" />
+          Allow upscale
+        </label>
+      </div>
+    </div>
+
+    <!-- Preset -->
+    <div class="space-y-3 hidden" data-panel="preset">
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" class="py-3 rounded-2xl bg-white/70 border border-slate-200/70 font-semibold text-slate-800 hover:bg-white transition"
+          data-preset="1080x1080">
+          1080 × 1080
+          <div class="text-[11px] text-slate-500 mt-1">Square</div>
+        </button>
+        <button type="button" class="py-3 rounded-2xl bg-white/70 border border-slate-200/70 font-semibold text-slate-800 hover:bg-white transition"
+          data-preset="1080x1920">
+          1080 × 1920
+          <div class="text-[11px] text-slate-500 mt-1">Story/Reels</div>
+        </button>
+      </div>
+
+      <div class="text-[11px] text-slate-500">
+        Preset uses <b>Fill</b> by default (crop) for best fit.
+      </div>
+
+      <div class="rounded-2xl bg-white/60 border border-slate-200/70 p-3 space-y-2">
+        <label class="flex items-center justify-between text-sm text-slate-700">
+          <span>Background fill</span>
+          <input type="checkbox" class="accent-blue-600" data-role="rz-bgfill3" />
+        </label>
+        <div class="flex items-center justify-between">
+          <div class="text-[11px] text-slate-500">Enable if you want Fit + no crop.</div>
+          <input type="color" value="#ffffff" class="w-10 h-8 rounded-lg border border-slate-200/70 bg-white" data-role="rz-bgcolor3" />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,129 @@
+---
+// src/components/tools/ImageToPng.astro
+import DropZone from "../core/DropZone.astro";
+const slug = "image-to-png";
+---
+
+<section class="tool-root space-y-6 min-w-0" data-tool-root={slug}>
+  <DropZone
+    dzId={slug}
+    accept="image/*"
+    multiple={true}
+    label="Drop images here"
+    hint="Local processing • Convert to PNG • Batch supported"
+    fixedStage={true}
+  />
+
+  <!-- stats row (same as converter) -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="glass tool-card rounded-2xl p-5">
+      <span class="block text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">Original Format</span>
+      <div class="text-2xl font-extrabold text-slate-900" data-role="stat-orig">—</div>
+    </div>
+
+    <div class="glass tool-card rounded-2xl p-5">
+      <span class="block text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">Output Format</span>
+      <div class="text-2xl font-extrabold text-slate-900" data-role="stat-out">—</div>
+    </div>
+
+    <div class="rounded-2xl p-5 bg-[#137fec] shadow-[0_18px_50px_rgba(19,127,236,0.22)]">
+      <span class="block text-[10px] uppercase font-bold text-white/80 tracking-widest mb-2">Files</span>
+      <div class="text-3xl font-black text-white" data-role="stat-saved">—</div>
+    </div>
+
+    <div class="glass tool-card rounded-2xl p-5">
+      <span class="block text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">Processing Time</span>
+      <div class="text-2xl font-extrabold text-emerald-700" data-role="stat-time">—</div>
+    </div>
+  </div>
+
+  <!-- results -->
+  <section class="glass tool-card rounded-2xl p-5">
+    <div class="flex items-center justify-between mb-3">
+      <div class="font-extrabold text-slate-900">Results</div>
+      <div class="text-sm text-slate-500">Per-file download • ZIP from right panel</div>
+    </div>
+    <div class="space-y-3" data-role="result-list"></div>
+  </section>
+</section>
+
+<!-- ✅ only for image-to-png: hide Reset block + keep only PNG -->
+<style is:global>
+  [data-role="settings"][data-tool="image-to-png"] [data-role="reset"] {
+    display: none !important;
+  }
+
+  [data-role="settings"][data-tool="image-to-png"] [data-role="fmt"] {
+    grid-template-columns: 1fr !important;
+  }
+  [data-role="settings"][data-tool="image-to-png"] [data-role="fmt"] button[data-fmt]:not([data-fmt="png"]) {
+    display: none !important;
+  }
+  [data-role="settings"][data-tool="image-to-png"] [data-role="fmt"] button[data-fmt="png"] {
+    pointer-events: none;
+  }
+
+  [data-role="settings"][data-tool="image-to-png"] [data-role="fmt-tip"],
+  [data-role="settings"][data-tool="image-to-png"] [data-role="fmt-hint"] {
+    display: none !important;
+  }
+</style>
+
+<script is:inline type="module">
+  const SLUG = "image-to-png";
+  const FIXED = "png";
+
+  const toolRoot = document.querySelector(`[data-tool-root="${SLUG}"]`);
+  const statOut = toolRoot?.querySelector('[data-role="stat-out"]');
+
+  function setStatOut(value) {
+    if (!statOut) return;
+    statOut.textContent = value;
+  }
+
+  function boot(retry = 60) {
+    const settingsRoot = document.querySelector(`[data-role="settings"][data-tool="${SLUG}"]`);
+    if (!settingsRoot) {
+      if (retry > 0) return setTimeout(() => boot(retry - 1), 50);
+      return;
+    }
+
+    const sel = settingsRoot.querySelector('select[data-bind="settings.outputFormat"]');
+
+    const lock = () => {
+      if (!sel) return;
+      if (sel.value !== FIXED) {
+        sel.value = FIXED;
+        sel.dispatchEvent(new Event("input", { bubbles: true }));
+        sel.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    };
+
+    lock();
+
+    settingsRoot.addEventListener("image-settings:sync", (ev) => {
+      const d = ev?.detail || {};
+      if (d.key === "outputFormat" || d.key === "__inputMime") {
+        lock();
+        setTimeout(() => setStatOut("PNG"), 0);
+      }
+    });
+
+    toolRoot?.addEventListener("dropzone:change", () => {
+      lock();
+      setTimeout(() => setStatOut("PNG"), 0);
+    });
+
+    toolRoot?.addEventListener("dropzone:clear", () => {
+      setStatOut("—");
+    });
+
+    const mo = new MutationObserver(() => {
+      const txt = (statOut?.textContent || "").trim();
+      if (txt && txt !== "—" && txt !== "PNG") setStatOut("PNG");
+    });
+    if (statOut) mo.observe(statOut, { childList: true, characterData: true, subtree: true });
+  }
+
+  boot();
+</script>

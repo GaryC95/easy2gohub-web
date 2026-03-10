@@ -1,23 +1,8 @@
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Easy2GoHub · Simple Online Tools</title>
-	</head>
-	<body>
-		<slot />
-	</body>
-</html>
+---
+import BaseLayout from "./BaseLayout.astro";
+const { title, description, canonical } = Astro.props;
+---
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
+<BaseLayout title={title} description={description} canonical={canonical}>
+  <slot />
+</BaseLayout>

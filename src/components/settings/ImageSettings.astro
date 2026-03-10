@@ -1,344 +1,303 @@
 ---
-const { tool } = Astro.props;
+import { getToolDef } from "../../lib/image/tool-registry.js";
 
-// tool may be undefined in some edge cases; keep safe defaults
-const slug = tool?.slug ?? "";
-const title = tool?.title ?? "Image Tool";
+// ✅ NEW: split parts
+import SettingsHeader from "./imagesettings/SettingsHeader.astro";
+import PrimaryActions from "./imagesettings/PrimaryActions.astro";
+import ResizerGroup from "./imagesettings/ResizerGroup.astro";
+import QualityRingGroup from "./imagesettings/QualityRingGroup.astro";
+import OutputFormatGroup from "./imagesettings/OutputFormatGroup.astro";
+import ResetGroup from "./imagesettings/ResetGroup.astro";
+import RotateGroup from "./imagesettings/RotateGroup.astro";
+import CropGroup from "./imagesettings/CropGroup.astro";
 
-// Capabilities by tool slug (adjust anytime)
-const CAP_BY_SLUG: Record<string, {
-  showQuality?: boolean;
-  showTargetFormat?: boolean;
-  showMaxDim?: boolean;
-  showResizeMode?: boolean;
-  showAllowUpscale?: boolean;
-  showJpegBg?: boolean;
-  showNaming?: boolean;
-  showMetadata?: boolean;
-}> = {
-  "image-compressor": {
-    showQuality: true,
-    showTargetFormat: true,
-    showMaxDim: true,
-    showJpegBg: true,
-    showNaming: true,
-    showMetadata: true,
-  },
-  "image-resizer": {
-    showQuality: true,
-    showTargetFormat: true,
-    showMaxDim: true,
-    showResizeMode: true,
-    showAllowUpscale: true,
-    showJpegBg: true,
-    showNaming: true,
-    showMetadata: true,
-  },
-  "image-converter": {
-    showQuality: true,
-    showTargetFormat: true,
-    showJpegBg: true,
-    showNaming: true,
-    showMetadata: true,
-  },
-  "image-to-webp": {
-    showQuality: true,
-    showMaxDim: true,
-    showResizeMode: true,
-    showAllowUpscale: true,
-    showNaming: true,
-    showMetadata: true,
-  },
-};
+type Props = { slug?: string; title?: string };
 
-// Default capability set if slug is unknown but category is image
-const caps = CAP_BY_SLUG[slug] ?? {
-  showQuality: true,
-  showTargetFormat: true,
-  showMaxDim: true,
-  showResizeMode: true,
-  showAllowUpscale: true,
-  showJpegBg: true,
-  showNaming: true,
-  showMetadata: true,
-};
+const propsSlug = Astro.props.slug;
+const slug =
+  typeof propsSlug === "string" && propsSlug.trim()
+    ? propsSlug.trim()
+    : "unknown-tool";
 
-const showQuality = !!caps.showQuality;
-const showTargetFormat = !!caps.showTargetFormat;
-const showMaxDim = !!caps.showMaxDim;
-const showResizeMode = !!caps.showResizeMode;
-const showAllowUpscale = !!caps.showAllowUpscale;
-const showJpegBg = !!caps.showJpegBg;
-const showNaming = !!caps.showNaming;
-const showMetadata = !!caps.showMetadata;
+let groups: string[] = [];
+let mode: string = "transform";
 
-// default suffix per tool
-const defaultSuffix =
-  slug === "image-resizer" ? "-resized" :
-  slug === "image-converter" ? "-converted" :
-  slug === "image-to-webp" ? "-webp" :
-  "-compressed";
+try {
+  const tool = getToolDef(slug);
+  groups = tool.groups ?? [];
+  mode = tool.mode ?? "transform";
+} catch {
+  groups = [];
+  mode = "transform";
+}
 ---
 
-<section class="tool-card p-6 space-y-8" data-tool="image-settings">
-  <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-    <span class="material-symbols-outlined text-primary">settings</span>
-    Settings
-  </h3>
+<aside
+  class="glass-sidebar rounded-2xl p-6 border border-slate-200/70"
+  data-role="settings"
+  data-tool={slug}
+>
+  <SettingsHeader mode={mode} />
 
-  <div class="text-xs text-slate-400 font-semibold">
-    Active tool: <span class="text-slate-600 font-extrabold">{title}</span>
+  <div class="space-y-6">
+    <PrimaryActions mode={mode} />
+    {groups.includes("crop") && <CropGroup slug={slug} />}
+    {groups.includes("rotate") && <RotateGroup />}
+
+    {slug === "image-resizer" && groups.includes("resize") && <ResizerGroup />}
+
+    {mode !== "convert" && groups.includes("quality") && <QualityRingGroup />}
+
+    {groups.includes("output") && <OutputFormatGroup mode={mode} />}
+
+    <ResetGroup />
   </div>
+</aside>
 
-  {/* ===================== Quality ===================== */}
-  {showQuality ? (
-    <div class="space-y-4">
-      <div class="flex justify-between items-center text-xs font-bold text-slate-700">
-        <span>Quality</span>
-        <span data-id="qualityLabel" class="text-primary bg-primary/10 px-2 py-0.5 rounded">80%</span>
-      </div>
+<script type="module" define:vars={{ slug, mode }}>
+  const aside = document.querySelector(`[data-role="settings"][data-tool="${slug}"]`);
+  if (!aside) console.warn("[ImageSettings] settings root not found for slug:", slug);
 
-      <input data-id="quality" id="quality" type="range" min="30" max="95" value="80" class="w-full" />
+  const isResizer = slug === "image-resizer";
+  const isConvert = mode === "convert";
+  const isCompress = mode === "compress";
 
-      <div class="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
-        <span>Smaller</span>
-        <span>Better Quality</span>
-      </div>
-    </div>
-  ) : (
-    <>
-      <input id="quality" type="hidden" value="80" />
-      <span data-id="qualityLabel" class="hidden">80%</span>
-    </>
-  )}
+  const getApi = () => {
+    const m = window.__imageTools;
+    if (!m || typeof m.get !== "function") return null;
+    return m.get(slug) || null;
+  };
 
-  {/* ===================== Target Format ===================== */}
-  {showTargetFormat ? (
-    <div class="space-y-4">
-      <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Target Format</label>
+  const btnProcess = aside?.querySelector('[data-action="process"]');
+  const btnZip = aside?.querySelector('[data-action="download-zip"]');
+  const btnReturn = aside?.querySelector('[data-action="return-auto"]');
 
-      <div class="grid grid-cols-2 gap-2" data-group="format">
-        <button type="button" data-format="auto" class="format-btn active">Auto</button>
-        <button type="button" data-format="image/avif" class="format-btn">AVIF</button>
-        <button type="button" data-format="image/webp" class="format-btn">WEBP</button>
-        <button type="button" data-format="image/jpeg" class="format-btn">JPG</button>
-        <button type="button" data-format="image/png" class="format-btn">PNG</button>
-      </div>
+  const ring = aside?.querySelector('[data-role="quality-ring"]');
+  const num = aside?.querySelector('[data-role="quality-number"]');
 
-      <input type="hidden" id="targetFormat" value="auto" />
-    </div>
-  ) : (
-    <input type="hidden" id="targetFormat" value="auto" />
-  )}
+  const fmtWrap = aside?.querySelector('[data-role="fmt"]');
+  const fmtSelect = aside?.querySelector('select[data-bind="settings.outputFormat"]');
 
-  {/* ===================== Max Dimension ===================== */}
-  {showMaxDim ? (
-    <div class="space-y-3">
-      <div class="flex justify-between items-center text-xs font-bold text-slate-700">
-        <span>Max Dimension</span>
-        <span data-id="maxDimLabel" class="text-primary bg-primary/10 px-2 py-0.5 rounded">0</span>
-      </div>
+  let inputMime = "";
 
-      <input data-id="maxDim" id="maxDim" type="range" min="0" max="4096" value="0" step="16" class="w-full" />
+  const setRing = (q) => {
+    const v = Math.max(1, Math.min(100, Number(q) || 85));
+    if (num) num.textContent = String(v);
+    if (ring) {
+      const dash = 502;
+      const offset = dash - (dash * v) / 100;
+      ring.setAttribute("stroke-dashoffset", String(offset));
+    }
+  };
 
-      <div class="text-[10px] text-slate-400 font-bold uppercase">
-        0 = keep original size • otherwise resize by longest side
-      </div>
-    </div>
-  ) : (
-    <>
-      <input id="maxDim" type="hidden" value="0" />
-      <span data-id="maxDimLabel" class="hidden">0</span>
-    </>
-  )}
+  btnProcess?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const api = getApi();
+    if (!api) return;
+    await api.process?.();
+  });
 
-  {/* ===================== Resize Mode ===================== */}
-  {showResizeMode ? (
-    <div class="space-y-3">
-      <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Resize Mode</label>
+  btnZip?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const api = getApi();
+    if (!api) return;
+    await api.downloadZip?.();
+  });
 
-      <div class="grid grid-cols-3 gap-2" data-group="resize">
-        <button type="button" data-resize="fit" class="chip-btn active">Fit</button>
-        <button type="button" data-resize="fill" class="chip-btn">Fill</button>
-        <button type="button" data-resize="exact" class="chip-btn">Exact</button>
-      </div>
+  btnReturn?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const api = getApi();
+    if (!api) return;
+    await api.returnToAutoBest?.();
+  });
 
-      <input type="hidden" id="resizeMode" value="fit" />
+  const setFmtActive = (val) => {
+    fmtWrap?.querySelectorAll("button[data-fmt]").forEach((b) => {
+      const on = b.getAttribute("data-fmt") === val;
+      b.classList.toggle("bg-[#137fec]", on);
+      b.classList.toggle("text-white", on);
+      b.classList.toggle("shadow-lg", on);
+      b.classList.toggle("shadow-blue-500/20", on);
+      b.classList.toggle("text-slate-600", !on);
+      b.classList.toggle("bg-white/0", !on);
+    });
+  };
 
-      <div class="text-[10px] text-slate-400 font-bold uppercase">
-        Fit: keep aspect • Fill: crop • Exact: square
-      </div>
-    </div>
-  ) : (
-    <input type="hidden" id="resizeMode" value="fit" />
-  )}
+  const forceFmt = (v) => {
+    if (!fmtSelect) return;
+    fmtSelect.value = v;
+    fmtSelect.dispatchEvent(new Event("input", { bubbles: true }));
+    fmtSelect.dispatchEvent(new Event("change", { bubbles: true }));
+    setFmtActive(v);
+  };
 
-  {/* ===================== Allow Upscale ===================== */}
-  {showAllowUpscale ? (
-    <div class="space-y-2">
-      <label class="flex items-center justify-between gap-3 text-xs font-bold text-slate-700">
-        <span>Allow Upscale</span>
-        <input id="allowUpscale" type="checkbox" class="toggle" />
-      </label>
-      <div class="text-[10px] text-slate-400 font-bold uppercase">
-        When off, smaller images won’t be enlarged
-      </div>
-    </div>
-  ) : (
-    <input id="allowUpscale" type="hidden" value="off" />
-  )}
+  // ✅ compressor/resizer 的规则；converter 直接不做任何“压缩策略”
+  const applyFormatRules = () => {
+    if (isConvert) return;
 
-  {/* ===================== JPEG Background ===================== */}
-  {showJpegBg ? (
-    <div class="space-y-3">
-      <label class="flex items-center justify-between gap-3 text-xs font-bold text-slate-700">
-        <span>JPEG Background for Transparency</span>
-        <input id="jpegBg" type="checkbox" class="toggle" />
-      </label>
-
-      <div class="grid grid-cols-3 gap-2" data-group="jbg">
-        <button type="button" data-jbg="white" class="chip-btn active">White</button>
-        <button type="button" data-jbg="black" class="chip-btn">Black</button>
-        <button type="button" data-jbg="neutral" class="chip-btn">Neutral</button>
-      </div>
-
-      <input type="hidden" id="jpegBgColor" value="white" />
-      <div class="text-[10px] text-slate-400 font-bold uppercase">
-        Applies when output is JPG
-      </div>
-    </div>
-  ) : (
-    <>
-      <input id="jpegBg" type="hidden" value="off" />
-      <input id="jpegBgColor" type="hidden" value="white" />
-    </>
-  )}
-
-  {/* ===================== Naming ===================== */}
-  {showNaming ? (
-    <div class="space-y-3">
-      <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Output Suffix</label>
-      <input
-        id="nameSuffix"
-        type="text"
-        value={defaultSuffix}
-        class="w-full rounded-xl border border-white/60 bg-white/60 px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/40"
-        placeholder={defaultSuffix}
-      />
-      <div class="text-[10px] text-slate-400 font-bold uppercase">
-        Output name = original + suffix
-      </div>
-    </div>
-  ) : (
-    <input id="nameSuffix" type="hidden" value="-output" />
-  )}
-
-  {/* ===================== Metadata ===================== */}
-  {showMetadata ? (
-    <div class="space-y-2">
-      <label class="flex items-center justify-between gap-3 text-xs font-bold text-slate-700">
-        <span>Keep Metadata (EXIF)</span>
-        <input id="keepMetadata" type="checkbox" class="toggle" />
-      </label>
-      <div class="text-[10px] text-slate-400 font-bold uppercase">
-        Coming soon: not all browsers preserve EXIF when exporting
-      </div>
-    </div>
-  ) : (
-    <input id="keepMetadata" type="hidden" value="off" />
-  )}
-</section>
-
-<style>
-  .format-btn, .chip-btn {
-    padding: 0.6rem;
-    font-size: 0.75rem;
-    font-weight: 800;
-    border-radius: 0.75rem;
-    border: 2px solid rgba(226,232,240,1);
-    background: rgba(255,255,255,0.85);
-    color: rgba(100,116,139,1);
-    transition: all 0.15s;
-  }
-  .format-btn:hover, .chip-btn:hover { border-color: rgba(147,197,253,1); }
-  .format-btn.active, .chip-btn.active {
-    border-color: rgba(37,99,235,1);
-    background: rgba(239,246,255,1);
-    color: rgba(37,99,235,1);
-  }
-  .toggle {
-    width: 42px;
-    height: 24px;
-    accent-color: rgb(79,70,229);
-  }
-</style>
-
-<script type="module">
-  const root = document.querySelector('[data-tool="image-settings"]');
-  if (!root) throw new Error("ImageSettings root not found");
-
-  if (root.dataset.inited === "1") {
-    // already initialized
-  } else {
-    root.dataset.inited = "1";
-
-    const q = (sel) => root.querySelector(sel);
-    const qa = (sel) => Array.from(root.querySelectorAll(sel));
-
-    // Quality label
-    const quality = document.getElementById("quality");
-    const qualityLabel = q('[data-id="qualityLabel"]');
-    if (quality && qualityLabel && quality.type === "range") {
-      qualityLabel.textContent = quality.value + "%";
-      quality.addEventListener("input", () => (qualityLabel.textContent = quality.value + "%"));
+    if (isResizer) {
+      // resizer：keep only（你现在 UI 仍展示按钮，但可按需要禁用）
+      return;
     }
 
-    // Format buttons -> hidden #targetFormat
-    const target = document.getElementById("targetFormat");
-    const formatBtns = qa('[data-group="format"] .format-btn');
-    if (target && formatBtns.length) {
-      formatBtns.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          formatBtns.forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          target.value = btn.dataset.format || "auto";
-        });
-      });
+    // compress：这里保留你原来的逻辑（如果你还有禁用/强制行为，可以在此恢复）
+    // 目前简化：不强制
+    return;
+  };
+
+  fmtWrap?.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-fmt]");
+    if (!btn || !fmtSelect) return;
+    if (btn.disabled) return;
+    const v = btn.getAttribute("data-fmt");
+    forceFmt(v);
+  });
+
+  if (fmtSelect) setFmtActive(fmtSelect.value || (isConvert ? "keep" : "webp"));
+
+  aside?.addEventListener("image-settings:sync", (ev) => {
+    const d = ev?.detail || {};
+
+    if (d.key === "quality") setRing(d.value);
+    if (d.key === "outputFormat") setFmtActive(d.value);
+
+    if (d.key === "__zipEnabled" && btnZip) {
+      btnZip.disabled = !d.value;
+      btnZip.classList.toggle("opacity-50", !d.value);
+      btnZip.classList.toggle("cursor-not-allowed", !d.value);
     }
 
-    // MaxDim label
-    const maxDim = document.getElementById("maxDim");
-    const maxDimLabel = q('[data-id="maxDimLabel"]');
-    if (maxDim && maxDimLabel && maxDim.type === "range") {
-      const set = () => (maxDimLabel.textContent = String(maxDim.value));
-      set();
-      maxDim.addEventListener("input", set);
+    if (d.key === "__inputMime") {
+      inputMime = String(d.value || "");
+      applyFormatRules();
     }
+  });
 
-    // Resize mode chips -> hidden #resizeMode
-    const resizeMode = document.getElementById("resizeMode");
-    const resizeBtns = qa('[data-group="resize"] .chip-btn');
-    if (resizeMode && resizeBtns.length) {
-      resizeBtns.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          resizeBtns.forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          resizeMode.value = btn.dataset.resize || "fit";
-        });
-      });
-    }
+  const qRange = aside?.querySelector('input[data-bind="settings.quality"]');
+  qRange?.addEventListener("input", () => setRing(qRange.value));
+  qRange?.addEventListener("change", () => setRing(qRange.value));
+  if (qRange) setRing(qRange.value);
 
-    // JPEG bg chips -> hidden #jpegBgColor
-    const jpegBgColor = document.getElementById("jpegBgColor");
-    const jbgBtns = qa('[data-group="jbg"] .chip-btn');
-    if (jpegBgColor && jbgBtns.length) {
-      jbgBtns.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          jbgBtns.forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          jpegBgColor.value = btn.dataset.jbg || "white";
-        });
-      });
-    }
+  // ---------- Resizer UI ----------
+  const setHidden = (bindKey, value) => {
+    const el = aside?.querySelector(`[data-bind="settings.${bindKey}"]`);
+    if (!el) return;
+
+    if (el.type === "checkbox") el.checked = !!value;
+    else el.value = value === undefined || value === null ? "" : String(value);
+
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+
+  const setTabActive = (tab) => {
+    const tabs = aside?.querySelector('[data-role="rz-tabs"]');
+    const panels = aside?.querySelector('[data-role="rz-panels"]');
+    if (!tabs || !panels) return;
+
+    tabs.querySelectorAll("button[data-tab]").forEach((b) => {
+      const on = b.getAttribute("data-tab") === tab;
+      b.classList.toggle("bg-[#137fec]", on);
+      b.classList.toggle("text-white", on);
+      b.classList.toggle("shadow-lg", on);
+      b.classList.toggle("shadow-blue-500/20", on);
+      b.classList.toggle("text-slate-700", !on);
+    });
+
+    panels.querySelectorAll("[data-panel]").forEach((p) => {
+      p.classList.toggle("hidden", p.getAttribute("data-panel") !== tab);
+    });
+
+    setHidden("resizeTab", tab);
+  };
+
+  const setModeActive = (m) => {
+    const wrap = aside?.querySelector('[data-role="rz-mode"]');
+    if (!wrap) return;
+    wrap.querySelectorAll("button[data-mode]").forEach((b) => {
+      const on = b.getAttribute("data-mode") === m;
+      b.classList.toggle("bg-[#137fec]", on);
+      b.classList.toggle("text-white", on);
+      b.classList.toggle("shadow-lg", on);
+      b.classList.toggle("shadow-blue-500/20", on);
+      b.classList.toggle("text-slate-700", !on);
+    });
+    setHidden("resizeMode", m);
+  };
+
+  if (isResizer) {
+    setTabActive("size");
+    setModeActive("fit");
+
+    aside?.querySelector('[data-role="rz-tabs"]')?.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-tab]");
+      if (!btn) return;
+      setTabActive(btn.getAttribute("data-tab"));
+    });
+
+    const w = aside?.querySelector('[data-role="rz-width"]');
+    const h = aside?.querySelector('[data-role="rz-height"]');
+    w?.addEventListener("input", () => setHidden("width", w.value ? Number(w.value) : undefined));
+    h?.addEventListener("input", () => setHidden("height", h.value ? Number(h.value) : undefined));
+
+    const keep = aside?.querySelector('[data-role="rz-keep"]');
+    const up = aside?.querySelector('[data-role="rz-upscale"]');
+    keep?.addEventListener("change", () => setHidden("keepAspect", !!keep.checked));
+    up?.addEventListener("change", () => setHidden("allowUpscale", !!up.checked));
+
+    aside?.querySelector('[data-role="rz-mode"]')?.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-mode]");
+      if (!btn) return;
+      const bg = aside?.querySelector('[data-role="rz-bgfill"]');
+      if (bg?.checked) {
+        setModeActive("fit");
+        return;
+      }
+      setModeActive(btn.getAttribute("data-mode"));
+    });
+
+    const bgfill = aside?.querySelector('[data-role="rz-bgfill"]');
+    const bgcolor = aside?.querySelector('[data-role="rz-bgcolor"]');
+    bgfill?.addEventListener("change", () => {
+      setHidden("backgroundFill", !!bgfill.checked);
+      if (bgfill.checked) setModeActive("fit");
+    });
+    bgcolor?.addEventListener("input", () => setHidden("backgroundColor", bgcolor.value || "#ffffff"));
+
+    const pct = aside?.querySelector('[data-role="rz-percent"]');
+    const pctLabel = aside?.querySelector('[data-role="rz-percent-label"]');
+    pct?.addEventListener("input", () => {
+      const v = Number(pct.value || 50);
+      if (pctLabel) pctLabel.textContent = `${v}%`;
+      setHidden("scalePercent", v);
+    });
+
+    const keep2 = aside?.querySelector('[data-role="rz-keep2"]');
+    const up2 = aside?.querySelector('[data-role="rz-upscale2"]');
+    keep2?.addEventListener("change", () => setHidden("keepAspect", !!keep2.checked));
+    up2?.addEventListener("change", () => setHidden("allowUpscale", !!up2.checked));
+
+    aside?.querySelector('[data-panel="preset"]')?.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-preset]");
+      if (!btn) return;
+      const key = btn.getAttribute("data-preset");
+      if (key === "1080x1080") {
+        setHidden("width", 1080); setHidden("height", 1080);
+        setHidden("keepAspect", true);
+        setHidden("resizeMode", "fill");
+      } else if (key === "1080x1920") {
+        setHidden("width", 1080); setHidden("height", 1920);
+        setHidden("keepAspect", true);
+        setHidden("resizeMode", "fill");
+      }
+    });
+
+    const bgfill3 = aside?.querySelector('[data-role="rz-bgfill3"]');
+    const bgcolor3 = aside?.querySelector('[data-role="rz-bgcolor3"]');
+    bgfill3?.addEventListener("change", () => {
+      setHidden("backgroundFill", !!bgfill3.checked);
+      if (bgfill3.checked) setHidden("resizeMode", "fit");
+    });
+    bgcolor3?.addEventListener("input", () => setHidden("backgroundColor", bgcolor3.value || "#ffffff"));
   }
 </script>

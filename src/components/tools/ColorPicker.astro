@@ -1,0 +1,44 @@
+---
+import DropZone from "../core/DropZone.astro";
+import ImageSettings from "../settings/ImageSettings.astro";
+
+const slug = "image-resizer";
+const title = "Resize Settings";
+const dzLabel = "Drop images here";
+const dzHint = "Local processing • Auto-first • Batch supported";
+---
+
+<section class="tool-root grid lg:grid-cols-[360px_1fr] gap-6" data-tool-root={slug}>
+  <aside class="order-2 lg:order-1">
+    <ImageSettings slug={slug} title={title} />
+  </aside>
+
+  <main class="order-1 lg:order-2 space-y-6">
+    <DropZone accept="image/*" multiple={true} label={dzLabel} hint={dzHint} />
+
+    <div class="glass tool-card rounded-2xl p-4 flex flex-wrap items-center gap-3">
+      <button class="glass px-4 py-2 rounded-xl font-medium" data-action="process">Process</button>
+      <button class="glass px-4 py-2 rounded-xl font-medium opacity-50" data-action="download-zip" disabled>Download ZIP</button>
+      <button class="glass px-4 py-2 rounded-xl opacity-80" data-action="clear">Clear</button>
+      <div class="ml-auto text-sm opacity-70">Live preview • Batch supported</div>
+    </div>
+
+    <section class="glass tool-card rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div class="font-semibold">Preview</div>
+        <div class="text-sm opacity-70">Canvas-rendered</div>
+      </div>
+      <div class="space-y-4" data-role="preview-list"></div>
+    </section>
+
+    <section class="glass tool-card rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div class="font-semibold">Results</div>
+        <div class="text-sm opacity-70">Download per-file or ZIP</div>
+      </div>
+      <div class="space-y-3" data-role="result-list"></div>
+    </section>
+  </main>
+</section>
+
+

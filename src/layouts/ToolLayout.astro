@@ -2,15 +2,18 @@
 import BaseLayout from "./BaseLayout.astro";
 import AppSidebar from "../components/ui/AppSidebar.astro";
 import AdsSlot from "../components/ads/AdsSlot.astro";
+import StickyAd from "../components/ads/StickyAd.astro";
 
 const {
   title,
   description,
   canonical,
   adsProfile = "default",
+  toolSlug = "",
 } = Astro.props;
 
 const showAds = adsProfile !== "none";
+const isToolPage = !!toolSlug;
 ---
 
 <BaseLayout title={title} description={description} canonical={canonical}>
@@ -22,75 +25,96 @@ const showAds = adsProfile !== "none";
     ></script>
   )}
 
-  <div class="min-h-screen">
+  <div class="min-h-screen bg-slate-50">
     <div class="flex">
-      {/* Sidebar: mobile hidden */}
       <div class="hidden md:block">
         <AppSidebar />
       </div>
 
-      <main class="flex-1">
-        <header class="sticky top-0 z-40 px-4 md:px-8 py-4 glass border-b border-white/40 flex items-center justify-between gap-4">
-          <div class="min-w-0">
-            <h1 class="text-2xl md:text-4xl font-extrabold text-slate-900 tracking-tight truncate">{title}</h1>
-            <p class="text-slate-500 mt-1 text-sm md:text-base max-w-3xl">{description}</p>
-            {canonical ? <p class="text-[11px] text-slate-400 mt-1 font-semibold truncate">{canonical}</p> : null}
+      <main class="flex-1 min-w-0 relative bg-gradient-to-br from-slate-50 via-indigo-100/60 to-fuchsia-100/45">
+  {/* ✅ Simple but more visible gradient background */}
+  <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+    <div class="absolute inset-0 bg-gradient-to-br from-slate-50 via-indigo-50/55 to-fuchsia-50/45"></div>
+    <div class="absolute -top-24 -right-24 size-[560px] rounded-full bg-indigo-500/18 blur-3xl"></div>
+  <div class="absolute -bottom-28 -left-24 size-[560px] rounded-full bg-sky-500/18 blur-3xl"></div>
+</div>
+        <header class="h-16 border-b border-slate-200 bg-white/70 backdrop-blur-md px-6 md:px-8 flex items-center justify-between">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="material-symbols-outlined text-slate-600">arrow_back</span>
+            <h1 class="text-lg font-bold truncate text-slate-900">{title}</h1>
+            <span class="text-[10px] bg-emerald-500/10 text-emerald-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+              Active Workspace
+            </span>
           </div>
 
           <div class="hidden md:flex items-center gap-3">
             <a
               href="/tools/"
-              class="px-4 py-2 rounded-xl bg-primary text-white text-sm font-extrabold shadow-lg shadow-primary/25 hover:shadow-primary/35 transition"
+              class="px-4 py-2 rounded-xl bg-[#137fec] text-white text-sm font-bold shadow-lg shadow-blue-500/20"
             >
               All Tools
             </a>
           </div>
-
-          <div class="md:hidden flex items-center gap-2 shrink-0">
-            <a
-              href="/"
-              class="px-3 py-2 rounded-xl bg-white/60 border border-white/50 text-xs font-extrabold text-slate-700"
-            >
-              Home
-            </a>
-            <a
-              href="/tools/"
-              class="px-3 py-2 rounded-xl bg-primary text-white text-xs font-extrabold shadow-lg shadow-primary/25"
-            >
-              Tools
-            </a>
-          </div>
         </header>
 
-        <div class="p-4 md:p-8 max-w-7xl mx-auto w-full">
-          {/* ✅ 单一 Grid：mobile 变单列，lg 变两列 */}
-          <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_20rem] gap-6 lg:gap-8 items-start">
-            {/* Main */}
-            <div class="space-y-8">
-              <slot />
+        <div class="p-6 md:p-8 max-w-[1440px] mx-auto w-full">
+          <div data-tool-scope={toolSlug || ""}>
+            <!-- ✅ 两栏 grid：由 global.css 的 .tool-grid 控制（右侧 clamp 跟着缩小） -->
+            <div class={isToolPage ? "tool-grid" : "grid grid-cols-1"}>
+  {/* LEFT */}
+  <div class={`space-y-6 min-w-0 ${isToolPage ? "" : "max-w-[1100px] mx-auto"}`}>
+    <slot />
+    <slot name="below-main" />
+    {showAds && (
+      <slot name="ads-below-tool">
+        <AdsSlot label="Sponsored" height="h-40" />
+      </slot>
+    )}
+  </div>
 
-              {showAds ? (
-                <slot name="ads-below-tool">
-                  <AdsSlot label="Sponsored" height="h-40" />
-                </slot>
-              ) : null}
-
-              <slot name="below-main" />
-            </div>
-
-            {/* ✅ 只渲染一次 settings slot */}
-            <aside class="space-y-6">
-              <slot name="settings" />
-
-              {showAds ? (
-                <slot name="ads-right">
-                  <AdsSlot label="Sponsored" height="h-56" />
-                </slot>
-              ) : null}
-            </aside>
+  {/* RIGHT：只有工具工作区才渲染，分类页不会留空列 */}
+  {isToolPage ? (
+    <aside class="hidden lg:block min-w-0">
+      <div class="sticky top-24 tool-panel-h overflow-visible">
+        <div class="h-full space-y-6">
+          <slot name="tool-settings" />
+          <slot name="right-rail" />
+          {showAds && (
+            <slot name="ads-right-rail">
+              <AdsSlot label="Sponsored" height="h-56" />
+            </slot>
+          )}
+        </div>
+      </div>
+    </aside>
+  ) : null}
+</div>
           </div>
         </div>
       </main>
+
+      {showAds && (adsProfile === "default" || adsProfile === "heavy") ? (
+        <StickyAd label="Sticky" />
+      ) : null}
     </div>
   </div>
+
+  <script type="module">
+    import { initImageTool } from "/src/lib/image/image-engine.js";
+
+    const scope = document.querySelector("[data-tool-scope]");
+    if (!scope) {
+      console.warn("[tool-init] missing [data-tool-scope]");
+    } else {
+      scope.querySelectorAll("[data-tool-root]").forEach((root) => {
+        const slug = root.getAttribute("data-tool-root");
+        if (!slug) return;
+        try {
+          initImageTool({ slug, root });
+        } catch (e) {
+          console.error("[tool-init] failed", slug, e);
+        }
+      });
+    }
+  </script>
 </BaseLayout>

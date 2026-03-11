@@ -13,10 +13,29 @@ export async function processAllFiles({ state, isResizer, onAfterOne }) {
   const { processor } = state.tool;
   const mod = await loadProcessorModule(processor);
 
-  const concurrency = 3;
-  const queue = state.files.slice();
-  const workers = Array.from({ length: concurrency }, () => worker());
-  await Promise.all(workers);
+  function detectMobileLike() {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia("(pointer: coarse)").matches ||
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+  );
+}
+
+function getSafeConcurrency() {
+  if (!detectMobileLike()) return 3;
+
+  const mem = navigator.deviceMemory || 4;
+  return mem <= 4 ? 1 : 2;
+}
+
+function yieldToUI() {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+  const isMobileLike = detectMobileLike();
+const concurrency = getSafeConcurrency();
+const queue = state.files.slice();
+const workers = Array.from({ length: concurrency }, () => worker());
+await Promise.all(workers);
 
   async function worker() {
     while (queue.length) {
@@ -29,6 +48,10 @@ export async function processAllFiles({ state, isResizer, onAfterOne }) {
       });
 
       await onAfterOne?.({ fileModel: f, res });
+
+if (isMobileLike) {
+  await yieldToUI();
+}
     }
   }
 }

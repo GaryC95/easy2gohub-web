@@ -242,9 +242,7 @@ queueMicrotask(initCropOnce);
       "shadow-[0_0_80px_rgba(0,0,0,0.18)] bg-slate-900 flex items-center justify-center";
     node.setAttribute("data-no-pick", "1");
 
-    // ✅ guarantee height even if tailwind class not applied in some builds
-    node.style.minHeight = "520px";
-    node.style.height = "600px";
+   
 
     node.innerHTML = `
       <div class="relative" data-role="crop-stage">
@@ -304,6 +302,10 @@ queueMicrotask(initCropOnce);
     "comparison-slider relative rounded-3xl overflow-hidden border border-white/10 " +
     "shadow-[0_0_80px_rgba(0,0,0,0.18)] h-[520px] md:h-[600px]";
   node.setAttribute("data-no-pick", "1");
+  node.style.width = "100%";
+node.style.maxWidth = "1024px";
+node.style.aspectRatio = "1 / 1";
+node.style.marginInline = "auto";
 
   node.innerHTML = `
     <div class="absolute inset-0 bg-slate-900 flex items-center justify-center">
@@ -537,9 +539,9 @@ function renderCanvasContainNoUpscale(canvas, bitmapOrImg, w, h) {
   ctx.drawImage(bitmapOrImg, 0, 0, iw, ih, dx, dy, dw, dh);
 }
 
-function renderCanvasContain(canvas, bitmapOrImg, w, h) {
+function renderCanvasContain(canvas, bitmapOrImg, w, h, { allowUpscale = true } = {}) {
   const ctx = canvas.getContext("2d");
-  if (!ctx) return;
+  if (!ctx) return null;
 
   const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
   canvas.style.width = `${w}px`;
@@ -552,16 +554,17 @@ function renderCanvasContain(canvas, bitmapOrImg, w, h) {
 
   const iw = bitmapOrImg.width;
   const ih = bitmapOrImg.height;
-  if (!iw || !ih) return;
+  if (!iw || !ih) return null;
 
-  // contain + allow upscale
-  const s = Math.min(w / iw, h / ih);
+  const s = allowUpscale ? Math.min(w / iw, h / ih) : Math.min(1, w / iw, h / ih);
   const dw = Math.max(1, Math.round(iw * s));
   const dh = Math.max(1, Math.round(ih * s));
   const dx = Math.round((w - dw) / 2);
   const dy = Math.round((h - dh) / 2);
 
   ctx.drawImage(bitmapOrImg, 0, 0, iw, ih, dx, dy, dw, dh);
+
+  return { x: dx, y: dy, w: dw, h: dh, sw: w, sh: h };
 }
 
 /* =========================
@@ -569,24 +572,31 @@ function renderCanvasContain(canvas, bitmapOrImg, w, h) {
    ========================= */
 
 async function refreshCropEditor({ state, dom, entry, bitmap, out }) {
-  const w = out.previewWidth;
-  const h = out.previewHeight;
+  const hostW = Math.max(
+    1,
+    Math.floor(entry.node.parentElement?.clientWidth || entry.node.clientWidth || out.previewWidth || 600)
+  );
+  const size = Math.min(1024, hostW);
 
-  entry.stage.style.width = `${w}px`;
-  entry.stage.style.height = `${h}px`;
+  entry.stage.style.width = `${size}px`;
+  entry.stage.style.height = `${size}px`;
 
-  // render image into canvas
-  renderCanvas(entry.canvas, bitmap, w, h);
+  // 图片完整 contain 到正方形舞台里，并拿到真实显示区域
+  const imageBox =
+    renderCanvasContain(entry.canvas, bitmap, size, size, { allowUpscale: true }) ||
+    { x: 0, y: 0, w: size, h: size, sw: size, sh: size };
+
+  entry.imageBox = imageBox;
 
   const rx = clamp01Unit(state.settings.values.cropX);
   const ry = clamp01Unit(state.settings.values.cropY);
   const rw = clamp01Unit(state.settings.values.cropW);
   const rh = clamp01Unit(state.settings.values.cropH);
 
-  const x = Math.round(rx * w);
-  const y = Math.round(ry * h);
-  const cw = Math.max(1, Math.round(rw * w));
-  const ch = Math.max(1, Math.round(rh * h));
+  const x = imageBox.x + Math.round(rx * imageBox.w);
+  const y = imageBox.y + Math.round(ry * imageBox.h);
+  const cw = Math.max(1, Math.round(rw * imageBox.w));
+  const ch = Math.max(1, Math.round(rh * imageBox.h));
 
   entry.rect.style.left = `${x}px`;
   entry.rect.style.top = `${y}px`;
@@ -629,71 +639,80 @@ function bindCropEditorInteractions({ state, dom, entry }) {
 
   const getStageBox = () => stage.getBoundingClientRect();
 
-  const getRectPx = () => {
-    const r = rectEl.getBoundingClientRect();
-    const s = getStageBox();
-    return {
-      x: r.left - s.left,
-      y: r.top - s.top,
-      w: r.width,
-      h: r.height,
-      sw: s.width,
-      sh: s.height,
-    };
+  const getImageBox = () => {
+  const img = entry.imageBox;
+  if (img?.w && img?.h) return img;
+
+  const s = getStageBox();
+  return { x: 0, y: 0, w: s.width, h: s.height, sw: s.width, sh: s.height };
+};
+
+const getRectPx = () => {
+  const r = rectEl.getBoundingClientRect();
+  const s = getStageBox();
+  return {
+    x: r.left - s.left,
+    y: r.top - s.top,
+    w: r.width,
+    h: r.height,
+    sw: s.width,
+    sh: s.height,
   };
+};
 
   const applyRectPx = (px) => {
-    let x = px.x, y = px.y, w = px.w, h = px.h;
-    const sw = Math.max(1, px.sw);
-    const sh = Math.max(1, px.sh);
+  let x = px.x, y = px.y, w = px.w, h = px.h;
+  const img = getImageBox();
 
-    w = Math.max(1, Math.min(sw, w));
-    h = Math.max(1, Math.min(sh, h));
-    x = Math.max(0, Math.min(sw - w, x));
-    y = Math.max(0, Math.min(sh - h, y));
+  w = Math.max(1, Math.min(img.w, w));
+  h = Math.max(1, Math.min(img.h, h));
+  x = Math.max(img.x, Math.min(img.x + img.w - w, x));
+  y = Math.max(img.y, Math.min(img.y + img.h - h, y));
 
-    rectEl.style.left = `${Math.round(x)}px`;
-    rectEl.style.top = `${Math.round(y)}px`;
-    rectEl.style.width = `${Math.round(w)}px`;
-    rectEl.style.height = `${Math.round(h)}px`;
-  };
+  rectEl.style.left = `${Math.round(x)}px`;
+  rectEl.style.top = `${Math.round(y)}px`;
+  rectEl.style.width = `${Math.round(w)}px`;
+  rectEl.style.height = `${Math.round(h)}px`;
+};
 
   const commitToSettings = () => {
-    const px = getRectPx();
-    setBoundNumber("cropX", clamp01Unit(px.x / px.sw));
-    setBoundNumber("cropY", clamp01Unit(px.y / px.sh));
-    setBoundNumber("cropW", clamp01Unit(px.w / px.sw));
-    setBoundNumber("cropH", clamp01Unit(px.h / px.sh));
-  };
+  const px = getRectPx();
+  const img = getImageBox();
+
+  setBoundNumber("cropX", clamp01Unit((px.x - img.x) / img.w));
+  setBoundNumber("cropY", clamp01Unit((px.y - img.y) / img.h));
+  setBoundNumber("cropW", clamp01Unit(px.w / img.w));
+  setBoundNumber("cropH", clamp01Unit(px.h / img.h));
+};
 
   const snapRectToAspect = (aspectStr) => {
-    const r = ratioFrom(aspectStr);
-    if (!r) return;
+  const r = ratioFrom(aspectStr);
+  if (!r) return;
 
-    const s = getStageBox();
-    const sw = Math.max(1, s.width);
-    const sh = Math.max(1, s.height);
-    const ar = sw / sh;
+  const img = getImageBox();
+  const iw = Math.max(1, img.w);
+  const ih = Math.max(1, img.h);
+  const ar = iw / ih;
 
-    let w, h;
-    if (ar >= r) {
-      h = sh;
-      w = sh * r;
-    } else {
-      w = sw;
-      h = sw / r;
-    }
+  let w, h;
+  if (ar >= r) {
+    h = ih;
+    w = ih * r;
+  } else {
+    w = iw;
+    h = iw / r;
+  }
 
-    const shrink = 0.92;
-    w *= shrink;
-    h *= shrink;
+  const shrink = 0.92;
+  w *= shrink;
+  h *= shrink;
 
-    const x = (sw - w) / 2;
-    const y = (sh - h) / 2;
+  const x = img.x + (iw - w) / 2;
+  const y = img.y + (ih - h) / 2;
 
-    applyRectPx({ x, y, w, h, sw, sh });
-    commitToSettings();
-  };
+  applyRectPx({ x, y, w, h, sw: img.sw, sh: img.sh });
+  commitToSettings();
+};
 
   // --- drag ---
   let dragMode = null; // move | nw ne sw se

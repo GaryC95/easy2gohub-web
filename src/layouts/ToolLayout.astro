@@ -25,43 +25,32 @@ const isToolPage = !!toolSlug;
       </div>
 
       <main class="flex-1 min-w-0 relative bg-gradient-to-br from-slate-50 via-indigo-100/60 to-fuchsia-100/45">
-        {/* ✅ background blobs */}
+        {/* background blobs */}
         <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
           <div class="absolute -top-24 -right-24 size-[560px] rounded-full bg-indigo-500/18 blur-3xl"></div>
           <div class="absolute -bottom-28 -left-24 size-[560px] rounded-full bg-sky-500/18 blur-3xl"></div>
         </div>
 
-        <header class="h-16 border-b border-slate-200 bg-white/70 backdrop-blur-md px-4 md:px-8 flex items-center justify-between">
+        <header class="h-16 border-b border-slate-200 bg-white/70 backdrop-blur-md px-6 md:px-8 flex items-center justify-between">
           <div class="flex items-center gap-3 min-w-0">
             {/* ✅ Back button */}
             <button
               type="button"
-              class="inline-flex items-center justify-center size-9 rounded-xl hover:bg-slate-100/80 active:scale-[0.99] transition"
+              class="inline-flex items-center justify-center rounded-xl p-2 hover:bg-slate-100 active:scale-[0.98] transition"
               aria-label="Back"
-              data-action="tool-back"
+              data-action="nav-back"
             >
               <span class="material-symbols-outlined text-slate-600">arrow_back</span>
             </button>
 
             <h1 class="text-lg font-bold truncate text-slate-900">{title}</h1>
 
-            <span class="hidden sm:inline-flex text-[10px] bg-emerald-500/10 text-emerald-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+            <span class="text-[10px] bg-emerald-500/10 text-emerald-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
               Active Workspace
             </span>
           </div>
 
-          <div class="flex items-center gap-2">
-            {/* ✅ mobile: Controls button (only on tool page) */}
-            {isToolPage ? (
-              <button
-                type="button"
-                class="lg:hidden px-3 py-2 rounded-xl bg-white/70 border border-slate-200/70 text-slate-700 text-sm font-bold hover:bg-white transition"
-                data-action="open-controls"
-              >
-                Controls
-              </button>
-            ) : null}
-
+          <div class="flex items-center gap-3">
             <a
               href="/tools/"
               class="px-4 py-2 rounded-xl bg-[#137fec] text-white text-sm font-bold shadow-lg shadow-blue-500/20"
@@ -71,7 +60,7 @@ const isToolPage = !!toolSlug;
           </div>
         </header>
 
-        <div class="p-4 md:p-8 max-w-[1440px] mx-auto w-full">
+        <div class="p-6 md:p-8 max-w-[1440px] mx-auto w-full">
           <div data-tool-scope={toolSlug || ""}>
             <div class={isToolPage ? "tool-grid" : "grid grid-cols-1"}>
               {/* LEFT */}
@@ -86,13 +75,16 @@ const isToolPage = !!toolSlug;
                 )}
               </div>
 
-              {/* RIGHT (IMPORTANT): render on ALL breakpoints, but as drawer on mobile) */}
+              {/* RIGHT (desktop only layout container) */}
               {isToolPage ? (
-                <aside class="min-w-0 tool-controls-panel" aria-label="Tool controls">
-                  <div class="lg:sticky lg:top-24 tool-panel-h overflow-visible">
+                <aside class="hidden lg:block min-w-0">
+                  <div class="sticky top-24 tool-panel-h overflow-visible">
                     <div class="h-full space-y-6">
-                      <slot name="tool-settings" />
+                      {/* ✅ settings will be moved here on lg+ */}
+                      <div data-role="tool-settings-host-desktop"></div>
+
                       <slot name="right-rail" />
+
                       {showAds && (
                         <slot name="ads-right-rail">
                           <AdsSlot label="Sponsored" height="h-56" />
@@ -103,98 +95,124 @@ const isToolPage = !!toolSlug;
                 </aside>
               ) : null}
             </div>
+
+            {/* ✅ stash the real settings exactly ONCE (no duplicate data-role="settings") */}
+            {isToolPage ? (
+              <div class="hidden" data-role="tool-settings-stash">
+                <slot name="tool-settings" />
+              </div>
+            ) : null}
+
+            {/* ✅ Mobile Controls Drawer (does not change desktop logic) */}
+            {isToolPage ? (
+              <>
+                <button
+                  type="button"
+                  class="lg:hidden fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl bg-[#137fec] text-white font-bold shadow-lg shadow-blue-500/25"
+                  data-action="open-controls"
+                >
+                  Controls
+                </button>
+
+                <div
+                  class="lg:hidden fixed inset-0 z-50 hidden"
+                  data-role="controls-backdrop"
+                  aria-hidden="true"
+                >
+                  <div class="absolute inset-0 bg-black/40"></div>
+                </div>
+
+                <div
+                  class="lg:hidden fixed inset-x-0 bottom-0 z-[60] translate-y-full opacity-0 pointer-events-none transition duration-200"
+                  data-role="controls-drawer"
+                >
+                  <div class="rounded-t-3xl bg-white border border-slate-200 shadow-[0_-18px_60px_rgba(2,6,23,0.18)] max-h-[80vh] overflow-y-auto">
+                    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+                      <div class="font-extrabold text-slate-900">Controls</div>
+                      <button
+                        type="button"
+                        class="rounded-xl p-2 hover:bg-slate-100"
+                        data-action="close-controls"
+                        aria-label="Close"
+                      >
+                        <span class="material-symbols-outlined">close</span>
+                      </button>
+                    </div>
+
+                    <div class="p-4 space-y-6">
+                      {/* ✅ settings will be moved here on mobile */}
+                      <div data-role="tool-settings-host-mobile"></div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : null}
           </div>
         </div>
 
-        {/* ✅ mobile drawer backdrop */}
+        {showAds && (adsProfile === "default" || adsProfile === "heavy") ? (
+          <StickyAd label="Sticky" />
+        ) : null}
+
+        {/* ✅ Back + mobile drawer + move settings (run before tool boot) */}
+                <script is:inline>
+          (() => {
+            const backBtn = document.querySelector('[data-action="nav-back"]');
+            if (backBtn) {
+              backBtn.addEventListener('click', () => {
+                if (history.length > 1) history.back();
+                else location.href = '/tools/';
+              });
+            }
+
+            const openBtn = document.querySelector('[data-action="open-controls"]');
+            const closeBtn = document.querySelector('[data-action="close-controls"]');
+            const backdrop = document.querySelector('[data-role="controls-backdrop"]');
+            const drawer = document.querySelector('[data-role="controls-drawer"]');
+
+            const open = () => {
+              if (!backdrop || !drawer) return;
+              backdrop.classList.remove('hidden');
+              drawer.classList.remove('translate-y-full', 'opacity-0', 'pointer-events-none');
+            };
+            const close = () => {
+              if (!backdrop || !drawer) return;
+              backdrop.classList.add('hidden');
+              drawer.classList.add('translate-y-full', 'opacity-0', 'pointer-events-none');
+            };
+
+            openBtn?.addEventListener('click', open);
+            closeBtn?.addEventListener('click', close);
+            backdrop?.addEventListener('click', close);
+
+            const stash = document.querySelector('[data-role="tool-settings-stash"]');
+            const hostDesktop = document.querySelector('[data-role="tool-settings-host-desktop"]');
+            const hostMobile = document.querySelector('[data-role="tool-settings-host-mobile"]');
+
+            if (!stash || !hostDesktop || !hostMobile) return;
+
+            const mq = window.matchMedia('(min-width: 1024px)');
+            const move = () => {
+              const host = mq.matches ? hostDesktop : hostMobile;
+              host.appendChild(stash);
+              stash.classList.remove('hidden');
+            };
+
+            move();
+            try {
+              mq.addEventListener('change', move);
+            } catch {
+              mq.addListener(move);
+            }
+          })();
+        </script>
+
         {isToolPage ? (
-          <div class="lg:hidden fixed inset-0 z-[55] bg-black/30 hidden" data-role="controls-backdrop"></div>
+          <script>
+            import "../lib/image/tool-boot.js";
+          </script>
         ) : null}
       </main>
-
-      {showAds && (adsProfile === "default" || adsProfile === "heavy") ? (
-        <StickyAd label="Sticky" />
-      ) : null}
     </div>
   </div>
-
-  {/* ✅ IMPORTANT: tool-boot.js is in src/lib/... so import as module */}
-  <script type="module" src="/lib/image/tool-boot.js"></script>
-
-  {/* ✅ Back + Drawer wiring (NO illegal top-level return) */}
-  <script is:inline>
-  (() => {
-    // Back
-    const backBtn = document.querySelector('[data-action="tool-back"]');
-    if (backBtn) {
-      backBtn.addEventListener('click', () => {
-        try {
-          if (window.history.length > 1) window.history.back();
-          else window.location.href = '/tools/';
-        } catch {
-          window.location.href = '/tools/';
-        }
-      });
-    }
-
-    // Drawer
-    const openBtn = document.querySelector('[data-action="open-controls"]');
-    const panel = document.querySelector('.tool-controls-panel');
-    const backdrop = document.querySelector('[data-role="controls-backdrop"]');
-
-    if (!openBtn || !panel || !backdrop) return;
-
-    const open = () => {
-      document.documentElement.classList.add('tool-controls-open');
-      backdrop.classList.remove('hidden');
-    };
-    const close = () => {
-      document.documentElement.classList.remove('tool-controls-open');
-      backdrop.classList.add('hidden');
-    };
-
-    openBtn.addEventListener('click', open);
-    backdrop.addEventListener('click', close);
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') close();
-    });
-  })();
-  </script>
-
-  {/* ✅ mobile drawer CSS (does NOT affect desktop logic) */}
-  <style is:global>
-    /* Desktop: behave like normal right column */
-    .tool-controls-panel {
-      display: block;
-    }
-
-    /* Mobile: drawer */
-    @media (max-width: 1023px) {
-      .tool-controls-panel {
-        position: fixed;
-        left: 12px;
-        right: 12px;
-        bottom: 12px;
-        z-index: 56;
-
-        max-height: 78vh;
-        overflow: auto;
-
-        transform: translateY(115%);
-        transition: transform 180ms ease;
-
-        border-radius: 24px;
-      }
-
-      /* drawer open */
-      html.tool-controls-open .tool-controls-panel {
-        transform: translateY(0);
-      }
-
-      /* make the sidebar card look nice in drawer */
-      .tool-controls-panel > div {
-        border-radius: 24px;
-      }
-    }
-  </style>
 </BaseLayout>

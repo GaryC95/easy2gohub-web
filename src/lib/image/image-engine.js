@@ -58,7 +58,8 @@ export function initImageTool({ slug, root }) {
       lastProcessHadAnySaved: false,
     },
   };
-
+state.env = detectRuntimeEnv();
+document.documentElement.dataset.mobileLike = state.env.isMobileLike ? "1" : "0";
   const api = createApi();
   window.__imageTools = window.__imageTools || new Map();
   window.__imageTools.set(slug, api);
@@ -476,4 +477,26 @@ function bindDropzone(scope, cb, onClear) {
     cb(files);
   });
   scope.addEventListener("dropzone:clear", () => onClear?.());
+}
+
+function detectRuntimeEnv() {
+  const coarse =
+    typeof window !== "undefined" &&
+    window.matchMedia("(pointer: coarse)").matches;
+
+  const narrow =
+    typeof window !== "undefined" &&
+    window.matchMedia("(max-width: 767px)").matches;
+
+  const mem =
+    typeof navigator !== "undefined"
+      ? (navigator.deviceMemory || 4)
+      : 4;
+
+  return {
+    isTouchLike: coarse,
+    isNarrow: narrow,
+    isMobileLike: coarse || narrow,
+    deviceMemory: mem,
+  };
 }

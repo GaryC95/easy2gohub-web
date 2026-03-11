@@ -33,24 +33,50 @@ try {
 ---
 
 <aside
-  class="glass-sidebar rounded-2xl p-6 border border-slate-200/70"
+  class="glass-sidebar settings-panel rounded-2xl p-6 border border-slate-200/70"
   data-role="settings"
   data-tool={slug}
 >
   <SettingsHeader mode={mode} />
 
-  <div class="space-y-6">
-    <PrimaryActions mode={mode} />
-    {groups.includes("crop") && <CropGroup slug={slug} />}
-    {groups.includes("rotate") && <RotateGroup />}
+    <div class="space-y-6">
+    <div class="actions-bar" data-sticky-action>
+      <PrimaryActions mode={mode} />
+    </div>
 
-    {slug === "image-resizer" && groups.includes("resize") && <ResizerGroup />}
+    {groups.includes("crop") && (
+      <section class="settings-group">
+        <CropGroup slug={slug} />
+      </section>
+    )}
 
-    {mode !== "convert" && groups.includes("quality") && <QualityRingGroup />}
+    {groups.includes("rotate") && (
+      <section class="settings-group">
+        <RotateGroup />
+      </section>
+    )}
 
-    {groups.includes("output") && <OutputFormatGroup mode={mode} />}
+    {slug === "image-resizer" && groups.includes("resize") && (
+      <section class="settings-group">
+        <ResizerGroup />
+      </section>
+    )}
 
-    <ResetGroup />
+    {mode !== "convert" && groups.includes("quality") && (
+      <section class="settings-group">
+        <QualityRingGroup />
+      </section>
+    )}
+
+    {groups.includes("output") && (
+      <section class="settings-group">
+        <OutputFormatGroup mode={mode} />
+      </section>
+    )}
+
+    <section class="settings-group">
+      <ResetGroup />
+    </section>
   </div>
 </aside>
 

@@ -47,14 +47,15 @@ const slug = "image-to-webp";
   </section>
 </section>
 
-<!-- ✅ only for image-to-webp: hide Reset block + keep only WEBP + fix stat-out display -->
 <style is:global>
-  /* 1) Hide Reset block (Return to Best Auto) only for this tool */
+  /* ✅ only for image-to-webp */
+
+  /* 1) Hide Reset block (Return to Best Auto) */
   [data-role="settings"][data-tool="image-to-webp"] [data-role="reset"] {
     display: none !important;
   }
 
-  /* 2) Keep only one format button: WEBP */
+  /* 2) Keep only WEBP button */
   [data-role="settings"][data-tool="image-to-webp"] [data-role="fmt"] {
     grid-template-columns: 1fr !important;
   }
@@ -65,7 +66,7 @@ const slug = "image-to-webp";
     pointer-events: none;
   }
 
-  /* 3) Converter-style: no compressor tips (optional) */
+  /* 3) No tips/hints */
   [data-role="settings"][data-tool="image-to-webp"] [data-role="fmt-tip"],
   [data-role="settings"][data-tool="image-to-webp"] [data-role="fmt-hint"] {
     display: none !important;
@@ -73,101 +74,70 @@ const slug = "image-to-webp";
 </style>
 
 <script is:inline type="module">
-  const SLUG = "image-to-webp";
-  const FIXED = "webp";
+  (() => {
+    const SLUG = "image-to-webp";
+    const FIXED = "webp";
 
-  const toolRoot = document.querySelector(`[data-tool-root="${SLUG}"]`);
-  const statOut = toolRoot?.querySelector('[data-role="stat-out"]');
+    const toolRoot = document.querySelector(`[data-tool-root="${SLUG}"]`);
+    const statOut = toolRoot?.querySelector('[data-role="stat-out"]');
 
-  function setStatOut(value) {
-    if (!statOut) return;
-    statOut.textContent = value;
-  }
+    const setStatOut = (v) => {
+      if (!statOut) return;
+      statOut.textContent = v;
+    };
 
-  function boot(retry = 60) {
-    const settingsRoot = document.querySelector(`[data-role="settings"][data-tool="${SLUG}"]`);
-    if (!settingsRoot) {
-      if (retry > 0) return setTimeout(() => boot(retry - 1), 50);
-      return;
-    }
+    const boot = (retry = 80) => {
+      const settingsRoot = document.querySelector(`[data-role="settings"][data-tool="${SLUG}"]`);
+      if (!settingsRoot) {
+        if (retry > 0) return setTimeout(() => boot(retry - 1), 50);
+        return;
+      }
 
-    const sel = settingsRoot.querySelector('select[data-bind="settings.outputFormat"]');
+      const sel = settingsRoot.querySelector('select[data-bind="settings.outputFormat"]');
 
-    const lockToWebp = () => {
-      if (!sel) return;
-      if (sel.value !== FIXED) {
-        sel.value = FIXED;
-        sel.dispatchEvent(new Event("input", { bubbles: true }));
-        sel.dispatchEvent(new Event("change", { bubbles: true }));
+      const lockToWebp = () => {
+        if (!sel) return;
+        if (sel.value !== FIXED) {
+          sel.value = FIXED;
+          sel.dispatchEvent(new Event("input", { bubbles: true }));
+          sel.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      };
+
+      // initial lock
+      lockToWebp();
+
+      // keep locked when engine syncs
+      settingsRoot.addEventListener("image-settings:sync", (ev) => {
+        const d = ev?.detail || {};
+        if (d.key === "outputFormat" || d.key === "__inputMime") {
+          lockToWebp();
+          // avoid confusion: always show WEBP as output format
+          queueMicrotask(() => setStatOut("WEBP"));
+        }
+      });
+
+      // on file change: force WEBP display
+      toolRoot?.addEventListener("dropzone:change", () => {
+        lockToWebp();
+        queueMicrotask(() => setStatOut("WEBP"));
+      });
+
+      // on clear
+      toolRoot?.addEventListener("dropzone:clear", () => {
+        setStatOut("—");
+      });
+
+      // safety: if some other code overwrites stat-out
+      if (statOut) {
+        const mo = new MutationObserver(() => {
+          const txt = (statOut.textContent || "").trim();
+          if (txt && txt !== "—" && txt !== "WEBP") setStatOut("WEBP");
+        });
+        mo.observe(statOut, { childList: true, characterData: true, subtree: true });
       }
     };
 
-    // On first load: lock + show WEBP as output format (when file exists)
-    lockToWebp();
-
-    // When engine syncs settings, re-lock and re-fix stat-out
-    settingsRoot.addEventListener("image-settings:sync", (ev) => {
-      const d = ev?.detail || {};
-      if (d.key === "outputFormat" || d.key === "__inputMime") {
-        lockToWebp();
-        // engine may render PNG here (keep), force WEBP to avoid confusion
-        setTimeout(() => setStatOut("WEBP"), 0);
-      }
-    });
-
-    // When user drops files: force Output Format display to WEBP
-    toolRoot?.addEventListener("dropzone:change", () => {
-      lockToWebp();
-      setTimeout(() => setStatOut("WEBP"), 0);
-    });
-
-    // When user clears: back to —
-    toolRoot?.addEventListener("dropzone:clear", () => {
-      setStatOut("—");
-    });
-
-    // Safety: if something overwrites stat-out back to PNG, force it back to WEBP (only when a file exists)
-    const mo = new MutationObserver(() => {
-      const txt = (statOut?.textContent || "").trim();
-      if (txt && txt !== "—" && txt !== "WEBP") setStatOut("WEBP");
-    });
-    if (statOut) mo.observe(statOut, { childList: true, characterData: true, subtree: true });
-  }
-
-  boot();
-</script>
-
-<!-- ✅ 只影响 image-to-webp 的右侧面板：只保留 WEBP -->
-<style is:global>
-  [data-role="settings"][data-tool="image-to-webp"] [data-role="fmt"] {
-    grid-template-columns: 1fr !important;
-  }
-  [data-role="settings"][data-tool="image-to-webp"] [data-role="fmt"] button[data-fmt]:not([data-fmt="webp"]) {
-    display: none !important;
-  }
-  [data-role="settings"][data-tool="image-to-webp"] [data-role="fmt"] button[data-fmt="webp"] {
-    pointer-events: none;
-  }
-</style>
-
-<!-- ✅ 锁住 outputFormat=webp（即使有人用键盘/脚本改） -->
-<script is:inline type="module">
-  const root = document.querySelector('[data-role="settings"][data-tool="image-to-webp"]');
-  if (!root) return;
-
-  const lock = () => {
-    const sel = root.querySelector('select[data-bind="settings.outputFormat"]');
-    if (!sel) return;
-    if (sel.value !== "webp") {
-      sel.value = "webp";
-      sel.dispatchEvent(new Event("input", { bubbles: true }));
-      sel.dispatchEvent(new Event("change", { bubbles: true }));
-    }
-  };
-
-  lock();
-  root.addEventListener("image-settings:sync", (e) => {
-    const d = e?.detail || {};
-    if (d.key === "outputFormat" || d.key === "__inputMime") lock();
-  });
+    boot();
+  })();
 </script>

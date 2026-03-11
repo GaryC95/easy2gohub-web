@@ -11,36 +11,45 @@ function searchHay(t: any) {
 }
 ---
 
-<section class="rounded-2xl bg-white/60 border border-slate-200 p-4" aria-label={title}>
-  <div class="flex items-center justify-between gap-4">
-    <div class="text-sm font-semibold text-slate-900">{title}</div>
+<!-- ✅ 加：w-full min-w-0 overflow-hidden 让阴影不会“跑出框框” -->
+<section
+  class="w-full min-w-0 rounded-2xl bg-white/60 border border-slate-200 p-4 overflow-hidden"
+  aria-label={title}
+>
+  <div class="flex items-center justify-between gap-4 min-w-0">
+    <div class="text-sm font-semibold text-slate-900 min-w-0 truncate">{title}</div>
+
     <a
       href={moreHref}
-      class="text-xs font-semibold text-slate-600 hover:text-slate-900 inline-flex items-center gap-1"
+      class="text-xs font-semibold text-slate-600 hover:text-slate-900 inline-flex items-center gap-1 shrink-0"
     >
       {moreLabel}
       <span class="material-symbols-outlined text-base">chevron_right</span>
     </a>
   </div>
 
-  <div class="mt-3 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+  <!-- ✅ 加：w-full min-w-0 -->
+  <div class="w-full min-w-0 mt-3 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
     {tools.map((t) => (
+      <!-- ✅ 加：min-w-0 w-full overflow-hidden，保证内部 truncate 真能生效 -->
       <a
         href={`/${t.category}/${t.slug}/`}
-        class="group flex items-center gap-3 rounded-2xl bg-white/75 border border-slate-200 px-4 py-3 transition
-       shadow-[0_10px_24px_rgba(2,6,23,0.08)]
-       hover:-translate-y-[2px] hover:shadow-[0_16px_40px_rgba(2,6,23,0.12)]
-       active:translate-y-0 active:shadow-[0_8px_20px_rgba(2,6,23,0.10)]
-       focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+        class="w-full min-w-0 overflow-hidden group flex items-center gap-3 rounded-2xl bg-white/75 border border-slate-200 px-4 py-3 transition
+               shadow-[0_10px_24px_rgba(2,6,23,0.08)]
+               hover:-translate-y-[2px] hover:shadow-[0_16px_40px_rgba(2,6,23,0.12)]
+               active:translate-y-0 active:shadow-[0_8px_20px_rgba(2,6,23,0.10)]
+               focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
         data-tool-card
         data-search={searchHay(t)}
       >
-        <span class="material-symbols-outlined text-indigo-600">{t.icon}</span>
+        <span class="material-symbols-outlined text-indigo-600 shrink-0">{t.icon}</span>
+
         <div class="min-w-0">
           <div class="text-sm font-semibold text-slate-900 truncate">{t.title}</div>
           <div class="text-[11px] text-slate-500 truncate">{t.description}</div>
         </div>
-        <span class="material-symbols-outlined ml-auto text-slate-400 group-hover:text-slate-600">
+
+        <span class="material-symbols-outlined ml-auto text-slate-400 group-hover:text-slate-600 shrink-0">
           chevron_right
         </span>
       </a>

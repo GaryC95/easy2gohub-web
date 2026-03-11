@@ -14,12 +14,10 @@ const slug = "image-rotator";
     fixedStage={true}
   />
 
-  <!-- Optional: simple helper note -->
   <div class="glass tool-card rounded-2xl p-5 text-sm text-slate-600">
     Tip: Use the right panel to choose rotation angle and flip options, then click <b>Apply Changes</b>.
   </div>
 
-  <!-- results (engine requires this) -->
   <section class="glass tool-card rounded-2xl p-5">
     <div class="flex items-center justify-between mb-3">
       <div class="font-extrabold text-slate-900">Results</div>
@@ -29,72 +27,28 @@ const slug = "image-rotator";
     <div class="space-y-3" data-role="result-list"></div>
   </section>
 </section>
-<style is:global>
-  /* 仅 rotator：隐藏“Original / Preview”对比预览区域（避免误导） */
-  [data-tool-root="image-rotator"] .preview-slider,
-  [data-tool-root="image-rotator"] [data-role="preview-host"],
-  [data-tool-root="image-rotator"] [data-role="preview"],
-  [data-tool-root="image-rotator"] [data-role="compare"],
-  [data-tool-root="image-rotator"] [data-role="slider"] {
-    display: none !important;
-  }
-</style>
 
 <script is:inline type="module">
-  // 仅 rotator：如果对比预览是动态插入且 selector 不命中，用“文字锚点”兜底隐藏
+(() => {
   const root = document.querySelector('[data-tool-root="image-rotator"]');
   if (!root) return;
 
-  function findLeafByText(txt) {
-    const all = Array.from(root.querySelectorAll("*"));
-    return all.find(el => el.children.length === 0 && (el.textContent || "").trim() === txt) || null;
-  }
+  const hideBadges = () => {
+    const slider = root.querySelector(".comparison-slider");
+    if (!slider) return;
 
-  function ancestors(el) {
-    const out = [];
-    while (el) { out.push(el); el = el.parentElement; }
-    return out;
-  }
+    // 只隐藏两个角落 badge，不碰 canvas
+    const badges = slider.querySelectorAll(".glass, .bg-\\[\\#137fec\\]");
+    badges.forEach((b) => {
+      const t = (b.textContent || "").trim().toLowerCase();
+      if (t === "original" || t === "preview") b.style.display = "none";
+    });
+  };
 
-  function lca(a, b) {
-    const A = new Set(ancestors(a));
-    let cur = b;
-    while (cur) {
-      if (A.has(cur)) return cur;
-      cur = cur.parentElement;
-    }
-    return null;
-  }
+  hideBadges();
+  root.addEventListener("dropzone:change", () => queueMicrotask(hideBadges));
 
-  function hideCompareOnce() {
-    const a = findLeafByText("ORIGINAL");
-    const b = findLeafByText("PREVIEW");
-    if (!a || !b) return;
-
-    const c = lca(a, b);
-    if (!c || c === root) return;
-
-    // 往上找一个更像“整块预览容器”的节点（避免只隐藏标签）
-    let target = c;
-    for (let i = 0; i < 6 && target.parentElement && target.parentElement !== root; i++) {
-      const box = target.getBoundingClientRect();
-      if (box.width > 400 && box.height > 200) break;
-      target = target.parentElement;
-    }
-    target.style.display = "none";
-  }
-
-  // 文件变化后，预览通常会被重新 mount，一次性隐藏
-  root.addEventListener("dropzone:change", () => setTimeout(hideCompareOnce, 0));
-  // 首次进来如果已经有内容也尝试一次
-  setTimeout(hideCompareOnce, 0);
+  const mo = new MutationObserver(hideBadges);
+  mo.observe(root, { childList: true, subtree: true });
+})();
 </script>
-
-<!-- ✅ If preview slider appears (from global engine), hide it only for rotator.
-     NOTE: selector depends on your preview DOM. If this doesn't hide it, tell me what element/class you see in DOM. -->
-<style is:global>
-  /* common guesses; safe because scoped by slug root */
-  [data-tool-root="image-rotator"] [data-role="preview-host"] { display: none !important; }
-  [data-tool-root="image-rotator"] [data-role="preview"] { display: none !important; }
-  [data-tool-root="image-rotator"] .preview-slider { display: none !important; }
-</style>

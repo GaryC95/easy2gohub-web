@@ -119,9 +119,7 @@ const isToolPage = !!toolSlug;
   </div>
 
   {/* ✅ IMPORTANT: tool-boot.js is in src/lib/... so import as module */}
-  <script type="module">
-    import "/src/lib/image/tool-boot.js";
-  </script>
+  <script type="module" src="/lib/image/tool-boot.js"></script>
 
   {/* ✅ Back + Drawer wiring (NO illegal top-level return) */}
   <script is:inline>

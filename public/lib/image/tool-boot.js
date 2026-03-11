@@ -1,5 +1,5 @@
 // src/lib/image/tool-boot.js
-import { initImageTool } from "./image-engine.js";
+import { initImageTool } from "../../../src/lib/image/image-engine.js";
 
 function initAllTools() {
   const scope = document.querySelector("[data-tool-scope]");

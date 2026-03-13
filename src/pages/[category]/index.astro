@@ -1,12 +1,13 @@
 ---
 import ToolLayout from "../../layouts/ToolLayout.astro";
 import ToolGrid from "../../components/ToolGrid.astro";
-import { CATEGORY_META, getToolsByCategory } from "../../data/tools";
+import { CATEGORY_META, getToolsByCategory, getActiveCategories } from "../../data/tools";
 
 // ✅ SSG: generate all category pages at build time
 export async function getStaticPaths() {
-  const cats = Object.keys(CATEGORY_META || {}).map((c) => String(c).toLowerCase());
-  return cats.map((category) => ({ params: { category } }));
+  return getActiveCategories().map((category) => ({
+    params: { category },
+  }));
 }
 
 const { category } = Astro.params;
@@ -20,12 +21,18 @@ if (!meta) {
 
 const list = getToolsByCategory(cat);
 
-const title = `${meta.label} Tools`;
+const title = `${meta.label} Tools – Free, Private, No Uploads | Easy2GoHub`;
 const description = meta.desc || `Browse ${meta.label} tools on Easy2GoHub.`;
 const canonical = `https://www.easy2gohub.com/${cat}/`;
 ---
 
-<ToolLayout title={title} description={description} canonical={canonical} adsProfile="light">
+<ToolLayout
+  title={title}
+  headerTitle={`${meta.label} Tools`}
+  description={description}
+  canonical={canonical}
+  adsProfile="light"
+>
   <section class="space-y-6">
     <div class="glass tool-card p-8 text-center bg-gradient-to-br from-violet-50/80 via-indigo-50/55 to-white/40 border border-slate-200/70">
   <div class="flex justify-center">
@@ -47,7 +54,7 @@ const canonical = `https://www.easy2gohub.com/${cat}/`;
     {list.length} tools
   </div>
 </div>
-    </div>
+    
 
     <ToolGrid tools={list} />
   </section>

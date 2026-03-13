@@ -7,8 +7,11 @@ import StickyAd from "../components/ads/StickyAd.astro";
 
 const {
   title,
+  headerTitle = title,
   description,
   canonical,
+  robots = "index,follow",
+  jsonLd = [],
   adsProfile = "default",
   toolSlug = "",
 } = Astro.props;
@@ -17,7 +20,13 @@ const showAds = adsProfile !== "none";
 const isToolPage = !!toolSlug;
 ---
 
-<BaseLayout title={title} description={description} canonical={canonical}>
+<BaseLayout
+  title={title}
+  description={description}
+  canonical={canonical}
+  robots={robots}
+  jsonLd={jsonLd}
+>
   <div class="min-h-screen bg-slate-50">
     <div class="flex">
       <div class="hidden md:block">
@@ -43,7 +52,7 @@ const isToolPage = !!toolSlug;
               <span class="material-symbols-outlined text-slate-600">arrow_back</span>
             </button>
 
-            <h1 class="text-lg font-bold truncate text-slate-900">{title}</h1>
+            <div class="text-lg font-bold truncate text-slate-900">{headerTitle}</div>
 
             <span class="text-[10px] bg-emerald-500/10 text-emerald-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
               Active Workspace

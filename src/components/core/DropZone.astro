@@ -8,6 +8,8 @@ const {
   hint = "Local processing • Auto-first • Batch supported",
   showClear = true,
   fixedStage = false,
+  stageMode = fixedStage ? "fill" : "auto",
+  stageMax = 1024,
 } = Astro.props;
 
 const maxFilesAttr = typeof maxFiles === "number" ? String(maxFiles) : "";
@@ -21,6 +23,8 @@ const maxFilesAttr = typeof maxFiles === "number" ? String(maxFiles) : "";
   data-multiple={multiple ? "1" : "0"}
   data-max-files={maxFilesAttr}
   data-fixed-stage={fixedStage ? "1" : "0"}
+  data-stage-mode={stageMode}
+  data-stage-max={String(stageMax)}
   tabindex="0"
   aria-label="Upload files"
 >
@@ -93,13 +97,17 @@ const maxFilesAttr = typeof maxFiles === "number" ? String(maxFiles) : "";
     };
 
     const emitClear = () => {
-      dz.dispatchEvent(new CustomEvent("dropzone:clear", { bubbles: true }));
-      stageEl.innerHTML = "";
-      stageEl.classList.add("hidden");
-      emptyEl.classList.remove("hidden");
-      clearBtn?.classList.add("hidden");
-      stageEl.style.height = "";
-    };
+  dz.dispatchEvent(new CustomEvent("dropzone:clear", { bubbles: true }));
+  stageEl.innerHTML = "";
+  stageEl.classList.add("hidden");
+  emptyEl.classList.remove("hidden");
+  clearBtn?.classList.add("hidden");
+
+  stageEl.style.height = "";
+  stageEl.style.maxWidth = "";
+  stageEl.style.aspectRatio = "";
+  stageEl.style.marginInline = "";
+};
 
     const showStage = () => {
       emptyEl.classList.add("hidden");
@@ -155,11 +163,15 @@ const maxFilesAttr = typeof maxFiles === "number" ? String(maxFiles) : "";
         emit(files);
       }
     });
-
+  const stageMode = dz.getAttribute("data-stage-mode") || (fixed ? "fill" : "auto");
+  const stageMax = Number(dz.getAttribute("data-stage-max") || "1024");
     // auto-height 只在非 fixed 时使用
     let ro = null, raf = 0;
     const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
-    const setStageHeight = (px) => stageEl.style.height = clamp(Math.round(px), 320, 760) + "px";
+    const setStageHeight = (px) => {
+  const maxH = Number.isFinite(stageMax) ? stageMax : 1024;
+  stageEl.style.height = clamp(Math.round(px), 320, maxH) + "px";
+};
 
     const measureAndFit = (node) => {
       cancelAnimationFrame(raf);
@@ -181,6 +193,15 @@ const maxFilesAttr = typeof maxFiles === "number" ? String(maxFiles) : "";
       showStage();
       stageEl.innerHTML = "";
       stageEl.appendChild(node);
+
+      if (stageMode === "square") {
+  stageEl.style.height = "";
+  stageEl.style.maxWidth = `${stageMax}px`;
+  stageEl.style.aspectRatio = "1 / 1";
+  stageEl.style.marginInline = "auto";
+  if (ro) { try { ro.disconnect(); } catch {} ro = null; }
+  return;
+}
 
       if (fixed) {
         stageEl.style.height = "";

@@ -12,6 +12,8 @@ const slug = "image-rotator";
     label="Drop images here"
     hint="Local processing • Rotate / Flip • Batch supported"
     fixedStage={true}
+      stageMode="square"
+      stageMax={1024}
   />
 
   <div class="glass tool-card rounded-2xl p-5 text-sm text-slate-600">
@@ -27,28 +29,3 @@ const slug = "image-rotator";
     <div class="space-y-3" data-role="result-list"></div>
   </section>
 </section>
-
-<script is:inline type="module">
-(() => {
-  const root = document.querySelector('[data-tool-root="image-rotator"]');
-  if (!root) return;
-
-  const hideBadges = () => {
-    const slider = root.querySelector(".comparison-slider");
-    if (!slider) return;
-
-    // 只隐藏两个角落 badge，不碰 canvas
-    const badges = slider.querySelectorAll(".glass, .bg-\\[\\#137fec\\]");
-    badges.forEach((b) => {
-      const t = (b.textContent || "").trim().toLowerCase();
-      if (t === "original" || t === "preview") b.style.display = "none";
-    });
-  };
-
-  hideBadges();
-  root.addEventListener("dropzone:change", () => queueMicrotask(hideBadges));
-
-  const mo = new MutationObserver(hideBadges);
-  mo.observe(root, { childList: true, subtree: true });
-})();
-</script>

@@ -12,7 +12,7 @@ import PopularToolsRow from "../components/home/PopularToolsRow.astro";
 import TrustStrip from "../components/home/TrustStrip.astro";
 import CategoriesSection from "../components/home/CategoriesSection.astro";
 
-const title = "Easy2GoHub – Free Online Image Tools (No Uploads)";
+const title = "Free Online Image Tools – Compress, Resize & Convert | Easy2GoHub";
 const description =
   "Free online image tools to compress, resize & convert JPG/PNG/WebP/HEIC — runs locally in your browser. No uploads. Fast results.";
 const canonical = "https://www.easy2gohub.com/";
@@ -36,7 +36,13 @@ const categories = activeCats.map((cat) => ({
 }));
 ---
 
-<HomeLayout title={title} description={description} canonical={canonical} adsProfile={adsProfile}>
+<HomeLayout
+  title={title}
+  headerTitle="Easy2GoHub"
+  description={description}
+  canonical={canonical}
+  adsProfile={adsProfile}
+>
   {/* ✅ A1: Hero（居中/无按钮/更满） + Popular tools + Trust strip */}
   <HomeHeroA1>
     <PopularToolsRow title="Popular tools" tools={featuredTools} moreHref="/image/" moreLabel="Image tools" />

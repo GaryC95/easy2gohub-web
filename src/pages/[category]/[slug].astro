@@ -2,7 +2,7 @@
  // src/pages/[category]/[slug].astro
 import ToolLayout from "@/layouts/ToolLayout.astro";
 import ToolSeoBlock from "@/components/seo/ToolSeoBlock.astro";
-import { tools } from "@/data/tools";
+import { liveTools, CATEGORY_META } from "@/data/tools";
 
 // ===== Tool components =====
 import ImageCompressor from "@/components/tools/ImageCompressor.astro";
@@ -47,13 +47,13 @@ const SETTINGS_COMPONENTS: Record<string, any> = {
 };
 
 export async function getStaticPaths() {
-  return tools.map((t) => ({
+  return liveTools.map((t) => ({
     params: { category: t.category, slug: t.slug },
   }));
 }
 
 const { category, slug } = Astro.params;
-const tool = tools.find((t) => t.category === category && t.slug === slug);
+const tool = liveTools.find((t) => t.category === category && t.slug === slug);
 if (!tool) throw new Error("Tool not found");
 
 const ToolComponent = TOOL_COMPONENTS[tool.slug] ?? ToolPlaceholder;
@@ -63,17 +63,74 @@ const SettingsComponent =
   settingsType !== "none" ? (SETTINGS_COMPONENTS[settingsType] ?? null) : null;
 
 const canonical = `https://www.easy2gohub.com/${tool.category}/${tool.slug}/`;
+const metaTitle = `${tool.title} – Free, Private, No Uploads | Easy2GoHub`;
+
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: "https://www.easy2gohub.com/",
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Tools",
+      item: "https://www.easy2gohub.com/tools/",
+    },
+    {
+      "@type": "ListItem",
+      position: 3,
+      name: CATEGORY_META[tool.category].label,
+      item: `https://www.easy2gohub.com/${tool.category}/`,
+    },
+    {
+      "@type": "ListItem",
+      position: 4,
+      name: tool.title,
+      item: canonical,
+    },
+  ],
+};
 const adsProfile = tool.adsProfile ?? "default";
 ---
 
 <!-- ✅ toolSlug 传给 ToolLayout -->
 <ToolLayout
-  title={tool.title}
+  title={metaTitle}
+  headerTitle={tool.title}
   description={tool.description}
   canonical={canonical}
   adsProfile={adsProfile}
   toolSlug={tool.slug}
+  jsonLd={[breadcrumbJsonLd]}
 >
+<section class="glass tool-card rounded-3xl p-6 md:p-8">
+  <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+    <a href="/tools/" class="hover:text-slate-700">Tools</a>
+    <span class="mx-2">/</span>
+    <a href={`/${tool.category}/`} class="hover:text-slate-700">
+      {CATEGORY_META[tool.category].label}
+    </a>
+  </div>
+
+  <h1 class="mt-3 text-3xl md:text-4xl font-semibold tracking-tight text-slate-900">
+    {tool.title}
+  </h1>
+
+  <p class="mt-3 max-w-3xl text-slate-600 leading-relaxed">
+    {tool.seo?.intro ?? tool.description}
+  </p>
+
+  <div class="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
+    <span class="px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-700">Runs locally</span>
+    <span class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700">No uploads</span>
+    <span class="px-3 py-1 rounded-full bg-fuchsia-500/10 text-fuchsia-700">Private workflow</span>
+  </div>
+</section>
   <ToolComponent tool={tool} />
 
   {SettingsComponent ? (
@@ -82,5 +139,11 @@ const adsProfile = tool.adsProfile ?? "default";
     </div>
   ) : null}
 
-  <ToolSeoBlock title={tool.title} seo={tool.seo} adsProfile={adsProfile} showAds={adsProfile !== "none"} />
+  <ToolSeoBlock
+  tool={tool}
+  title={tool.title}
+  seo={tool.seo}
+  adsProfile={adsProfile}
+  showAds={adsProfile !== "none"}
+/>
 </ToolLayout>

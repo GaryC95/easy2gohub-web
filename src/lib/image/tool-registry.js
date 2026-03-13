@@ -55,6 +55,13 @@ export const TOOL_REGISTRY = [
     mode: "compress",
     groups: ["quality", "output", "resize", "metadata", "batch"],
     processor: "compressor",
+    previewPolicy: {
+      interaction: "compare", // compare | crop | static | output
+      frame: "square",        // square | auto
+      maxSize: 1024,
+      fit: "contain",         // contain | fill
+      allowUpscale: true,
+    },
     autoStrategy: (file) => {
       const kind = normMime(file);
       const maxEdge = suggestMaxEdge(file);
@@ -114,6 +121,13 @@ export const TOOL_REGISTRY = [
     mode: "transform",
     groups: ["resize", "metadata", "batch"],
     processor: "resizer",
+    previewPolicy: {
+      interaction: "output",
+      frame: "square",
+      maxSize: 1024,
+      fit: "contain",
+      allowUpscale: true,
+    },
     autoStrategy: () => {
       return {
         resizeTab: "size",
@@ -130,221 +144,151 @@ export const TOOL_REGISTRY = [
     },
   },
 
-  // 3) Image Converter (通用格式转换：不做压缩 ladder)
+  // 3) Image Converter
   {
-  slug: "image-converter",
-  mode: "convert",
-  // ✅ 不要 quality，避免出现 quality ring
-  // ✅ 不要 output 的“auto策略提示”，但 output 控件本身可以保留
-  groups: ["output", "metadata", "batch"],  // 你想保留 metadata 也行，但 UI 那块你要自己做
-  processor: "converter",
-  autoStrategy: (file) => {
-    // converter 默认更建议 keep（纯格式工具，不做“更小”推荐）
-    return {
-      __inputKind: normMime(file),
-      outputFormat: "keep",
-      // quality 仍可存在（converter.js 用得上），但 UI 不显示也没关系
-      quality: 85,
-      stripMetadata: false,
-    };
-  },
-},
-
- // 4) Image to WebP (固定输出 WebP + compress ladder + anti-bloat)
-{
-  slug: "image-to-webp",
-  mode: "convert",
-  groups: ["output", "metadata", "batch"],
-  processor: "converter",
-  autoStrategy: (file) => ({
-    __inputKind: normMime(file),
-    outputFormat: "webp",
-    quality: 100,
-    stripMetadata: false,
-  }),
-},
-
-// Image to JPG (convert-only)
-{
-  slug: "image-to-jpg",
-  mode: "convert",
-  groups: ["output", "metadata", "batch"],
-  processor: "converter",
-  fixedOutputFormat: "jpg",
-  autoStrategy: (file) => {
-    return {
-      __inputKind: normMime(file),
-      outputFormat: "jpg",
-      quality: 100,
-      stripMetadata: false,
-    };
-  },
-},
-
-// Image to PNG (convert-only)
-{
-  slug: "image-to-png",
-  mode: "convert",
-  groups: ["output", "metadata", "batch"],
-  processor: "converter",
-  fixedOutputFormat: "png",
-  autoStrategy: (file) => {
-    return {
-      __inputKind: normMime(file),
-      outputFormat: "png",
-      quality: 100,
-      stripMetadata: false,
-    };
-  },
-},
-
-  // 5) Image Rotator
-  {
-  slug: "image-rotator",
-  mode: "transform",
-  groups: ["rotate", "metadata", "batch"], // 你现在这样就行
-  processor: "rotator",
-  autoStrategy: (file) => {
-  return {
-    __inputKind: normMime(file),
-    outputFormat: "keep",   // ✅ rotator 不让改格式 -> 永远 keep
-    rotateDeg: 90,
-    flipX: false,
-    flipY: false,
-    stripMetadata: false,
-    quality: 85,
-    };
-  },
-},
-
-{
-  slug: "image-cropper",
-  mode: "transform",
-  groups: ["crop", "metadata", "batch"],
-  processor: "cropper",
-  autoStrategy: (file) => {
-    return {
-      __inputKind: normMime(file),
-      // keep format (no output UI)
-      outputFormat: "keep",
-      quality: 85,
-      stripMetadata: false,
-
-      // ✅ V2: normalized crop (0..1)
-      cropAspect: "free", // free | 1:1 | 4:5 | 16:9 | 9:16 | 3:2 | 2:3 ...
-      cropX: 0,
-      cropY: 0,
-      cropW: 1,
-      cropH: 1,
-    };
-  },
-},
-
-  // 6) Image Watermark
-  {
-    slug: "image-watermark",
-    mode: "transform",
-    groups: ["watermark", "output", "quality", "resize", "metadata", "batch"],
-    processor: "watermark",
+    slug: "image-converter",
+    mode: "convert",
+    groups: ["output", "metadata", "batch"],
+    processor: "converter",
+    previewPolicy: {
+      interaction: "compare",
+      frame: "square",
+      maxSize: 1024,
+      fit: "contain",
+      allowUpscale: true,
+    },
     autoStrategy: (file) => {
-      const kind = normMime(file);
-      const transparency = isTransparencyLikely(file);
-
-      let outFmt = "jpg";
-      if (transparency) outFmt = kind === "png" ? "keep" : "webp";
-
-      const qKind = outFmt === "jpg" ? "jpg" : "webp";
-      const q = suggestQualityRange(qKind);
-
       return {
-        __inputKind: kind,
-        __qualityHint: q,
-        outputFormat: outFmt,
-        quality: q.sweet,
-        watermarkType: "text",
-        watermarkText: "Easy2GoHub",
-        watermarkOpacity: 0.35,
-        watermarkPosition: "br",
-        stripMetadata: true,
-        maxEdge: suggestMaxEdge(file),
+        __inputKind: normMime(file),
+        outputFormat: "keep",
+        quality: 85,
+        stripMetadata: false,
       };
     },
   },
 
-  // 7) Image Border
+  // 4) Image to WebP
   {
-    slug: "image-border",
-    mode: "transform",
-    groups: ["border", "output", "quality", "resize", "metadata", "batch"],
-    processor: "border",
+    slug: "image-to-webp",
+    mode: "convert",
+    groups: ["output", "metadata", "batch"],
+    processor: "converter",
+    previewPolicy: {
+      interaction: "compare",
+      frame: "square",
+      maxSize: 1024,
+      fit: "contain",
+      allowUpscale: true,
+    },
+    autoStrategy: (file) => ({
+      __inputKind: normMime(file),
+      outputFormat: "webp",
+      quality: 100,
+      stripMetadata: false,
+    }),
+  },
+
+  // 5) Image to JPG
+  {
+    slug: "image-to-jpg",
+    mode: "convert",
+    groups: ["output", "metadata", "batch"],
+    processor: "converter",
+    fixedOutputFormat: "jpg",
+    previewPolicy: {
+      interaction: "compare",
+      frame: "square",
+      maxSize: 1024,
+      fit: "contain",
+      allowUpscale: true,
+    },
     autoStrategy: (file) => {
-      const kind = normMime(file);
-      const transparency = isTransparencyLikely(file);
-
-      let outFmt = "jpg";
-      if (transparency) outFmt = kind === "png" ? "keep" : "webp";
-
-      const qKind = outFmt === "jpg" ? "jpg" : "webp";
-      const q = suggestQualityRange(qKind);
-
       return {
-        __inputKind: kind,
-        __qualityHint: q,
-        outputFormat: outFmt,
-        quality: q.sweet,
-        borderWidth: 24,
-        borderColor: "#ffffff",
-        borderRadius: 24,
-        stripMetadata: true,
-        maxEdge: suggestMaxEdge(file),
+        __inputKind: normMime(file),
+        outputFormat: "jpg",
+        quality: 100,
+        stripMetadata: false,
       };
     },
   },
 
-  // 8) Meme Generator
+  // 6) Image to PNG
   {
-    slug: "meme-generator",
-    mode: "transform",
-    groups: ["meme", "output", "quality", "resize", "batch"],
-    processor: "meme",
+    slug: "image-to-png",
+    mode: "convert",
+    groups: ["output", "metadata", "batch"],
+    processor: "converter",
+    fixedOutputFormat: "png",
+    previewPolicy: {
+      interaction: "compare",
+      frame: "square",
+      maxSize: 1024,
+      fit: "contain",
+      allowUpscale: true,
+    },
     autoStrategy: (file) => {
       return {
         __inputKind: normMime(file),
         outputFormat: "png",
-        topText: "TOP TEXT",
-        bottomText: "BOTTOM TEXT",
-        memeFontSize: 48,
-        memeStrokeWidth: 6,
-        quality: 92,
+        quality: 100,
+        stripMetadata: false,
       };
     },
   },
 
-  // 9) Favicon Generator
+  // 7) Image Rotator
   {
-    slug: "favicon-generator",
+    slug: "image-rotator",
     mode: "transform",
-    groups: ["favicon", "output", "batch"],
-    processor: "favicon",
+    groups: ["rotate", "metadata", "batch"],
+    processor: "rotator",
+    previewPolicy: {
+      interaction: "static",
+      frame: "square",
+      maxSize: 1024,
+      fit: "contain",
+      allowUpscale: true,
+    },
     autoStrategy: (file) => {
       return {
         __inputKind: normMime(file),
-        outputFormat: "png",
-        faviconSizes: [16, 32, 48, 64, 128, 256],
-        faviconPadding: 0.12,
-        faviconBackground: "transparent",
+        outputFormat: "keep",
+        rotateDeg: 90,
+        flipX: false,
+        flipY: false,
+        stripMetadata: false,
+        quality: 85,
       };
     },
   },
 
-  // 10) EXIF Tool
+  // 8) Image Cropper
   {
-    slug: "exif-tool",
+    slug: "image-cropper",
     mode: "transform",
-    groups: ["metadata", "batch"],
-    processor: "exif",
+    groups: ["crop", "metadata", "batch"],
+    processor: "cropper",
+    previewPolicy: {
+      interaction: "crop",
+      frame: "square",
+      maxSize: 1024,
+      fit: "contain",
+      allowUpscale: true,
+    },
     autoStrategy: (file) => {
-      return { __inputKind: normMime(file), exifMode: "read", stripMetadata: false };
+      return {
+        __inputKind: normMime(file),
+        outputFormat: "keep",
+        quality: 85,
+        stripMetadata: false,
+
+        // normalized crop (0..1)
+        cropAspect: "free",
+        cropX: 0,
+        cropY: 0,
+        cropW: 1,
+        cropH: 1,
+      };
     },
   },
 ];

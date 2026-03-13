@@ -6,7 +6,7 @@ export type Category = "image" | "pdf" | "text" | "file" | "dev" | "media";
 
 /** 用于 Sidebar / 分类页显示 */
 export const CATEGORY_LABEL: Record<Category, string> = {
-  image: "Graphics",
+  image: "Image",
   pdf: "PDF",
   text: "Text",
   file: "Files",
@@ -16,7 +16,7 @@ export const CATEGORY_LABEL: Record<Category, string> = {
 
 /** 用于分类页 SEO 描述 */
 export const CATEGORY_DESC: Record<Category, string> = {
-  image: "Compress, convert, resize images in your browser — fast and private.",
+  image: "Compress, convert, crop, rotate, and resize images online in your browser — fast, private, and no uploads.",
   pdf: "Merge, split, compress and convert PDFs locally — fast and private.",
   text: "Text tools for formatting, cleaning, and transforming content locally.",
   file: "File utilities for organizing, converting, and packaging files locally.",
@@ -32,7 +32,7 @@ export const CATEGORY_META: Record<
   Category,
   { label: string; desc: string; icon: string; iconClass: string }
 > = {
-  image: { label: "Graphics", desc: CATEGORY_DESC.image, icon: "image", iconClass: "text-blue-500" },
+  image: { label: "Image", desc: CATEGORY_DESC.image, icon: "image", iconClass: "text-blue-500" },
   pdf: { label: "PDF", desc: CATEGORY_DESC.pdf, icon: "picture_as_pdf", iconClass: "text-red-500" },
   text: { label: "Text", desc: CATEGORY_DESC.text, icon: "text_fields", iconClass: "text-indigo-600" },
   file: { label: "Files", desc: CATEGORY_DESC.file, icon: "folder", iconClass: "text-amber-600" },
@@ -57,7 +57,7 @@ export type ToolSEO = {
   tips?: string[];
   steps?: string[];
   faq?: FaqItem[];
-  
+  relatedTools?: string[];
 };
 
 /* =========================================================
@@ -117,6 +117,7 @@ export const tools: Tool[] = [
     { q: "How can I compress to a specific size (e.g. 100KB)?", a: "Reduce quality first, then reduce dimensions (Max Dimension). Repeat until you reach your target." },
     { q: "Which formats work best for compression?", a: "JPG/WebP are best for photos. PNG is lossless and may be larger for photos." },
   ],
+  relatedTools: ["image-resizer", "image-to-webp", "image-converter"],
     },
   },
 
@@ -152,6 +153,7 @@ export const tools: Tool[] = [
     { q: "Will resizing reduce quality?", a: "Resizing changes pixel dimensions. Quality loss mainly depends on the output format and compression settings." },
     { q: "How do I keep the aspect ratio?", a: "Enable Keep Aspect Ratio (or use Fit mode) to prevent distortion." },
   ],
+  relatedTools: ["image-compressor", "image-cropper", "image-to-webp"],
 },
   },
 
@@ -187,6 +189,7 @@ export const tools: Tool[] = [
     { q: "Can I convert multiple images at once?", a: "Yes. Add multiple files and download results as a ZIP." },
     { q: "What happens to transparency if I convert to JPG?", a: "JPG doesn’t support transparency, so transparent areas may be filled with a solid background." },
   ],
+  relatedTools: ["image-to-jpg", "image-to-png", "image-to-webp"],
 },
   },
 
@@ -352,6 +355,7 @@ export const tools: Tool[] = [
     { q: "Will cropping reduce image quality?", a: "Cropping itself does not reduce quality. Quality changes only if you choose a lossy output format or lower quality settings." },
     { q: "What formats are supported?", a: "Common formats like JPG, PNG, and WebP are supported (output options depend on your browser)." },
   ],
+  relatedTools: ["image-resizer", "image-compressor", "image-converter"],
  }
 },
 

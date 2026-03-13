@@ -1,15 +1,17 @@
 ---
 import AdsSlot from "../ads/AdsSlot.astro";
+import { liveTools } from "@/data/tools";
 
 type FaqItem = { q: string; a: string };
 
 type ToolSeo = {
   intro?: string;
   tips?: string[];
-  steps?: string[];   // ✅ 与 tools.ts 的 ToolSEO.steps 对齐
-  howTo?: string[];   // ✅ 兼容旧字段
+  steps?: string[];
+  howTo?: string[];
   faq?: FaqItem[];
-  lastUpdated?: string; // ✅ 新增：显示更新时间（你 tools.ts 已有）
+  lastUpdated?: string;
+  relatedTools?: string[];
 };
 
 type ToolLike = {
@@ -57,12 +59,14 @@ function isPlaceholder(s?: string) {
   const t = (s ?? "").trim();
   return !t || t === "..." || t === "…";
 }
+
 function cleanLines(arr?: string[]) {
   if (!Array.isArray(arr)) return [];
   return arr
     .map((x) => (x ?? "").trim())
     .filter((x) => x && !isPlaceholder(x));
 }
+
 function cleanFaq(arr?: FaqItem[]) {
   if (!Array.isArray(arr)) return [];
   return arr
@@ -70,149 +74,167 @@ function cleanFaq(arr?: FaqItem[]) {
     .filter((it) => it.q && it.a && !isPlaceholder(it.q) && !isPlaceholder(it.a));
 }
 
-// ✅ 针对你当前“已上线的 8 个 image tools”提供默认 SEO（当 tools.ts 里没写或写了 "..." 时自动补）
+// ✅ 默认 SEO fallback（当 tools.ts 里没写完整时兜底）
 const DEFAULT_BY_SLUG: Record<string, ToolSeo> = {
   "image-compressor": {
     intro:
-      "Free online image compressor that runs locally in your browser. Compress JPG/PNG/WebP with no uploads — fast and private.",
+      "Free online image compressor that runs locally in your browser. Compress JPG, PNG, and WebP images with no uploads — fast, private, and easy to use.",
     steps: [
-      "Add images (drag & drop or select from computer).",
-      "Choose target format and quality in Settings.",
-      "Optional: set max dimension to downscale large images.",
-      "Process and download results (ZIP for multiple files).",
+      "Add images by dragging them into the page or selecting them from your device.",
+      "Choose output format and quality in the settings panel.",
+      "Optional: reduce image dimensions to shrink file size further.",
+      "Process your images and download each file or a ZIP for batch results.",
     ],
     tips: [
-      "WebP usually gives smaller files on modern browsers.",
-      "Use JPG for photos, PNG for sharp edges or transparency.",
-      "Downscaling large images can reduce size dramatically.",
+      "WebP usually gives smaller files for web use.",
+      "JPG is best for photos; PNG is better for graphics or transparency.",
+      "Downscaling large images can reduce file size much more than quality changes alone.",
     ],
     faq: [
-      { q: "Are my images uploaded?", a: "No. Everything runs locally in your browser." },
-      { q: "Does it support batch?", a: "Yes. Multiple files download as a ZIP." },
+      { q: "Are my images uploaded?", a: "No. Everything runs locally in your browser, so your files stay on your device." },
+      { q: "Does it support batch compression?", a: "Yes. You can add multiple images and download the results as a ZIP." },
     ],
+    relatedTools: ["image-resizer", "image-to-webp", "image-converter"],
   },
+
   "image-resizer": {
     intro:
-      "Resize images online (locally in your browser). Batch resize with no uploads — fast, private, and simple.",
+      "Resize images online in your browser with no uploads. Change dimensions in batch for social media, websites, forms, and more.",
     steps: [
-      "Add images (drag & drop or select).",
-      "Set max dimension and resize mode (fit/fill/exact) in Settings.",
-      "Optional: choose output format and quality.",
-      "Download resized images (ZIP for batch).",
+      "Add one or more images.",
+      "Choose width, height, max edge, or percentage resize in Settings.",
+      "Select the resize mode that fits your use case.",
+      "Download resized images individually or as a ZIP.",
     ],
     tips: [
-      "Keep aspect ratio on for natural resizing.",
-      "Avoid upscaling unless necessary to prevent blur.",
-      "For web, convert to WebP after resizing for smaller size.",
+      "Keep aspect ratio enabled to avoid distortion.",
+      "Avoid upscaling unless necessary, because it can make images look soft.",
+      "After resizing, use Image Compressor to reduce file size even more.",
     ],
     faq: [
-      { q: "Does it upscale small images?", a: "Only if you enable Allow Upscale." },
-      { q: "Is it private?", a: "Yes. Files never leave your device." },
+      { q: "Does this resize images in batch?", a: "Yes. You can resize multiple images at once." },
+      { q: "Are my files uploaded?", a: "No. Everything runs locally in your browser." },
     ],
+    relatedTools: ["image-compressor", "image-cropper", "image-to-webp"],
   },
+
   "image-converter": {
     intro:
-      "Convert images online (JPG/PNG/WebP) locally in your browser. No uploads. Fast conversions.",
+      "Convert images between JPG, PNG, and WebP locally in your browser. No uploads, no signup, and fast results.",
     steps: [
-      "Add images.",
-      "Select target format (JPG/PNG/WebP) in Settings.",
-      "Optional: adjust quality for JPG/WebP.",
-      "Convert and download results (ZIP for batch).",
+      "Add images to the converter.",
+      "Choose the target format in Settings.",
+      "Optional: adjust quality for supported formats.",
+      "Convert and download each file or a ZIP for batch conversion.",
     ],
     tips: [
-      "Use PNG for transparency; use JPG for photos.",
-      "WebP is a great default for the web.",
-      "If AVIF isn’t supported, WebP is the safest modern option.",
+      "Use PNG when you need transparency.",
+      "Use JPG for smaller photo files.",
+      "Use WebP when you want better web performance.",
     ],
     faq: [
-      { q: "Which formats can I convert to?", a: "JPG, PNG, WebP, AVIF (depends on browser support)." },
-      { q: "Do you upload my files?", a: "No. Conversion happens locally in your browser." },
+      { q: "Which formats can I convert to?", a: "You can convert between common formats like JPG, PNG, and WebP." },
+      { q: "Do you upload my images?", a: "No. Conversion happens locally in your browser." },
     ],
+    relatedTools: ["image-to-jpg", "image-to-png", "image-to-webp"],
   },
+
   "image-to-webp": {
     intro:
-      "Convert images to WebP online (locally in your browser) for faster websites. No uploads — private and fast.",
+      "Convert images to WebP online in your browser for smaller file sizes and faster loading websites. No uploads required.",
     steps: [
-      "Add images.",
-      "Adjust WebP quality (and optional resize) in Settings.",
-      "Convert and download WebP results (ZIP for batch).",
+      "Add one or more images.",
+      "Adjust output settings if needed.",
+      "Convert to WebP.",
+      "Download your results individually or as a ZIP.",
     ],
     tips: [
-      "Quality around 75–85 is a strong default for photos.",
-      "If your image has transparency, WebP can still keep it.",
+      "WebP usually works well for websites and modern browsers.",
+      "WebP can preserve transparency, unlike JPG.",
     ],
     faq: [
-      { q: "Why WebP?", a: "WebP often loads faster with good quality at smaller size." },
-      { q: "Is it private?", a: "Yes. Files stay on your device." },
+      { q: "Why convert to WebP?", a: "WebP often gives smaller files while keeping good visual quality." },
+      { q: "Does this tool upload files?", a: "No. Everything stays on your device." },
     ],
+    relatedTools: ["image-converter", "image-compressor", "image-to-jpg"],
   },
+
   "image-to-jpg": {
     intro:
-      "Convert images to JPG online (locally in your browser) for compatibility and smaller photo sizes. No uploads.",
+      "Convert images to JPG online in your browser for compatibility and smaller photo files. Private and no uploads.",
     steps: [
-      "Add images.",
-      "Convert to JPG and download results (ZIP for multiple).",
+      "Add your images.",
+      "Convert them to JPG.",
+      "Download each result or use ZIP for multiple files.",
     ],
     tips: [
-      "JPG is best for photos; it does not support transparency.",
-      "If you need transparency, convert to PNG instead.",
+      "JPG is best for photos and general compatibility.",
+      "JPG does not support transparency.",
     ],
     faq: [
-      { q: "What about transparency?", a: "JPG doesn’t support transparency; transparent areas may be filled." },
-      { q: "Do you upload files?", a: "No. Everything runs locally." },
+      { q: "What happens to transparency?", a: "JPG does not support transparency, so transparent areas may be filled with a solid background." },
+      { q: "Are files uploaded to a server?", a: "No. Conversion runs locally in your browser." },
     ],
+    relatedTools: ["image-converter", "image-to-png", "image-compressor"],
   },
+
   "image-to-png": {
     intro:
-      "Convert images to PNG online (locally in your browser) for lossless quality and transparency support. No uploads.",
+      "Convert images to PNG online in your browser for lossless quality and transparency support. No uploads needed.",
     steps: [
-      "Add images.",
-      "Convert to PNG and download results (ZIP for batch).",
+      "Add your images.",
+      "Convert them to PNG.",
+      "Download each file or a ZIP for batch conversion.",
     ],
     tips: [
-      "PNG is lossless and can be larger for photos.",
-      "Use PNG when you need transparency or sharp edges.",
+      "PNG is a good choice for graphics, logos, and transparency.",
+      "PNG files can be larger than JPG for photos.",
     ],
     faq: [
-      { q: "Is PNG always smaller?", a: "Not always. PNG can be larger for photos." },
-      { q: "Is it private?", a: "Yes. Files never leave your device." },
+      { q: "Is PNG always smaller?", a: "No. PNG is lossless and can be larger, especially for photographic images." },
+      { q: "Does PNG support transparency?", a: "Yes. PNG supports transparency." },
     ],
+    relatedTools: ["image-converter", "image-to-jpg", "image-compressor"],
   },
+
   "image-rotator": {
     intro:
-      "Rotate or flip images online (locally in your browser). Fix orientation in batch with no uploads.",
+      "Rotate or flip images online in your browser to fix orientation quickly and privately. Batch processing is supported.",
     steps: [
-      "Add images.",
-      "Choose rotation angle and flip options in Settings.",
-      "Optional: set output format/quality.",
-      "Download rotated/flipped images (ZIP for batch).",
+      "Add one or more images.",
+      "Choose a rotation angle or flip option in Settings.",
+      "Apply changes.",
+      "Download the updated images individually or as a ZIP.",
     ],
     tips: [
-      "Use 90° steps for camera orientation fixes.",
-      "Flip horizontally to un-mirror selfies or scans.",
+      "Use 90° steps to correct sideways photos.",
+      "Use horizontal flip to fix mirrored selfies or scans.",
     ],
     faq: [
-      { q: "Does it support batch?", a: "Yes. Multiple images download as a ZIP." },
-      { q: "Is it private?", a: "Yes. Everything runs locally." },
+      { q: "Can I rotate multiple images at once?", a: "Yes. Batch processing is supported." },
+      { q: "Are my images uploaded?", a: "No. Everything runs locally in your browser." },
     ],
+    relatedTools: ["image-cropper", "image-resizer", "image-converter"],
   },
+
   "image-cropper": {
     intro:
-      "Crop images online (locally in your browser). Use a draggable crop box with no uploads — fast and private.",
+      "Crop images online with a draggable crop box that runs locally in your browser. Fast, private, and no uploads.",
     steps: [
-      "Add an image.",
-      "Drag/resize the crop box to select the area.",
-      "Apply crop and download the cropped result.",
-      "For multiple files, repeat or use the same crop ratio if supported.",
+      "Add an image to the cropper.",
+      "Drag and resize the crop box to select the area you want.",
+      "Apply the crop.",
+      "Download the cropped image.",
     ],
     tips: [
-      "Use a fixed aspect ratio for profile photos or thumbnails.",
-      "Zoom in for precise cropping on small details.",
+      "Use a fixed aspect ratio for avatars, covers, thumbnails, and social media posts.",
+      "For more precise results, crop first and resize afterward.",
     ],
     faq: [
-      { q: "Are images uploaded?", a: "No. Cropping happens locally in your browser." },
-      { q: "Can I crop multiple images?", a: "Batch depends on your tool UI; you can crop images one by one safely." },
+      { q: "Are my images uploaded?", a: "No. Cropping happens locally in your browser." },
+      { q: "Can I crop multiple images?", a: "You can process multiple images, but the workflow depends on the cropper UI and current tool behavior." },
     ],
+    relatedTools: ["image-resizer", "image-compressor", "image-converter"],
   },
 };
 
@@ -231,16 +253,16 @@ const slug = String(tool?.slug ?? "").trim();
 const fallback = slug && DEFAULT_BY_SLUG[slug] ? DEFAULT_BY_SLUG[slug] : ({} as ToolSeo);
 
 const introRaw = introProp ?? seo.intro ?? resolvedDesc ?? "";
-const intro = isPlaceholder(introRaw) ? (fallback.intro ?? "This tool runs locally in your browser. No uploads. 100% private.") : introRaw;
+const intro = isPlaceholder(introRaw)
+  ? (fallback.intro ?? "This tool runs locally in your browser. No uploads. 100% private.")
+  : introRaw;
 
-// tips
 const tips = cleanLines(
   Array.isArray(tipsProp) ? tipsProp :
   Array.isArray(seo.tips) ? seo.tips :
   fallback.tips
 );
 
-// steps/howTo（优先 props -> seo.steps/howTo -> fallback）
 const steps = cleanLines(
   Array.isArray(stepsProp) ? stepsProp :
   Array.isArray(howToProp) ? howToProp :
@@ -249,24 +271,34 @@ const steps = cleanLines(
   fallback.steps
 );
 
-// faq
 const faq = cleanFaq(
   Array.isArray(faqProp) ? faqProp :
   Array.isArray(seo.faq) ? seo.faq :
   fallback.faq
 );
 
+const resolvedLastUpdated =
+  !isPlaceholder(seo.lastUpdated) ? String(seo.lastUpdated).trim() :
+  !isPlaceholder(fallback.lastUpdated) ? String(fallback.lastUpdated).trim() :
+  "";
 
-// --- Ad density control (keep 4-5 total on page, not stacked here) ---
+const relatedToolSlugs = Array.isArray(seo.relatedTools)
+  ? seo.relatedTools
+  : Array.isArray(fallback.relatedTools)
+  ? fallback.relatedTools
+  : [];
+
+const relatedTools = liveTools.filter(
+  (t) => relatedToolSlugs.includes(t.slug) && t.slug !== slug
+);
+
+// --- Ad density control ---
 const showLightExtras = adsProfile === "light";
 const showDefaultExtras = adsProfile === "default";
 const showHeavyExtras = adsProfile === "heavy";
 
-// In this SEO block:
-// - default/heavy: 2 ads max (top + after faq)
-// - heavy: +1 optional in-content box (between steps & tips) with generous spacing
 const showTopBanner = showAds && (showDefaultExtras || showHeavyExtras);
-const showInContentBox = showAds && showHeavyExtras; // only heavy
+const showInContentBox = showAds && showHeavyExtras;
 const showAfterFaqBanner = showAds && (showDefaultExtras || showHeavyExtras);
 
 // -----------------------
@@ -280,7 +312,10 @@ const faqJsonLd =
         mainEntity: faq.map((f) => ({
           "@type": "Question",
           name: f.q,
-          acceptedAnswer: { "@type": "Answer", text: f.a },
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: f.a,
+          },
         })),
       }
     : null;
@@ -303,7 +338,6 @@ const howToJsonLd =
 ---
 
 <section class="mt-10 space-y-6">
-  {/* ✅ JSON-LD (SEO) */}
   {howToJsonLd ? (
     <script type="application/ld+json" is:inline>
       {JSON.stringify(howToJsonLd)}
@@ -319,10 +353,16 @@ const howToJsonLd =
   <div class="glass tool-card p-8 space-y-6">
     <div class="flex items-start justify-between gap-6">
       <div class="min-w-0">
-        <h3 class="text-2xl font-semibold text-slate-900">About {resolvedTitle}</h3>
+        <h2 class="text-2xl font-semibold text-slate-900">About {resolvedTitle}</h2>
         <p class="text-slate-600 mt-2 leading-relaxed">
           {intro}
         </p>
+
+        {resolvedLastUpdated ? (
+          <div class="mt-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Last updated: {resolvedLastUpdated}
+          </div>
+        ) : null}
       </div>
 
       <div class="hidden md:flex shrink-0">
@@ -338,9 +378,9 @@ const howToJsonLd =
       </div>
     ) : null}
 
-    {(steps.length > 0) ? (
+    {steps.length > 0 ? (
       <div class="pt-1">
-        <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">How it works</h4>
+        <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">How it works</h3>
         <ol class="mt-3 space-y-2 text-slate-600">
           {steps.map((s, i) => (
             <li class="flex gap-3">
@@ -360,9 +400,9 @@ const howToJsonLd =
       </div>
     ) : null}
 
-    {(tips.length > 0) ? (
+    {tips.length > 0 ? (
       <div class="pt-1">
-        <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Tips</h4>
+        <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Tips</h3>
         <ul class="mt-3 space-y-2 text-slate-600">
           {tips.map((t) => (
             <li class="flex gap-3">
@@ -374,9 +414,9 @@ const howToJsonLd =
       </div>
     ) : null}
 
-    {(faq.length > 0) ? (
+    {faq.length > 0 ? (
       <div class="pt-1">
-        <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">FAQ</h4>
+        <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">FAQ</h3>
 
         <div class="mt-3 space-y-3">
           {faq.map((item) => (
@@ -396,6 +436,22 @@ const howToJsonLd =
             <AdsSlot label="SEO – After FAQ Banner" variant="banner" height={120} className="w-full" />
           </div>
         ) : null}
+      </div>
+    ) : null}
+
+    {relatedTools.length > 0 ? (
+      <div class="pt-1">
+        <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Related tools</h3>
+        <div class="mt-3 flex flex-wrap gap-2">
+          {relatedTools.map((t) => (
+            <a
+              href={`/${t.category}/${t.slug}/`}
+              class="px-3 py-2 rounded-xl bg-white/70 border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-white hover:text-slate-900 transition"
+            >
+              {t.title}
+            </a>
+          ))}
+        </div>
       </div>
     ) : null}
 

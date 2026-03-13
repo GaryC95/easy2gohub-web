@@ -48,7 +48,15 @@ function ratioFrom(aspect) {
   if (m.length !== 2 || !isFinite(m[0]) || !isFinite(m[1]) || m[0] <= 0 || m[1] <= 0) return null;
   return m[0] / m[1];
 }
-
+function getPreviewPolicy(state) {
+  return state?.tool?.previewPolicy || {
+    interaction: "compare",
+    frame: "square",
+    maxSize: 1024,
+    fit: "contain",
+    allowUpscale: true,
+  };
+}
 /* =========================
    Rotator preview helpers
    ========================= */
@@ -70,13 +78,12 @@ function previewMimeFrom(settings, inputMime) {
   return "image/png";
 }
 
-async function buildRotatorPreviewBlob({ bitmap, settings, inputMime }) {
+async function buildRotatorPreviewBlob({ bitmap, settings, inputMime, previewMax = 1024 }) {
   const t0 = performance.now();
 
   const ow = bitmap.width;
   const oh = bitmap.height;
 
-  const previewMax = 1024;
   const s = Math.min(1, previewMax / Math.max(ow, oh));
   const pw = Math.max(1, Math.round(ow * s));
   const ph = Math.max(1, Math.round(oh * s));
@@ -166,8 +173,9 @@ export async function mountOrRefreshSliderForFirst({
   const bitmap = await loadBitmap(f0);
   if (!bitmap) return;
 
-  const isRotator = state.slug === "image-rotator";
-  const isCropper = state.slug === "image-cropper";
+  const policy = getPreviewPolicy(state);
+  const isRotator = policy.interaction === "static" && state.slug === "image-rotator";
+  const isCropper = policy.interaction === "crop";
 
   const out = derivePreviewOutput(bitmap, state.settings.values, { isResizer });
   if (isRotator) maybeSwapOutForRotator(out, state.settings.values);
@@ -241,6 +249,11 @@ queueMicrotask(initCropOnce);
       "cropper-stage relative rounded-3xl overflow-hidden border border-white/10 " +
       "shadow-[0_0_80px_rgba(0,0,0,0.18)] bg-slate-900 flex items-center justify-center";
     node.setAttribute("data-no-pick", "1");
+    const maxSize = Number(policy.maxSize || 1024);
+node.style.width = "100%";
+node.style.maxWidth = `${maxSize}px`;
+node.style.aspectRatio = policy.frame === "square" ? "1 / 1" : "";
+node.style.marginInline = "auto";
 
    
 
@@ -263,10 +276,11 @@ queueMicrotask(initCropOnce);
     // ✅ fallback: if mount listener didn't append node, append ourselves
     if (!node.isConnected) {
       const host =
-        dom.$dropzone.querySelector('[data-role="dropzone-stage"]') ||
-        dom.$dropzone.querySelector('[data-role="dropzone-fixed"]') ||
-        dom.$dropzone.querySelector('[data-role="dropzone-preview"]') ||
-        dom.$dropzone;
+  dom.$dropzone.querySelector('[data-role="dropzone-stage"]') ||
+  dom.$dropzone.querySelector('[data-role="dz-stage"]') ||
+  dom.$dropzone.querySelector('[data-role="dropzone-fixed"]') ||
+  dom.$dropzone.querySelector('[data-role="dropzone-preview"]') ||
+  dom.$dropzone;
 
       (host || dom.$dropzone).appendChild(node);
     }
@@ -288,29 +302,50 @@ queueMicrotask(initCropOnce);
     return;
   }
 
-  /* ---------- Default flow (comparison slider) ---------- */
+   /* ---------- Default flow (comparison slider / static preview) ---------- */
 
   const existing = state.previews.get(f0.id);
   if (existing && !forceRemount && existing.node?.isConnected) {
-    await refreshPreview({ state, entry: existing, fileModel: f0, bitmap, out, isResizer, onPreviewUpdated, onPreviewFallbackToast });
+    await refreshPreview({
+      state,
+      entry: existing,
+      fileModel: f0,
+      bitmap,
+      out,
+      isResizer,
+      onPreviewUpdated,
+      onPreviewFallbackToast,
+    });
     return;
   }
 
+  const isStaticPreview = policy.interaction === "static";
+  const maxSize = Number(policy.maxSize || 1024);
+
   // new node
   const node = document.createElement("div");
-  node.className =
-    "comparison-slider relative rounded-3xl overflow-hidden border border-white/10 " +
-    "shadow-[0_0_80px_rgba(0,0,0,0.18)] h-[520px] md:h-[600px]";
+  const baseCls =
+  "comparison-slider relative rounded-3xl overflow-hidden border border-white/10 " +
+  "shadow-[0_0_80px_rgba(0,0,0,0.18)]";
+
+node.className =
+  policy.frame === "square"
+    ? baseCls
+    : `${baseCls} h-[520px] md:h-[600px]`;
   node.setAttribute("data-no-pick", "1");
+
   node.style.width = "100%";
-node.style.maxWidth = "1024px";
-node.style.aspectRatio = "1 / 1";
-node.style.marginInline = "auto";
+  node.style.maxWidth = `${maxSize}px`;
+  node.style.aspectRatio = policy.frame === "square" ? "1 / 1" : "";
+  node.style.marginInline = "auto";
 
   node.innerHTML = `
     <div class="absolute inset-0 bg-slate-900 flex items-center justify-center">
       <canvas data-role="cmp-orig" class="block"></canvas>
-      <div class="absolute top-6 left-6 glass px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-white flex items-center gap-2">
+      <div
+        data-role="cmp-label-orig"
+        class="absolute top-6 left-6 glass px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-white flex items-center gap-2"
+      >
         <div class="w-2 h-2 rounded-full bg-slate-400"></div>
         Original
       </div>
@@ -318,7 +353,10 @@ node.style.marginInline = "auto";
 
     <div class="absolute inset-0 mask-right flex items-center justify-center" data-role="cmp-right">
       <canvas data-role="cmp-prev" class="block"></canvas>
-      <div class="absolute top-6 right-6 bg-[#137fec] px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-white flex items-center gap-2">
+      <div
+        data-role="cmp-label-prev"
+        class="absolute top-6 right-6 bg-[#137fec] px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-white flex items-center gap-2"
+      >
         <div class="w-2 h-2 rounded-full bg-white animate-pulse"></div>
         Preview
       </div>
@@ -331,19 +369,51 @@ node.style.marginInline = "auto";
     </div>
   `;
 
-  dom.$dropzone.dispatchEvent(new CustomEvent("dropzone:mount", { bubbles: true, detail: { node } }));
+  dom.$dropzone.dispatchEvent(
+    new CustomEvent("dropzone:mount", { bubbles: true, detail: { node } })
+  );
+
+  // fallback mount
+  if (!node.isConnected) {
+    const host =
+      dom.$dropzone.querySelector?.('[data-role="dropzone-stage"]') ||
+      dom.$dropzone.querySelector?.('[data-role="dz-stage"]') ||
+      dom.$dropzone.querySelector?.('[data-role="dropzone-fixed"]') ||
+      dom.$dropzone.querySelector?.('[data-role="dropzone-preview"]') ||
+      dom.$dropzone;
+
+    (host || dom.$dropzone).appendChild(node);
+  }
 
   const origCanvas = node.querySelector('canvas[data-role="cmp-orig"]');
   const prevCanvas = node.querySelector('canvas[data-role="cmp-prev"]');
   const rightLayer = node.querySelector('[data-role="cmp-right"]');
-  if (isRotator && rightLayer) rightLayer.classList.add("bg-slate-900");
   const handle = node.querySelector('[data-role="cmp-handle"]');
+  const labelOrig = node.querySelector('[data-role="cmp-label-orig"]');
+  const labelPrev = node.querySelector('[data-role="cmp-label-prev"]');
 
-  let pct = 50;
+  if (!origCanvas || !prevCanvas || !rightLayer || !handle) return;
+
+  if (isRotator && rightLayer) rightLayer.classList.add("bg-slate-900");
+
+  let pct = isStaticPreview ? 0 : 50;
   let dragging = false;
+
+  const applyStaticPreviewUI = () => {
+    rightLayer.style.clipPath = "inset(0 0 0 0)";
+    handle.style.display = "none";
+    labelOrig?.classList.add("hidden");
+    labelPrev?.classList.add("hidden");
+  };
 
   const setPct = (p) => {
     pct = Math.max(0, Math.min(100, p));
+
+    if (isStaticPreview) {
+      applyStaticPreviewUI();
+      return;
+    }
+
     handle.style.left = `${pct}%`;
     rightLayer.style.clipPath = `inset(0 0 0 ${pct}%)`;
   };
@@ -356,10 +426,27 @@ node.style.marginInline = "auto";
 
   // build preview
   const previewRes = isResizer
-    ? await buildResizerPreview({ bitmap, out, settings: state.settings.values, inputMime: f0.type, inputName: f0.name })
+    ? await buildResizerPreview({
+        bitmap,
+        out,
+        settings: state.settings.values,
+        inputMime: f0.type,
+        inputName: f0.name,
+      })
     : isRotator
-    ? await buildRotatorPreviewBlob({ bitmap, settings: state.settings.values, inputMime: f0.type })
-    : await buildSmartLightPreview({ bitmap, out, settings: state.settings.values, originalSize: f0.size, inputMime: f0.type });
+? await buildRotatorPreviewBlob({
+    bitmap,
+    settings: state.settings.values,
+    inputMime: f0.type,
+    previewMax: Number(policy.maxSize || 1024),
+  })
+    : await buildSmartLightPreview({
+        bitmap,
+        out,
+        settings: state.settings.values,
+        originalSize: f0.size,
+        inputMime: f0.type,
+      });
 
   const pBlob = previewRes.blob;
   const pMs = previewRes.ms;
@@ -374,7 +461,7 @@ node.style.marginInline = "auto";
     out,
     origCanvas,
     prevCanvas,
-    previewContain: isRotator, // ✅ only rotator
+    previewContain: policy.fit === "contain" || isRotator,
   });
 
   // prevent DropZone click-pick
@@ -387,37 +474,51 @@ node.style.marginInline = "auto";
   node.addEventListener("pointercancel", eat, true);
 
   const down = (ev) => {
+    if (isStaticPreview) return;
     ev.preventDefault();
     ev.stopPropagation();
     dragging = true;
-    try { handle.setPointerCapture?.(ev.pointerId); } catch {}
+    try {
+      handle.setPointerCapture?.(ev.pointerId);
+    } catch {}
     setPct(getPctFromClientX(ev.clientX));
   };
+
   const move = (ev) => {
-    if (!dragging) return;
+    if (isStaticPreview || !dragging) return;
     ev.preventDefault();
     ev.stopPropagation();
     setPct(getPctFromClientX(ev.clientX));
   };
+
   const up = (ev) => {
-    if (!dragging) return;
+    if (isStaticPreview || !dragging) return;
     ev.preventDefault();
     ev.stopPropagation();
     dragging = false;
-    try { handle.releasePointerCapture?.(ev.pointerId); } catch {}
+    try {
+      handle.releasePointerCapture?.(ev.pointerId);
+    } catch {}
   };
 
-  handle.addEventListener("pointerdown", down, { passive: false });
-  window.addEventListener("pointermove", move, { passive: false });
-  window.addEventListener("pointerup", up, { passive: false });
+  if (!isStaticPreview) {
+    handle.addEventListener("pointerdown", down, { passive: false });
+    window.addEventListener("pointermove", move, { passive: false });
+    window.addEventListener("pointerup", up, { passive: false });
 
-  node.addEventListener("pointerdown", (ev) => {
-    ev.preventDefault();
-    ev.stopPropagation();
-    setPct(getPctFromClientX(ev.clientX));
-  }, { passive: false });
+    node.addEventListener(
+      "pointerdown",
+      (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        setPct(getPctFromClientX(ev.clientX));
+      },
+      { passive: false }
+    );
+  }
 
-  setPct(50);
+  if (isStaticPreview) applyStaticPreviewUI();
+  else setPct(50);
 
   state.previews.clear();
   state.previews.set(f0.id, {
@@ -434,29 +535,63 @@ node.style.marginInline = "auto";
     previewMs: pMs,
     previewFallback: pFallback,
     previewPlan: previewRes.plan || null,
+    previewPolicy: policy,
   });
 
-  onPreviewUpdated?.({ file0: f0, previewBlob: pBlob, previewMs: pMs, previewFallback: pFallback });
+  onPreviewUpdated?.({
+    file0: f0,
+    previewBlob: pBlob,
+    previewMs: pMs,
+    previewFallback: pFallback,
+  });
+
   if (!isResizer && pFallback) onPreviewFallbackToast?.();
 }
 
-async function refreshPreview({ state, entry, fileModel, bitmap, out, isResizer, onPreviewUpdated, onPreviewFallbackToast }) {
-  const isCropper = state.slug === "image-cropper";
+async function refreshPreview({
+  state,
+  entry,
+  fileModel,
+  bitmap,
+  out,
+  isResizer,
+  onPreviewUpdated,
+  onPreviewFallbackToast,
+}) {
+  const policy = getPreviewPolicy(state);
+  const isCropper = policy.interaction === "crop";
+  const isRotator = policy.interaction === "static" && state.slug === "image-rotator";
+
   if (isCropper && entry.kind === "cropper") {
-    // should not hit in default flow, but keep safe
     await refreshCropEditor({ state, dom: { $settingsRoot: null }, entry, bitmap, out });
     onPreviewUpdated?.({ file0: fileModel, previewBlob: null, previewMs: 0, previewFallback: false });
     return;
   }
 
-  const isRotator = state.slug === "image-rotator";
   if (isRotator) maybeSwapOutForRotator(out, state.settings.values);
 
   const previewRes = isResizer
-    ? await buildResizerPreview({ bitmap, out, settings: state.settings.values, inputMime: fileModel.type, inputName: fileModel.name })
+    ? await buildResizerPreview({
+        bitmap,
+        out,
+        settings: state.settings.values,
+        inputMime: fileModel.type,
+        inputName: fileModel.name,
+      })
     : isRotator
-    ? await buildRotatorPreviewBlob({ bitmap, settings: state.settings.values, inputMime: fileModel.type })
-    : await buildSmartLightPreview({ bitmap, out, settings: state.settings.values, originalSize: fileModel.size, inputMime: fileModel.type });
+? await buildRotatorPreviewBlob({
+    bitmap,
+    settings: state.settings.values,
+    inputMime: f0.type,
+    previewMax: Number(policy.maxSize || 1024),
+  })
+    : await buildSmartLightPreview({
+        bitmap,
+        out,
+        settings: state.settings.values,
+        originalSize: fileModel.size,
+        inputMime: fileModel.type,
+      });
 
   const pBlob = previewRes.blob;
   const pMs = previewRes.ms;
@@ -471,7 +606,7 @@ async function refreshPreview({ state, entry, fileModel, bitmap, out, isResizer,
     out,
     origCanvas: entry.origCanvas,
     prevCanvas: entry.prevCanvas,
-    previewContain: isRotator,
+    previewContain: policy.fit === "contain" || isRotator,
   });
 
   entry.out = out;
@@ -481,10 +616,17 @@ async function refreshPreview({ state, entry, fileModel, bitmap, out, isResizer,
   entry.previewMs = pMs;
   entry.previewFallback = pFallback;
   entry.previewPlan = previewRes.plan || null;
+  entry.previewPolicy = policy;
 
   state.previews.set(fileModel.id, entry);
 
-  onPreviewUpdated?.({ file0: fileModel, previewBlob: pBlob, previewMs: pMs, previewFallback: pFallback });
+  onPreviewUpdated?.({
+    file0: fileModel,
+    previewBlob: pBlob,
+    previewMs: pMs,
+    previewFallback: pFallback,
+  });
+
   if (!isResizer && pFallback) onPreviewFallbackToast?.();
 }
 
@@ -572,19 +714,22 @@ function renderCanvasContain(canvas, bitmapOrImg, w, h, { allowUpscale = true } 
    ========================= */
 
 async function refreshCropEditor({ state, dom, entry, bitmap, out }) {
+  const policy = getPreviewPolicy(state);
+  const maxSize = Number(policy.maxSize || 1024);
+
   const hostW = Math.max(
     1,
     Math.floor(entry.node.parentElement?.clientWidth || entry.node.clientWidth || out.previewWidth || 600)
   );
-  const size = Math.min(1024, hostW);
+  const size = Math.min(maxSize, hostW);
 
   entry.stage.style.width = `${size}px`;
   entry.stage.style.height = `${size}px`;
 
-  // 图片完整 contain 到正方形舞台里，并拿到真实显示区域
   const imageBox =
-    renderCanvasContain(entry.canvas, bitmap, size, size, { allowUpscale: true }) ||
-    { x: 0, y: 0, w: size, h: size, sw: size, sh: size };
+    renderCanvasContain(entry.canvas, bitmap, size, size, {
+      allowUpscale: policy.allowUpscale !== false,
+    }) || { x: 0, y: 0, w: size, h: size, sw: size, sh: size };
 
   entry.imageBox = imageBox;
 

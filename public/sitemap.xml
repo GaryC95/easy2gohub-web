@@ -4,78 +4,78 @@
 >
   <!-- Home -->
   <url>
-    <loc>https://www.easy2gohub.com/</loc>
+    <loc> https://easy2gohub.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <!-- All Tools -->
   <url>
-    <loc>https://www.easy2gohub.com/tools/</loc>
+    <loc> https://easy2gohub.com/tools/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-  <loc>https://www.easy2gohub.com/image/</loc>
+  <loc> https://easy2gohub.com/image/</loc>
   <changefreq>weekly</changefreq>
   <priority>0.9</priority>
   </url>
 
   <!-- Image Tools -->
   <url>
-    <loc>https://www.easy2gohub.com/image/image-compressor/</loc>
+    <loc> https://easy2gohub.com/image/image-compressor/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.easy2gohub.com/image/image-resizer/</loc>
+    <loc> https://easy2gohub.com/image/image-resizer/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.easy2gohub.com/image/image-converter/</loc>
+    <loc> https://easy2gohub.com/image/image-converter/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.easy2gohub.com/image/image-to-webp/</loc>
+    <loc> https://easy2gohub.com/image/image-to-webp/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.easy2gohub.com/image/image-to-jpg/</loc>
+    <loc> https://easy2gohub.com/image/image-to-jpg/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.easy2gohub.com/image/image-to-png/</loc>
+    <loc> https://easy2gohub.com/image/image-to-png/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.easy2gohub.com/image/image-rotator/</loc>
+    <loc> https://easy2gohub.com/image/image-rotator/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.easy2gohub.com/image/image-cropper/</loc>
+    <loc> https://easy2gohub.com/image/image-cropper/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Info Pages -->
   <url>
-    <loc>https://www.easy2gohub.com/about/</loc>
+    <loc> https://easy2gohub.com/about/</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://www.easy2gohub.com/privacy-policy/</loc>
+    <loc> https://easy2gohub.com/privacy-policy/</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://www.easy2gohub.com/terms/</loc>
+    <loc> https://easy2gohub.com/terms/</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

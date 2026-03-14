@@ -62,7 +62,7 @@ const settingsType = tool.settingsType ?? "none";
 const SettingsComponent =
   settingsType !== "none" ? (SETTINGS_COMPONENTS[settingsType] ?? null) : null;
 
-const canonical = `https://www.easy2gohub.com/${tool.category}/${tool.slug}/`;
+const canonical = ` https://easy2gohub.com/${tool.category}/${tool.slug}/`;
 const metaTitle = `${tool.title} – Free, Private, No Uploads | Easy2GoHub`;
 
 const breadcrumbJsonLd = {
@@ -73,19 +73,19 @@ const breadcrumbJsonLd = {
       "@type": "ListItem",
       position: 1,
       name: "Home",
-      item: "https://www.easy2gohub.com/",
+      item: " https://easy2gohub.com/",
     },
     {
       "@type": "ListItem",
       position: 2,
       name: "Tools",
-      item: "https://www.easy2gohub.com/tools/",
+      item: " https://easy2gohub.com/tools/",
     },
     {
       "@type": "ListItem",
       position: 3,
       name: CATEGORY_META[tool.category].label,
-      item: `https://www.easy2gohub.com/${tool.category}/`,
+      item: ` https://easy2gohub.com/${tool.category}/`,
     },
     {
       "@type": "ListItem",

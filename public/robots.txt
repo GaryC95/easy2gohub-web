@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.easy2gohub.com/sitemap.xml
+Sitemap:  https://easy2gohub.com/sitemap.xml

@@ -79,9 +79,10 @@ const {
 ) : null}
 {Array.isArray(jsonLd)
   ? jsonLd.map((item) => (
-      <script type="application/ld+json" is:inline>
-        {JSON.stringify(item)}
-      </script>
+      <script
+        type="application/ld+json"
+        set:html={JSON.stringify(item)}
+      />
     ))
   : null}
   </head>
